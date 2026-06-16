@@ -4,12 +4,10 @@
     "target": "ES2022",
     "module": "CommonJS",
     "lib": ["ES2022"],
-    "moduleResolution": "Node",
 
     /* ===== Paths & Output ===== */
     "rootDir": "src",
     "outDir": "dist",
-    "baseUrl": ".",
 
     /* ===== Type Safety ===== */
     "strict": true,
@@ -29,12 +27,12 @@
     "sourceMap": true,
 
     /* ===== Express / Node ===== */
-    "types": ["node"],
+    "types": ["node", "jest"],
 
     /* ===== Emit ===== */
     "declaration": false
   },
 
-  "include": ["src/**/*.ts", "tests/**/*.ts"],
+  "include": ["src/**/*.ts", "tests/**/*.ts"], // TODO
   "exclude": ["node_modules", "dist"]
 }
