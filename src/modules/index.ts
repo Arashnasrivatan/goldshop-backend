@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import os from "os";
 import configs from "../configs/env.config";
 import response from "../common/utils/response";
+import AuthRouter from "./Auth/auth.route";
 
 const apiRouter: Router = Router();
 
@@ -39,5 +40,6 @@ apiRouter.get("/api/status", (req: Request, res: Response) => {
 });
 
 // TODO: modules routes
+apiRouter.use("/api/auth", AuthRouter);
 
 export default apiRouter;
