@@ -1,0 +1,39 @@
+import { CreateUserDto } from "./dto/create-user.dto";
+import UserModel, { IUserDocument } from "./user.model";
+
+export class UserRepository {
+  async findById(userId: string): Promise<IUserDocument | null> {
+    return await UserModel.findOne({ _id: userId });
+  }
+
+  async findByPhone(phone: string): Promise<IUserDocument | null> {
+    return await UserModel.findOne({ phone });
+  }
+
+  async create(input: CreateUserDto): Promise<IUserDocument> {
+    const { fullname, phone, password } = input;
+    const user = await UserModel.create({
+      fullname,
+      phone,
+      password,
+    });
+    return user;
+  }
+
+  async updatePasswordById(
+    userId: string,
+    hashedPassword: string,
+  ): Promise<void> {
+    await UserModel.updateOne(
+      { _id: userId },
+      {
+        $set: {
+          password: hashedPassword,
+        },
+      },
+    );
+  }
+
+  //* ============================== *\\
+
+}
