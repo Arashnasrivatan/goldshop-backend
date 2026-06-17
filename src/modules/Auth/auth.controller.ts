@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { AuthService } from "./auth.service";
 import response from "../../common/utils/response";
 import { SendOtpDto } from "./dto/send-otp.dto";
+import { VerifyOtpDto } from "./dto/verify-otp.dto";
 
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -21,7 +22,10 @@ export class AuthController {
 
   verifyOTP = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const input: VerifyOtpDto = new VerifyOtpDto(req.body);
+      const result = await this.authService.verifyOTP(input);
+
+      return response(res, 201, result.message, result.data);
     } catch (err) {
       next(err);
     }

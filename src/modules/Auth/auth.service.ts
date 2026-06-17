@@ -8,6 +8,8 @@ import configs from "../../configs/env.config";
 
 import { SendOtpDto } from "./dto/send-otp.dto";
 import { IOtpDetails } from "./auth.types";
+import { IUserDocument } from "../User/user.model";
+import { VerifyOtpDto } from "./dto/verify-otp.dto";
 
 export class AuthService {
   constructor(
@@ -96,6 +98,45 @@ export class AuthService {
     return {
       message: "OTP Code Sent",
       ...(configs.app.env === "development" && { otpCode }),
+    };
+  }
+
+  async verifyOTP(input: VerifyOtpDto) {
+    const { fullname, phone, password, otp } = input;
+
+    const isPhoneBanned = await this.banService.isPhoneBanned(phone);
+
+    if (isPhoneBanned) throw new AppError("You Are Banned", 403);
+
+    const isUserExists = await this.userService.isUserExistsByPhone(phone);
+
+    if (isUserExists) throw new AppError("A user exists with this info", 400);
+
+    const key = this.getOtpRedisKey(phone);
+
+    const hashedOtp = await this.redisService.get<string>(key);
+
+    if (!hashedOtp) throw new AppError("OTP Expired", 400);
+
+    const isOtpValid = await bcrypt.compare(String(otp), hashedOtp);
+
+    if (!isOtpValid) throw new AppError("Invalid OTP", 400);
+
+    await this.redisService.del(key);
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    const user: IUserDocument = await this.userService.createUser({
+      fullname,
+      phone,
+      password: hashedPassword,
+    });
+
+    const userWithoutPassword = user.toObject ? user.toObject() : { ...user };
+    delete userWithoutPassword.password;
+    return {
+      message: "User Registered Successfully",
+      data: { user: userWithoutPassword },
     };
   }
 }
