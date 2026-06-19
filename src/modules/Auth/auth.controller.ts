@@ -102,7 +102,18 @@ export class AuthController {
 
   getMe = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const user = req.user as IUserDocument;
+      if (!user) {
+        return response(res, 401, "Unauthorized: Please login");
+      }
+
+      return response(res, 200, "User Profile Retrieved Successfully", {
+        id: user._id,
+        fullname: user.fullname,
+        phone: user.phone,
+        role: user.role,
+        addresses: user.addresses ?? [],
+      });
     } catch (err) {
       next(err);
     }
