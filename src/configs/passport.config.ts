@@ -5,6 +5,7 @@ import { UserService } from "../modules/User/user.service";
 import { BanRepository } from "../modules/Ban/ban.repository";
 import { BanService } from "../modules/Ban/ban.service";
 import { createJwtStrategy } from "../common/strategies/jwt.strategy";
+import { createRefreshStrategy } from "../common/strategies/refresh.strategy";
 
 const userRepository = new UserRepository();
 const userService = new UserService(userRepository);
@@ -14,9 +15,11 @@ const banService = new BanService(banRepository, userService);
 
 const localStrategy = createLocalStrategy(userService, banService);
 const jwtStrategy = createJwtStrategy(userService, banService);
+const refreshStrategy = createRefreshStrategy(userService, banService);
 
 passport.use("local", localStrategy);
 passport.use("accessToken", jwtStrategy);
+passport.use("refreshToken", refreshStrategy);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 passport.serializeUser((user: any, done) => {
