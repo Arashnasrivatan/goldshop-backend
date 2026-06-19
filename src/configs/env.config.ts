@@ -35,6 +35,9 @@ const configs = {
     resetToken: {
       cooldown: Number(process.env.RESET_TOKEN_COOLDOWN ?? 5), // 5 min
     },
+    resetPassword: {
+      link: process.env.RESET_PASSWORD_LINK ?? "http://localhost:3000/reset-password",
+    },
   },
 
   sms: {

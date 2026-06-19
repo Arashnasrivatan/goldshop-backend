@@ -13,6 +13,23 @@ export class RedisService {
     }
   }
 
+  async setIfNotExists(
+    key: string,
+    value: unknown,
+    ttlSeconds: number,
+  ): Promise<boolean> {
+    const serializedValue = JSON.stringify(value);
+    const result = await this.client.set(
+      key,
+      serializedValue,
+      "EX",
+      ttlSeconds,
+      "NX",
+    );
+
+    return result === "OK";
+  }
+
   async get<T>(key: string): Promise<T | null> {
     const data = await this.client.get(key);
     if (!data) return null;

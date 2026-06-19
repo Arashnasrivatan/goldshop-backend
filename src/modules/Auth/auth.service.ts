@@ -6,11 +6,15 @@ import { RedisService } from "../../common/services/redis.service";
 import { sendSms } from "../../common/services/sms.service";
 import configs from "../../configs/env.config";
 import jwt from "jsonwebtoken";
+import { v4 as uuidv4 } from "uuid";
+import crypto from "crypto";
 import { SendOtpDto } from "./dto/sendOTP.dto";
 import { IOtpDetails } from "./auth.types";
 import { IUserDocument } from "../User/user.model";
 import { VerifyOtpDto } from "./dto/verifyOTP.dto";
 import { LoginDto } from "./dto/login.dto";
+import { ForgotPasswordDto } from "./dto/forgotPassword.dto";
+import { ResetPasswordDto } from "./dto/resetPassword.dto";
 
 export class AuthService {
   constructor(
@@ -54,6 +58,18 @@ export class AuthService {
       .padStart(2, "0")}`;
 
     return { expired: false, remainingTime };
+  }
+
+  private getResetTokenKey(tokenHash: string): string {
+    return `resetToken:${tokenHash}`;
+  }
+
+  private getResetRequestKey(phone: string): string {
+    return `resetTokenReq:${phone}`;
+  }
+
+  private hashResetToken(token: string): string {
+    return crypto.createHash("sha256").update(token).digest("hex");
   }
 
   //* End Util Functions
@@ -169,5 +185,109 @@ export class AuthService {
         refreshToken,
       },
     };
+  }
+
+  async forgotPassword(input: ForgotPasswordDto) {
+    const { phone } = input;
+    const tokenCooldown = configs.auth.resetToken.cooldown;
+
+    const resetRequestKey = this.getResetRequestKey(phone);
+    const genericMessage =
+      "If the account exists and not banned, a reset link will be sent";
+
+    const user = await this.userService.findOneByPhone(phone);
+    const isPhoneBanned = await this.banService.isPhoneBanned(phone);
+
+    if (!user || isPhoneBanned) {
+      throw new AppError(genericMessage, 400);
+    }
+
+    const tokenTtlSeconds = tokenCooldown * 60;
+    const reserveRequest = await this.redisService.setIfNotExists(
+      resetRequestKey,
+      1,
+      tokenTtlSeconds,
+    );
+
+    if (!reserveRequest) {
+      throw new AppError("Please wait before requesting again", 429);
+    }
+
+    const resetToken: string = uuidv4();
+    const hashedResetToken = this.hashResetToken(resetToken);
+    const resetTokenKey = this.getResetTokenKey(hashedResetToken);
+
+    try {
+      await this.redisService.set(
+        resetTokenKey,
+        user._id.toString(),
+        tokenTtlSeconds,
+      );
+    } catch {
+      await this.redisService.del(resetRequestKey);
+      throw new AppError("Failed To Generate reset link", 500);
+    }
+
+    const resetLink: string = `${configs.auth.resetPassword.link}${resetToken}`;
+
+    if (configs.app.env === "production") {
+      const smsResult = await sendSms(
+        phone,
+        [{ name: "TOKEN", value: resetLink }],
+        configs.sms.patternForgot,
+      );
+
+      if (smsResult.status !== 1) {
+        await Promise.all([
+          this.redisService.del(resetTokenKey),
+          this.redisService.del(resetRequestKey),
+        ]);
+        throw new AppError("Failed To Send Sms", 500);
+      }
+    }
+
+    return {
+      message: "Reset link sent via SMS (Valid for 5 minutes)",
+      ...(configs.app.env === "development" && { data: { resetLink } }),
+    };
+  }
+
+  async resetPassword(input: ResetPasswordDto) {
+    const { token, newPassword, confirmPassword } = input;
+
+    if (!/^[0-9a-fA-F-]{36}$/.test(token)) {
+      throw new AppError("Invalid reset token", 400);
+    }
+
+    const hashedToken = this.hashResetToken(token);
+    const resetTokenKey = this.getResetTokenKey(hashedToken);
+
+    const userId = await this.redisService.get<string>(resetTokenKey);
+
+    if (!userId) throw new AppError("Invalid or expired reset token", 400);
+
+    const user = await this.userService.findOneById(userId);
+
+    if (!user) throw new AppError("Invalid or expired reset token", 400);
+
+    const isUserBanned = await this.banService.isPhoneBanned(user.phone);
+
+    if (isUserBanned) throw new AppError("Invalid or expired reset token", 400);
+
+    if (newPassword !== confirmPassword) {
+      throw new AppError("Passwords do not match", 400);
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    await this.userService.changeUserPassword(userId, hashedPassword);
+
+    await Promise.all([
+      this.redisService.del(`resetToken:${hashedToken}`),
+      this.redisService.del(`resetTokenReq:${user.phone}`),
+      this.redisService.del(`refreshToken:${userId}`),
+    ]);
+
+    return { message: "Password reset successful" };
   }
 }

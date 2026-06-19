@@ -6,6 +6,8 @@ import { SendOtpDto } from "./dto/sendOTP.dto";
 import { VerifyOtpDto } from "./dto/verifyOTP.dto";
 import { IUserDocument } from "../User/user.model";
 import { LoginDto } from "./dto/login.dto";
+import { ForgotPasswordDto } from "./dto/forgotPassword.dto";
+import { ResetPasswordDto } from "./dto/resetPassword.dto";
 
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -70,7 +72,10 @@ export class AuthController {
 
   forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const input: ForgotPasswordDto = new ForgotPasswordDto(req.body);
+      const result = await this.authService.forgotPassword(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }
@@ -78,7 +83,18 @@ export class AuthController {
 
   resetPassword = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const { token } = req.params as { token: string };
+      const { newPassword, confirmPassword } = req.body;
+
+      const input: ResetPasswordDto = new ResetPasswordDto({
+        token,
+        newPassword,
+        confirmPassword,
+      });
+
+      const result = await this.authService.resetPassword(input);
+
+      return response(res, 200, result.message);
     } catch (err) {
       next(err);
     }
