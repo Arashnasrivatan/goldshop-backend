@@ -9,7 +9,7 @@ import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import logger from "./common/utils/logger";
 import path from "path";
-// import passportConfig from "./configs/passport.config";
+import passportConfig from "./configs/passport.config";
 import errorHandler from "./common/middlewares/errorHandler";
 import { AppError } from "./common/errors/AppError";
 import apiRouter from "./modules";
@@ -71,8 +71,8 @@ app.use(
 
 //* Passport
 // TODO
-// app.use(passportConfig.initialize());
-// app.use(passportConfig.session());
+app.use(passportConfig.initialize());
+app.use(passportConfig.session());
 
 //* Routes
 app.use(apiRouter);
