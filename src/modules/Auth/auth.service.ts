@@ -15,6 +15,7 @@ import { VerifyOtpDto } from "./dto/verifyOTP.dto";
 import { LoginDto } from "./dto/login.dto";
 import { ForgotPasswordDto } from "./dto/forgotPassword.dto";
 import { ResetPasswordDto } from "./dto/resetPassword.dto";
+import { RefreshTokenDto } from "./dto/refreshToken.dto";
 
 export class AuthService {
   constructor(
@@ -289,5 +290,32 @@ export class AuthService {
     ]);
 
     return { message: "Password reset successful" };
+  }
+
+  async refreshToken(input: RefreshTokenDto) {
+    const { refreshToken } = input;
+    const decoded = jwt.verify(
+      refreshToken,
+      configs.auth.refreshToken.secret,
+    ) as jwt.JwtPayload;
+    const userId = decoded.id;
+    const storedToken = await this.redisService.get<string>(
+      `refreshToken:${userId}`,
+    );
+    if (!storedToken) throw new AppError("Refresh token expired", 403);
+
+    const match = await bcrypt.compare(refreshToken, storedToken);
+    if (!match) throw new AppError("Refresh token invalid", 403);
+
+    const accessToken = jwt.sign(
+      { id: userId },
+      configs.auth.accessToken.secret,
+      { expiresIn: `${configs.auth.accessToken.expiresIn}s` },
+    );
+
+    return {
+      message: "Access token refreshed successfully",
+      data: { accessToken },
+    };
   }
 }

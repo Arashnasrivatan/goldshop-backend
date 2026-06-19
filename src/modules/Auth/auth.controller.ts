@@ -8,6 +8,7 @@ import { IUserDocument } from "../User/user.model";
 import { LoginDto } from "./dto/login.dto";
 import { ForgotPasswordDto } from "./dto/forgotPassword.dto";
 import { ResetPasswordDto } from "./dto/resetPassword.dto";
+import { RefreshTokenDto } from "./dto/refreshToken.dto";
 
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -121,7 +122,17 @@ export class AuthController {
 
   refreshToken = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const refreshToken = req.cookies.refresh_token;
+
+      if (!refreshToken) {
+        return response(res, 401, "Refresh token missing please login again");
+      }
+
+      const input: RefreshTokenDto = new RefreshTokenDto({ refreshToken });
+
+      const result = await this.authService.refreshToken(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }
