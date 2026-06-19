@@ -5,11 +5,12 @@ import { BanService } from "../Ban/ban.service";
 import { RedisService } from "../../common/services/redis.service";
 import { sendSms } from "../../common/services/sms.service";
 import configs from "../../configs/env.config";
-
-import { SendOtpDto } from "./dto/send-otp.dto";
+import jwt from "jsonwebtoken";
+import { SendOtpDto } from "./dto/sendOTP.dto";
 import { IOtpDetails } from "./auth.types";
 import { IUserDocument } from "../User/user.model";
-import { VerifyOtpDto } from "./dto/verify-otp.dto";
+import { VerifyOtpDto } from "./dto/verifyOTP.dto";
+import { LoginDto } from "./dto/login.dto";
 
 export class AuthService {
   constructor(
@@ -137,6 +138,36 @@ export class AuthService {
     return {
       message: "User Registered Successfully",
       data: { user: userWithoutPassword },
+    };
+  }
+
+  async login(input: LoginDto) {
+    const accessToken = jwt.sign(
+      { id: input._id },
+      configs.auth.accessToken.secret,
+      { expiresIn: `${configs.auth.accessToken.expiresIn}s` },
+    );
+
+    const refreshToken = jwt.sign(
+      { id: input._id },
+      configs.auth.refreshToken.secret,
+      { expiresIn: `${configs.auth.refreshToken.expiresIn}s` },
+    );
+
+    const hashedRefreshToken = await bcrypt.hash(refreshToken, 12);
+
+    await this.redisService.set(
+      `refreshToken:${input._id}`,
+      hashedRefreshToken,
+      Number(configs.auth.refreshToken.expiresIn),
+    );
+
+    return {
+      message: "User Logged In Successfully",
+      data: {
+        accessToken,
+        refreshToken,
+      },
     };
   }
 }

@@ -36,7 +36,22 @@ const verifySchema = yup.object().shape({
 });
 
 const loginSchema = yup.object().shape({
-  // TODO
+  phone: yup
+    .string()
+    .required("Phone number is required")
+    .matches(
+      /^09[0-9]{9}$/,
+      "Phone number must start with 09 and be 11 digits long",
+    ),
+
+  password: yup
+    .string()
+    .required("Password is required")
+    .min(8, "Password must be at least 8 characters long")
+    .matches(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*_?&])[A-Za-z\d@$!%*_?&]{8,}$/,
+      "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+    ),
 });
 
 const forgotPasswordSchema = yup.object().shape({

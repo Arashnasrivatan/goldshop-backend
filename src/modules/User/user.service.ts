@@ -1,4 +1,4 @@
-import { CreateUserDto } from "./dto/create-user.dto";
+import { CreateUserDto } from "./dto/createUser.dto";
 import { UserRepository } from "./user.repository";
 
 export class UserService {

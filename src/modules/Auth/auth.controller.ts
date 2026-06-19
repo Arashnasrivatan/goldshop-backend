@@ -1,8 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import { AuthService } from "./auth.service";
 import response from "../../common/utils/response";
-import { SendOtpDto } from "./dto/send-otp.dto";
-import { VerifyOtpDto } from "./dto/verify-otp.dto";
+import configs from "./../../configs/env.config";
+import { SendOtpDto } from "./dto/sendOTP.dto";
+import { VerifyOtpDto } from "./dto/verifyOTP.dto";
+import { IUserDocument } from "../User/user.model";
+import { LoginDto } from "./dto/login.dto";
 
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -33,7 +36,33 @@ export class AuthController {
 
   login = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const user = req.user as IUserDocument;
+      const userId = user._id.toString();
+      if (!user || !userId) {
+        return response(res, 401, "Unauthorized: Please login");
+      }
+
+      const input: LoginDto = new LoginDto({ _id: userId });
+
+      const result = await this.authService.login(input);
+
+      res.cookie("refresh_token", result.data.refreshToken, {
+        httpOnly: true,
+        secure: configs.app.env === "production",
+        sameSite: "strict",
+        path: "/api/auth/refresh",
+        maxAge: configs.auth.refreshToken.expiresIn * 1000,
+      });
+
+      return response(res, 200, "User Logged In Successfully", {
+        accessToken: result.data.accessToken,
+        user: {
+          id: user._id,
+          fullname: user.fullname,
+          phone: user.phone,
+          role: user.role,
+        },
+      });
     } catch (err) {
       next(err);
     }

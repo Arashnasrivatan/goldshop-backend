@@ -1,4 +1,4 @@
-import { CreateUserDto } from "./dto/create-user.dto";
+import { CreateUserDto } from "./dto/createUser.dto";
 import UserModel, { IUserDocument } from "./user.model";
 
 export class UserRepository {
@@ -35,5 +35,4 @@ export class UserRepository {
   }
 
   //* ============================== *\\
-
 }
