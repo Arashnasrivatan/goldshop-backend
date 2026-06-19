@@ -35,4 +35,15 @@ export class UserRepository {
   }
 
   //* ============================== *\\
+
+  async updateUserById(
+    userId: string,
+    updateData: Partial<IUserDocument>,
+  ): Promise<IUserDocument | null> {
+    return UserModel.findByIdAndUpdate(
+      userId,
+      { $set: updateData },
+      { new: true, runValidators: true },
+    ).select("-password -__v");
+  }
 }

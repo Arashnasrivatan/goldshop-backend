@@ -30,4 +30,20 @@ export class BanRepository {
 
     return await query.exec();
   }
+
+  async banUser(
+    userId: string,
+    userPhone: string,
+    banReason: string,
+    adminId: string,
+  ): Promise<IBanDocument> {
+    const ban = new BanModel({
+      phone: userPhone,
+      user: userId,
+      banReason,
+      bannedBy: adminId,
+    });
+
+    return await ban.save();
+  }
 }
