@@ -16,6 +16,7 @@ import { LoginDto } from "./dto/login.dto";
 import { ForgotPasswordDto } from "./dto/forgotPassword.dto";
 import { ResetPasswordDto } from "./dto/resetPassword.dto";
 import { RefreshTokenDto } from "./dto/refreshToken.dto";
+import { LogOutDto } from "./dto/logOut.dto";
 
 export class AuthService {
   constructor(
@@ -317,5 +318,17 @@ export class AuthService {
       message: "Access token refreshed successfully",
       data: { accessToken },
     };
+  }
+
+  async logout(input: LogOutDto) {
+    const { userId } = input;
+    const deletedRefreshToken = await this.redisService.del(
+      `refreshToken:${userId}`,
+    );
+
+    if (deletedRefreshToken === 0) {
+      throw new AppError("User is already logged out", 400);
+    }
+    return { message: "User logged out successfully" };
   }
 }

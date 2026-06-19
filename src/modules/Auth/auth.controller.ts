@@ -9,6 +9,7 @@ import { LoginDto } from "./dto/login.dto";
 import { ForgotPasswordDto } from "./dto/forgotPassword.dto";
 import { ResetPasswordDto } from "./dto/resetPassword.dto";
 import { RefreshTokenDto } from "./dto/refreshToken.dto";
+import { LogOutDto } from "./dto/logOut.dto";
 
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -140,7 +141,24 @@ export class AuthController {
 
   logout = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const user = req.user as IUserDocument;
+      if (!user) {
+        return response(res, 401, "Unauthorized: Please login");
+      }
+      const userId = user._id.toString();
+
+      const input: LogOutDto = new LogOutDto({ userId });
+
+      const result = await this.authService.logout(input);
+
+      res.clearCookie("refresh_token", {
+        httpOnly: true,
+        secure: configs.app.env === "production",
+        sameSite: "strict",
+        path: "/api/auth/refresh",
+      });
+
+      return response(res, 200, result.message);
     } catch (err) {
       next(err);
     }
