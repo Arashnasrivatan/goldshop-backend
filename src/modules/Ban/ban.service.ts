@@ -6,6 +6,7 @@ import { UserRole } from "../User/user.model";
 import { IPaginationData } from "../../common/types/utils";
 import { createPaginationData } from "../../common/utils";
 import { GetAllBansDto } from "./dto/getAllBans.dto";
+import { GetBanDto } from "./dto/getBan.dto";
 
 export class BanService {
   constructor(
@@ -53,6 +54,16 @@ export class BanService {
     };
   }
 
+  async getBan(input: GetBanDto) {
+    const banRecord = await this.banRepository.findBanById(input.banId, true);
+
+    if (!banRecord) {
+      throw new AppError("Ban Record not found", 404);
+    }
+
+    return { message: "Ban Record fetched successfully", data: banRecord };
+  }
+
   async banUser(input: BanUserDto) {
     const user = await this.userService.findOneById(input.userId);
 
@@ -61,7 +72,7 @@ export class BanService {
     if (user.role === UserRole.SUPER_ADMIN || user.role === UserRole.ADMIN)
       throw new AppError("You cant ban ADMINS!", 403);
 
-    const isUserAlreadyBanned = await this.banRepository.findBanById(
+    const isUserAlreadyBanned = await this.banRepository.findBanByUserId(
       user._id.toString(),
     );
 

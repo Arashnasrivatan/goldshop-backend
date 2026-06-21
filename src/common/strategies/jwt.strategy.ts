@@ -25,7 +25,7 @@ export const createJwtStrategy = (
         );
 
         if (!user) {
-          return done(new AppError("User not found", 404), false);
+          return done(new AppError("Please Try to login again", 404), false);
         }
 
         const isBanned = await banService.isPhoneBanned(user.phone);

@@ -4,6 +4,7 @@ import { BanService } from "./ban.service";
 import { IUserDocument } from "../User/user.model";
 import { BanUserDto } from "./dto/banUser.dto";
 import { GetAllBansDto } from "./dto/getAllBans.dto";
+import { GetBanDto } from "./dto/getBan.dto";
 
 export class BanController {
   constructor(private banService: BanService) {}
@@ -38,7 +39,13 @@ export class BanController {
 
   getBanById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const { banId } = req.params as { banId: string };
+
+      const input: GetBanDto = new GetBanDto({ banId });
+
+      const result = await this.banService.getBan(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }

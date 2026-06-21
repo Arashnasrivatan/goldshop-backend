@@ -17,11 +17,26 @@ export class BanRepository {
     return await query.exec();
   }
 
-  async findBanById(
+  async findBanByUserId(
     userId: string,
     populate: boolean = false,
   ): Promise<IBanDocument | null> {
     const query = BanModel.findOne({ user: userId });
+
+    if (populate) {
+      query.populate("user bannedBy", "fullname phone role");
+    }
+
+    query.select("-__v");
+
+    return await query.exec();
+  }
+
+  async findBanById(
+    banId: string,
+    populate: boolean = false,
+  ): Promise<IBanDocument | null> {
+    const query = BanModel.findOne({ _id: banId });
 
     if (populate) {
       query.populate("user bannedBy", "fullname phone role");
