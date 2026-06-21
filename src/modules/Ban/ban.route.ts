@@ -6,6 +6,7 @@ import {
   banUserSchema,
   getAllBansParamsSchema,
   banIdParamsSchema,
+  editBanSchema,
 } from "./ban.validation";
 
 import authGuard from "../../common/middlewares/authGuard";
@@ -56,6 +57,7 @@ router
     authGuard,
     roleGuard("SUPER_ADMIN", "ADMIN"),
     validate(banIdParamsSchema, "params"),
+    validate(editBanSchema),
     banController.editBan,
   )
   .delete(

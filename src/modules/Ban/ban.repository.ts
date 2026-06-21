@@ -48,6 +48,17 @@ export class BanRepository {
     return await query.exec();
   }
 
+  async updateBanById(
+    banId: string,
+    updateData: Partial<IBanDocument>,
+  ): Promise<IBanDocument | null> {
+    return BanModel.findByIdAndUpdate(
+      banId,
+      { $set: updateData },
+      { new: true, runValidators: true },
+    );
+  }
+
   async findAll(
     filter: IBanFilter,
     limit: number = 10,

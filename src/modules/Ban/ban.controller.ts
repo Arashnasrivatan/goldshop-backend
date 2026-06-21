@@ -4,8 +4,8 @@ import { BanService } from "./ban.service";
 import { IUserDocument } from "../User/user.model";
 import { BanUserDto } from "./dto/banUser.dto";
 import { GetAllBansDto } from "./dto/getAllBans.dto";
-import { GetBanDto } from "./dto/getBan.dto";
-import { UnbanUserDto } from "./dto/unbanUser.dto";
+import { BanIdDto } from "./dto/banId.dto";
+import { EditBanDto } from "./dto/editBan.dto";
 
 export class BanController {
   constructor(private banService: BanService) {}
@@ -42,7 +42,7 @@ export class BanController {
     try {
       const { banId } = req.params as { banId: string };
 
-      const input: GetBanDto = new GetBanDto({ banId });
+      const input: BanIdDto = new BanIdDto({ banId });
 
       const result = await this.banService.getBan(input);
 
@@ -76,7 +76,15 @@ export class BanController {
 
   editBan = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const { banId } = req.params as { banId: string };
+
+      const { banReason } = req.body as { banReason: string };
+
+      const input: EditBanDto = new EditBanDto({ banId, banReason });
+
+      const result = await this.banService.editBan(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }
@@ -86,7 +94,7 @@ export class BanController {
     try {
       const { banId } = req.params as { banId: string };
 
-      const input: UnbanUserDto = new UnbanUserDto({ banId });
+      const input: BanIdDto = new BanIdDto({ banId });
 
       const result = await this.banService.unbanUser(input);
 

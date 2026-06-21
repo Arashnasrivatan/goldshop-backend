@@ -1,4 +1,4 @@
-export class GetBanDto {
+export class BanIdDto {
   public banId: string;
 
   constructor(data: { banId: string }) {
