@@ -7,3 +7,13 @@ export interface IBan {
   banReason: string;
   bannedBy: Types.ObjectId;
 }
+
+export interface IBanFilter {
+  search?: string;
+  phone?: string;
+  userId?: string;
+  bannedBy?: string;
+  banReason?: string;
+  from?: string;
+  to?: string;
+}

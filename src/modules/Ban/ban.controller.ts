@@ -3,6 +3,7 @@ import response from "../../common/utils/response";
 import { BanService } from "./ban.service";
 import { IUserDocument } from "../User/user.model";
 import { BanUserDto } from "./dto/banUser.dto";
+import { GetAllBansDto } from "./dto/getAllBans.dto";
 
 export class BanController {
   constructor(private banService: BanService) {}
@@ -11,7 +12,25 @@ export class BanController {
 
   getAllBans = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const queryParams = req.query;
+      const input: GetAllBansDto = new GetAllBansDto({
+        search: queryParams.search as string,
+        phone: queryParams.phone as string,
+        userId: queryParams.userId as string,
+        bannedBy: queryParams.bannedBy as string,
+        banReason: queryParams.banReason as string,
+        from: queryParams.from as string,
+        to: queryParams.to as string,
+        sort: queryParams.sort as string,
+        limit: queryParams.limit
+          ? parseInt(queryParams.limit as string, 10)
+          : 10,
+        page: queryParams.page ? parseInt(queryParams.page as string, 10) : 1,
+      });
+
+      const result = await this.banService.getAllBans(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }

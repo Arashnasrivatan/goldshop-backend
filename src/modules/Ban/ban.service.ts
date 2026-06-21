@@ -3,6 +3,9 @@ import { UserService } from "./../User/user.service";
 import { BanUserDto } from "./dto/banUser.dto";
 import { AppError } from "../../common/errors/AppError";
 import { UserRole } from "../User/user.model";
+import { IPaginationData } from "../../common/types/utils";
+import { createPaginationData } from "../../common/utils";
+import { GetAllBansDto } from "./dto/getAllBans.dto";
 
 export class BanService {
   constructor(
@@ -16,6 +19,38 @@ export class BanService {
     const banRecord = await this.banRepository.findBanByPhone(phone);
 
     return !!banRecord;
+  }
+
+  async getAllBans(input: GetAllBansDto) {
+    const { data: bannedUsers, meta } = await this.banRepository.findAll(
+      {
+        search: input.search,
+        phone: input.phone,
+        userId: input.userId,
+        bannedBy: input.bannedBy,
+        banReason: input.banReason,
+        from: input.from,
+        to: input.to,
+      },
+      input.limit!,
+      input.page!,
+      input.sort!,
+    );
+
+    const paginationData: IPaginationData = createPaginationData(
+      meta.page,
+      meta.limit,
+      meta.total,
+      "BannedUsers",
+    );
+
+    return {
+      message: "Banned Users fetched Successfully :)",
+      data: {
+        paginationData,
+        bannedUsers,
+      },
+    };
   }
 
   async banUser(input: BanUserDto) {
