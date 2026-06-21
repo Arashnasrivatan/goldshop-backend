@@ -1,3 +1,4 @@
+import { DeleteResult } from "mongoose";
 import BanModel, { IBanDocument } from "./ban.model";
 import { IBanFilter } from "./ban.types";
 
@@ -111,5 +112,9 @@ export class BanRepository {
     });
 
     return await ban.save();
+  }
+
+  async unbanUser(banId: string): Promise<DeleteResult> {
+    return await BanModel.deleteOne({ _id: banId });
   }
 }

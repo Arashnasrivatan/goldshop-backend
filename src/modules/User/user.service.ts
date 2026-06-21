@@ -33,8 +33,12 @@ export class UserService {
   async changeUserPassword(userId: string, newPassword: string) {
     await this.userRepository.updatePasswordById(userId, newPassword);
   }
-  
+
   async markUserAsBanned(userId: string) {
     await this.userRepository.updateUserById(userId, { isBanned: true });
+  }
+
+  async markUserAsUnbanned(userId: string) {
+    await this.userRepository.updateUserById(userId, { isBanned: false });
   }
 }
