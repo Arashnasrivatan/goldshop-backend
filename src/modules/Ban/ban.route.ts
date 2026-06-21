@@ -2,8 +2,11 @@ import express, { Router } from "express";
 import { BanController } from "./ban.controller";
 import validate from "./../../common/middlewares/validate";
 import roleGuard from "./../../common/middlewares/roleGuard";
-import { banUserSchema, getAllBansParamsSchema } from "./ban.validation";
-import { userIdParamsSchema } from "../../common/utils/validation/params/sharedValidators";
+import {
+  banUserSchema,
+  getAllBansParamsSchema,
+  banIdParamsSchema,
+} from "./ban.validation";
 
 import authGuard from "../../common/middlewares/authGuard";
 
@@ -42,17 +45,23 @@ router
   );
 
 router
-  .route("/:userId")
+  .route("/:banId")
   .get(
     authGuard,
     roleGuard("SUPER_ADMIN", "ADMIN"),
-    validate(userIdParamsSchema, "params"),
-    banController.getBannedUserById,
+    validate(banIdParamsSchema, "params"),
+    banController.getBanById,
+  )
+  .patch(
+    authGuard,
+    roleGuard("SUPER_ADMIN", "ADMIN"),
+    validate(banIdParamsSchema, "params"),
+    banController.editBan,
   )
   .delete(
     authGuard,
     roleGuard("SUPER_ADMIN", "ADMIN"),
-    validate(userIdParamsSchema, "params"),
+    validate(banIdParamsSchema, "params"),
     banController.unban,
   );
 

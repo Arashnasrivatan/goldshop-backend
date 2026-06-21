@@ -36,11 +36,7 @@ export class BanController {
     }
   };
 
-  getBannedUserById = async (
-    req: Request,
-    res: Response,
-    next: NextFunction,
-  ) => {
+  getBanById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       // TODO
     } catch (err) {
@@ -65,6 +61,14 @@ export class BanController {
       const result = await this.banService.banUser(input);
 
       return response(res, 200, result.message);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  editBan = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // TODO
     } catch (err) {
       next(err);
     }

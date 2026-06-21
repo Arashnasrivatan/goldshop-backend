@@ -72,4 +72,13 @@ const getAllBansParamsSchema = yup.object().shape({
     .positive("Page must be a positive integer"),
 });
 
-export { banUserSchema, getAllBansParamsSchema };
+const banIdParamsSchema = yup.object().shape({
+  banId: yup
+    .string()
+    .required("banId is required")
+    .test("isValidObjectId", "banId is invalid", (value) => {
+      return value === undefined || isValidObjectId(value);
+    }),
+});
+
+export { banUserSchema, getAllBansParamsSchema, banIdParamsSchema };
