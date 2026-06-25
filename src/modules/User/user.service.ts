@@ -297,4 +297,28 @@ export class UserService {
       message: "Address Deleted Successfully :)",
     };
   }
+
+  //* ========== Admin User Management ========== *\\
+
+  async promoteUser(input: UserIdDto) {
+    const user = await this.userRepository.findById(input.userId);
+
+    if (!user) throw new AppError("User not found :(", 404);
+
+    if (user.role == UserRole.ADMIN || user.role == UserRole.SUPER_ADMIN) {
+      throw new AppError(
+        "The user already holds the highest access level (ADMIN) and cannot be promoted further",
+        400,
+      );
+    }
+
+    const updatedUser = await this.userRepository.updateUserById(input.userId, {
+      role: UserRole.ADMIN,
+    });
+
+    if (!updatedUser)
+      throw new AppError("Cannot promote user please try again later :(", 500);
+
+    return { message: "User Promoted Successfully :)", data: updatedUser };
+  }
 }
