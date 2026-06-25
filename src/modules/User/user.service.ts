@@ -2,6 +2,7 @@ import { IUserDocument, UserRole } from "./user.model";
 import { createPaginationData, isLocationInIran } from "../../common/utils";
 
 import { AdminAddUserAddressDto } from "./dto/adminAddAddress.dto";
+import { AdminUpdateUserAddressDto } from "./dto/adminUpdateAddress.dto";
 import { AdminUserDeleteDto } from "./dto/adminUserDelete.dto";
 import { AdminUserUpdateDto } from "./dto/adminUserUpdate.dto";
 import { AppError } from "../../common/errors/AppError";
@@ -193,5 +194,70 @@ export class UserService {
     const data = await this.userRepository.createAddress(input);
 
     return { message: "Address Added Successfully :)", data };
+  }
+
+  async adminUpdateUserAddress(input: AdminUpdateUserAddressDto) {
+    const user = await this.userRepository.findById(input.userId);
+    if (!user) {
+      throw new AppError("User not found :(", 404);
+    }
+
+    const address = user.addresses.find(
+      (address) => address._id == input.addressId,
+    );
+
+    if (!address)
+      throw new AppError("Address not found or its not for this user :(", 400);
+
+    if (user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN) {
+      throw new AppError("You cant update admin address", 400);
+    }
+
+    if (input.title) {
+      const isDuplicateTitle = user.addresses.some(
+        (addr) => addr._id != input.addressId && addr.title === input.title,
+      );
+      if (isDuplicateTitle) {
+        throw new AppError("An address with this title already exists", 400);
+      }
+    }
+
+    if (input.postalCode) {
+      const isDuplicatePostalCode = user.addresses.some(
+        (addr) =>
+          addr._id != input.addressId && addr.postalCode === input.postalCode,
+      );
+      if (isDuplicatePostalCode) {
+        throw new AppError(
+          "An address with this postal code already exists",
+          400,
+        );
+      }
+    }
+
+    const hasChanges =
+      (input.title !== undefined && input.title !== address.title) ||
+      (input.postalCode !== undefined &&
+        input.postalCode !== address.postalCode) ||
+      (input.address !== undefined && input.address !== address.address) ||
+      (input.location?.lat !== undefined &&
+        input.location.lat !== address.location.lat) ||
+      (input.location?.lng !== undefined &&
+        input.location.lng !== address.location.lng);
+
+    if (!hasChanges) {
+      throw new AppError("No changes to update", 400);
+    }
+
+    const updatedUser = await this.userRepository.updateAddress(input);
+
+    if (!updatedUser) {
+      throw new AppError("Address not found for this user", 404);
+    }
+
+    return {
+      message: "Address updated successfully :)",
+      data: updatedUser,
+    };
   }
 }

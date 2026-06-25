@@ -1,6 +1,7 @@
 import UserModel, { IUserDocument } from "./user.model";
 
 import { AdminAddUserAddressDto } from "./dto/adminAddAddress.dto";
+import { AdminUpdateUserAddressDto } from "./dto/adminUpdateAddress.dto";
 import { CreateUserDto } from "./dto/createUser.dto";
 import { IUserFilter } from "./user.types";
 
@@ -134,5 +135,48 @@ export class UserRepository {
         new: true,
       },
     ).select("addresses");
+  }
+
+  async updateAddress(
+    input: AdminUpdateUserAddressDto,
+  ): Promise<IUserDocument | null> {
+    const updateFields: Record<string, unknown> = {};
+
+    if (input.title !== undefined)
+      updateFields["addresses.$[addr].title"] = input.title;
+
+    if (input.postalCode !== undefined)
+      updateFields["addresses.$[addr].postalCode"] = input.postalCode;
+
+    if (input.address !== undefined)
+      updateFields["addresses.$[addr].address"] = input.address;
+
+    if (input.location?.lat !== undefined)
+      updateFields["addresses.$[addr].location.lat"] = Number(
+        input.location.lat,
+      );
+
+    if (input.location?.lng !== undefined)
+      updateFields["addresses.$[addr].location.lng"] = Number(
+        input.location.lng,
+      );
+
+    if (Object.keys(updateFields).length === 0) {
+      return null;
+    }
+
+    return UserModel.findOneAndUpdate(
+      {
+        _id: input.userId,
+        "addresses._id": input.addressId,
+      },
+      {
+        $set: updateFields,
+      },
+      {
+        new: true,
+        arrayFilters: [{ "addr._id": input.addressId }],
+      },
+    ).select("-__v -password");
   }
 }
