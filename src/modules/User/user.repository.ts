@@ -1,5 +1,6 @@
 import UserModel, { IUserDocument } from "./user.model";
 
+import { AdminAddUserAddressDto } from "./dto/adminAddAddress.dto";
 import { CreateUserDto } from "./dto/createUser.dto";
 import { IUserFilter } from "./user.types";
 
@@ -109,5 +110,29 @@ export class UserRepository {
     void userId;
     // Add related data cleanup here when additional collections are implemented. // TODO
     return;
+  }
+
+  async createAddress(
+    input: AdminAddUserAddressDto,
+  ): Promise<IUserDocument | null> {
+    return await UserModel.findOneAndUpdate(
+      { _id: input.userId },
+      {
+        $push: {
+          addresses: {
+            title: input.title,
+            postalCode: input.postalCode,
+            location: {
+              lat: Number(input.location.lat),
+              lng: Number(input.location.lng),
+            },
+            address: input.address,
+          },
+        },
+      },
+      {
+        new: true,
+      },
+    ).select("addresses");
   }
 }

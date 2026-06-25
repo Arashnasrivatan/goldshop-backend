@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 
+import { AdminAddUserAddressDto } from "./dto/adminAddAddress.dto";
 import { AdminUserDeleteDto } from "./dto/adminUserDelete.dto";
 import { AdminUserUpdateDto } from "./dto/adminUserUpdate.dto";
 import { GetAllUsersDto } from "./dto/getAllUsers.dto";
@@ -102,7 +103,25 @@ export class UserController {
     next: NextFunction,
   ) => {
     try {
-      // TODO
+      const { userId } = req.params as { userId: string };
+      const { title, postalCode, location, address } = req.body as {
+        title: string;
+        postalCode: string;
+        location: { lat: number; lng: number };
+        address: string;
+      };
+
+      const input: AdminAddUserAddressDto = new AdminAddUserAddressDto({
+        userId,
+        title,
+        postalCode,
+        location,
+        address,
+      });
+
+      const result = await this.userService.adminAddUserAddress(input);
+
+      return response(res, 201, result.message, result.data);
     } catch (err) {
       next(err);
     }

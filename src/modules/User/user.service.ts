@@ -1,5 +1,7 @@
 import { IUserDocument, UserRole } from "./user.model";
+import { createPaginationData, isLocationInIran } from "../../common/utils";
 
+import { AdminAddUserAddressDto } from "./dto/adminAddAddress.dto";
 import { AdminUserDeleteDto } from "./dto/adminUserDelete.dto";
 import { AdminUserUpdateDto } from "./dto/adminUserUpdate.dto";
 import { AppError } from "../../common/errors/AppError";
@@ -8,7 +10,6 @@ import { GetAllUsersDto } from "./dto/getAllUsers.dto";
 import { IPaginationData } from "../../common/types/utils";
 import { UserIdDto } from "../../common/dto/userId.dto";
 import { UserRepository } from "./user.repository";
-import { createPaginationData } from "../../common/utils";
 
 export class UserService {
   constructor(private userRepository: UserRepository) {}
@@ -158,5 +159,39 @@ export class UserService {
     ]);
 
     return { message: "User deleted successfully" };
+  }
+
+  //* ========== Admin Address Management ========== *\\
+
+  async adminAddUserAddress(input: AdminAddUserAddressDto) {
+    const lat = Number(input.location.lat);
+    const lng = Number(input.location.lng);
+    const user = await this.userRepository.findById(input.userId);
+
+    if (!user) throw new AppError("User Not Found :(", 404);
+
+    if (user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN) {
+      throw new AppError("You cant add address to admins", 400);
+    }
+
+    // Double Check
+    const isAddressInIran = isLocationInIran(lat, lng);
+    if (!isAddressInIran)
+      throw new AppError("Location must be in iran !!!", 400);
+
+    const isDuplicate = user.addresses.some(
+      (addr) =>
+        addr.title === input.title || addr.postalCode === input.postalCode,
+    );
+    if (isDuplicate) {
+      throw new AppError(
+        "This address title or postal code already exists",
+        400,
+      );
+    }
+
+    const data = await this.userRepository.createAddress(input);
+
+    return { message: "Address Added Successfully :)", data };
   }
 }
