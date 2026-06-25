@@ -82,7 +82,13 @@ const updateUserSchema = yup
   );
 
 const adminUserDeleteSchema = yup.object().shape({
-  // TODO
+  confirmationPhrase: yup
+    .string()
+    .required("Confirmation phrase is required")
+    .matches(
+      /^DELETE USER [a-zA-Z0-9_-]+$/i,
+      "Confirmation phrase must start with 'DELETE USER ' followed by the targer userId",
+    ),
 });
 
 const adminAddUserAddressSchema = yup.object().shape({

@@ -100,4 +100,14 @@ export class UserRepository {
       { new: true, runValidators: true },
     ).select("-password -__v");
   }
+
+  async deleteUserById(userId: string): Promise<IUserDocument | null> {
+    return await UserModel.findByIdAndDelete(userId).select("-__v -password");
+  }
+
+  async deleteUserRelatedData(userId: string): Promise<void> {
+    void userId;
+    // Add related data cleanup here when additional collections are implemented. // TODO
+    return;
+  }
 }

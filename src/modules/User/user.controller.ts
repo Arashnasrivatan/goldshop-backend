@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 
+import { AdminUserDeleteDto } from "./dto/adminUserDelete.dto";
 import { AdminUserUpdateDto } from "./dto/adminUserUpdate.dto";
 import { GetAllUsersDto } from "./dto/getAllUsers.dto";
 import { IUserDocument } from "./user.model";
@@ -75,7 +76,19 @@ export class UserController {
   };
   deleteUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const adminData = req.user as IUserDocument;
+      const { userId } = req.params as { userId: string };
+      const { confirmationPhrase } = req.body as { confirmationPhrase: string };
+
+      const input: AdminUserDeleteDto = new AdminUserDeleteDto({
+        userId,
+        confirmationPhrase,
+        adminRole: adminData.role,
+      });
+
+      const result = await this.userService.adminDeleteUser(input);
+
+      return response(res, 200, result.message);
     } catch (err) {
       next(err);
     }

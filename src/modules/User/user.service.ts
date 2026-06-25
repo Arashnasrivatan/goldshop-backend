@@ -1,5 +1,6 @@
 import { IUserDocument, UserRole } from "./user.model";
 
+import { AdminUserDeleteDto } from "./dto/adminUserDelete.dto";
 import { AdminUserUpdateDto } from "./dto/adminUserUpdate.dto";
 import { AppError } from "../../common/errors/AppError";
 import { CreateUserDto } from "./dto/createUser.dto";
@@ -127,5 +128,35 @@ export class UserService {
       throw new AppError("Update failed :( Please try again later", 500);
 
     return { message: "User updated successfully", data: updatedUser };
+  }
+
+  async adminDeleteUser(input: AdminUserDeleteDto) {
+    const user = await this.userRepository.findById(input.userId);
+
+    if (!user) throw new AppError("User Not Found", 404);
+
+    if (user.role === UserRole.SUPER_ADMIN) {
+      throw new AppError("Cannot delete a SUPER_ADMIN", 403);
+    }
+
+    if (user.role === UserRole.ADMIN && input.adminRole === UserRole.ADMIN) {
+      throw new AppError("Admins cannot delete other admins", 403);
+    }
+
+    //* Double Check
+    const expectedPhrase = `DELETE USER ${input.userId}`;
+    if (input.confirmationPhrase !== expectedPhrase) {
+      throw new AppError(
+        `Invalid confirmation phrase. Expected: ${expectedPhrase}`,
+        400,
+      );
+    }
+
+    await Promise.all([
+      this.userRepository.deleteUserById(input.userId),
+      this.userRepository.deleteUserRelatedData(input.userId),
+    ]);
+
+    return { message: "User deleted successfully" };
   }
 }
