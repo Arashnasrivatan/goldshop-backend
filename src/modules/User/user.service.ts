@@ -1,5 +1,8 @@
 import { CreateUserDto } from "./dto/createUser.dto";
+import { GetAllUsersDto } from "./dto/getAllUsers.dto";
+import { IPaginationData } from "../../common/types/utils";
 import { UserRepository } from "./user.repository";
+import { createPaginationData } from "../../common/utils";
 
 export class UserService {
   constructor(private userRepository: UserRepository) {}
@@ -40,5 +43,39 @@ export class UserService {
 
   async markUserAsUnbanned(userId: string) {
     await this.userRepository.updateUserById(userId, { isBanned: false });
+  }
+
+  //* ========== Admin User Management ========== *\\
+
+  async getAllUsers(input: GetAllUsersDto) {
+    const { data: users, meta } = await this.userRepository.findAll(
+      {
+        search: input.search,
+        userId: input.userId,
+        phone: input.phone,
+        from: input.from,
+        to: input.to,
+        role: input.role,
+        includeBanned: input.includeBanned,
+      },
+      input.limit!,
+      input.page!,
+      input.sort!,
+    );
+
+    const paginationData: IPaginationData = createPaginationData(
+      meta.page,
+      meta.limit,
+      meta.total,
+      "Users",
+    );
+
+    return {
+      message: "Users fetched Successfully :)",
+      data: {
+        paginationData,
+        users,
+      },
+    };
   }
 }

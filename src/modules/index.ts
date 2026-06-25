@@ -4,6 +4,7 @@ import configs from "../configs/env.config";
 import response from "../common/utils/response";
 import AuthRouter from "./Auth/auth.route";
 import BanRouter from "./Ban/ban.route";
+import UserRouter from "./User/user.route";
 
 const apiRouter: Router = Router();
 
@@ -43,5 +44,6 @@ apiRouter.get("/api/status", (req: Request, res: Response) => {
 // TODO: modules routes
 apiRouter.use("/api/auth", AuthRouter);
 apiRouter.use("/api/bans", BanRouter);
+apiRouter.use("/api/users", UserRouter);
 
 export default apiRouter;
