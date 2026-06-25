@@ -204,7 +204,13 @@ export class UserController {
   };
   demoteUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const { userId } = req.params as { userId: string };
+
+      const input: UserIdDto = new UserIdDto({ userId });
+
+      const result = await this.userService.demoteUser(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }

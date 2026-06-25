@@ -321,4 +321,33 @@ export class UserService {
 
     return { message: "User Promoted Successfully :)", data: updatedUser };
   }
+
+  async demoteUser(input: UserIdDto) {
+    const user = await this.userRepository.findById(input.userId);
+
+    if (!user) throw new AppError("User not found :(", 404);
+
+    if (user.role == UserRole.USER) {
+      throw new AppError(
+        "The user already holds the lowest access level (USER) and cannot be demoted",
+        400,
+      );
+    }
+
+    if (user.role == UserRole.SUPER_ADMIN) {
+      throw new AppError(
+        "SuperAdmin cannot get demoted",
+        400,
+      );
+    }
+
+    const updatedUser = await this.userRepository.updateUserById(input.userId, {
+      role: UserRole.USER,
+    });
+
+    if (!updatedUser)
+      throw new AppError("Cannot demote user please try again later :(", 500);
+
+    return { message: "User Demoted Successfully :)", data: updatedUser };
+  }
 }
