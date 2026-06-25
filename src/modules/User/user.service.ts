@@ -1,3 +1,6 @@
+import { IUserDocument, UserRole } from "./user.model";
+
+import { AdminUserUpdateDto } from "./dto/adminUserUpdate.dto";
 import { AppError } from "../../common/errors/AppError";
 import { CreateUserDto } from "./dto/createUser.dto";
 import { GetAllUsersDto } from "./dto/getAllUsers.dto";
@@ -80,7 +83,7 @@ export class UserService {
       },
     };
   }
-  
+
   async getOneUser(input: UserIdDto) {
     const user = await this.userRepository.findById(input.userId);
 
@@ -95,5 +98,34 @@ export class UserService {
       message: "user fetched successfully :)",
       data: safeUser,
     };
+  }
+
+  async adminUserUpdate(
+    input: AdminUserUpdateDto,
+  ): Promise<{ message: string; data: IUserDocument }> {
+    const user = await this.userRepository.findById(input.userId);
+
+    if (!user) throw new AppError("User Not Found", 404);
+
+    if (user.role === UserRole.SUPER_ADMIN) {
+      throw new AppError("Cannot modify a SUPER_ADMIN", 403);
+    }
+
+    if (user.role === UserRole.ADMIN && input.adminRole === UserRole.ADMIN) {
+      throw new AppError("Admins cannot modify other admins", 403);
+    }
+
+    if (input.fullname === user.fullname) {
+      throw new AppError("No changes to update", 400);
+    }
+
+    const updatedUser = await this.userRepository.updateUserById(input.userId, {
+      fullname: input.fullname,
+    });
+
+    if (!updatedUser)
+      throw new AppError("Update failed :( Please try again later", 500);
+
+    return { message: "User updated successfully", data: updatedUser };
   }
 }

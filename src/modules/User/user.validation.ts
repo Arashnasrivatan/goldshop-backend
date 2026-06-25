@@ -1,6 +1,7 @@
-import { isValidObjectId } from "mongoose";
 import * as yup from "yup";
+
 import { UserRole } from "./user.model";
+import { isValidObjectId } from "mongoose";
 
 const getAllUsersParamsSchema = yup.object().shape({
   search: yup.string().optional().trim(),
@@ -67,9 +68,18 @@ const getAllUsersParamsSchema = yup.object().shape({
     .positive("Page must be a positive integer"),
 });
 
-const updateUserSchema = yup.object().shape({
-  // TODO
-});
+const updateUserSchema = yup
+  .object()
+  .shape({
+    fullname: yup.string().optional().trim(),
+  })
+  .test(
+    "at-least-one-field",
+    "At least one field must be provided",
+    (value) => {
+      return !!value.fullname;
+    },
+  );
 
 const adminUserDeleteSchema = yup.object().shape({
   // TODO

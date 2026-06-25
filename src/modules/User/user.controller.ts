@@ -1,6 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 
+import { AdminUserUpdateDto } from "./dto/adminUserUpdate.dto";
 import { GetAllUsersDto } from "./dto/getAllUsers.dto";
+import { IUserDocument } from "./user.model";
 import { UserIdDto } from "../../common/dto/userId.dto";
 import { UserService } from "./user.service";
 import response from "../../common/utils/response";
@@ -55,7 +57,18 @@ export class UserController {
   };
   updateUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const adminData = req.user as IUserDocument;
+      const { userId } = req.params as { userId: string };
+      const { fullname } = req.body as { fullname?: string };
+
+      const input = new AdminUserUpdateDto({
+        userId,
+        fullname,
+        adminRole: adminData.role,
+      });
+
+      const result = await this.userService.adminUserUpdate(input);
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }
