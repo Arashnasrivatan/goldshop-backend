@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 
 import { GetAllUsersDto } from "./dto/getAllUsers.dto";
+import { UserIdDto } from "../../common/dto/userId.dto";
 import { UserService } from "./user.service";
 import response from "../../common/utils/response";
 
@@ -41,7 +42,13 @@ export class UserController {
   };
   getUserById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const { userId } = req.params as { userId: string };
+
+      const input: UserIdDto = new UserIdDto({ userId });
+
+      const result = await this.userService.getOneUser(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }

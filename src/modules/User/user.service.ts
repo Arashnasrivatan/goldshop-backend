@@ -1,6 +1,8 @@
+import { AppError } from "../../common/errors/AppError";
 import { CreateUserDto } from "./dto/createUser.dto";
 import { GetAllUsersDto } from "./dto/getAllUsers.dto";
 import { IPaginationData } from "../../common/types/utils";
+import { UserIdDto } from "../../common/dto/userId.dto";
 import { UserRepository } from "./user.repository";
 import { createPaginationData } from "../../common/utils";
 
@@ -76,6 +78,22 @@ export class UserService {
         paginationData,
         users,
       },
+    };
+  }
+  
+  async getOneUser(input: UserIdDto) {
+    const user = await this.userRepository.findById(input.userId);
+
+    if (!user) throw new AppError("User Not Found :(", 404);
+
+    const safeUser = user.toObject();
+
+    delete safeUser.password;
+    delete safeUser.__v;
+
+    return {
+      message: "user fetched successfully :)",
+      data: safeUser,
     };
   }
 }
