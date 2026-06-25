@@ -2,6 +2,7 @@ import { IUserDocument, UserRole } from "./user.model";
 import { createPaginationData, isLocationInIran } from "../../common/utils";
 
 import { AdminAddUserAddressDto } from "./dto/adminAddAddress.dto";
+import { AdminDeleteUserAddressDto } from "./dto/adminDeleteAddress.dto";
 import { AdminUpdateUserAddressDto } from "./dto/adminUpdateAddress.dto";
 import { AdminUserDeleteDto } from "./dto/adminUserDelete.dto";
 import { AdminUserUpdateDto } from "./dto/adminUserUpdate.dto";
@@ -258,6 +259,42 @@ export class UserService {
     return {
       message: "Address updated successfully :)",
       data: updatedUser,
+    };
+  }
+
+  async adminDeleteUserAddress(input: AdminDeleteUserAddressDto) {
+    const user = await this.userRepository.findById(input.userId);
+    if (!user) throw new AppError("User not found :(", 404);
+
+    const address = user.addresses.find(
+      (address) => address._id == input.addressId,
+    );
+
+    if (!address)
+      throw new AppError("Address not found or its not for this user :(", 400);
+
+    if (user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN) {
+      throw new AppError("You cant delete admin address", 400);
+    }
+
+    //* Double Check
+    const expectedPhrase = `DELETE ADDRESS ${input.addressId}`;
+    if (input.confirmationPhrase !== expectedPhrase) {
+      throw new AppError(
+        `Invalid confirmation phrase. Expected: ${expectedPhrase}`,
+        400,
+      );
+    }
+
+    const deletedAddress = await this.userRepository.deleteAddress(input);
+
+    if (deletedAddress && deletedAddress?.modifiedCount == 0)
+      throw new AppError(
+        "Cannot delete address please try again later :(",
+        500,
+      );
+    return {
+      message: "Address Deleted Successfully :)",
     };
   }
 }

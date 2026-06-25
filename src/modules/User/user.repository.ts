@@ -1,9 +1,11 @@
 import UserModel, { IUserDocument } from "./user.model";
 
 import { AdminAddUserAddressDto } from "./dto/adminAddAddress.dto";
+import { AdminDeleteUserAddressDto } from "./dto/adminDeleteAddress.dto";
 import { AdminUpdateUserAddressDto } from "./dto/adminUpdateAddress.dto";
 import { CreateUserDto } from "./dto/createUser.dto";
 import { IUserFilter } from "./user.types";
+import { UpdateResult } from "mongoose";
 
 export class UserRepository {
   async findById(userId: string): Promise<IUserDocument | null> {
@@ -178,5 +180,16 @@ export class UserRepository {
         arrayFilters: [{ "addr._id": input.addressId }],
       },
     ).select("-__v -password");
+  }
+
+  async deleteAddress(
+    input: AdminDeleteUserAddressDto,
+  ): Promise<UpdateResult | null> {
+    return await UserModel.updateOne(
+      { _id: input.userId },
+      {
+        $pull: { addresses: { _id: input.addressId } },
+      },
+    );
   }
 }
