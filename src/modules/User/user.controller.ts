@@ -15,6 +15,7 @@ import { DeleteMeDto } from "./dto/deleteMe.dto";
 import { ChangePasswordDto } from "./dto/changePassword.dto";
 import { AddAddressDto } from "./dto/addAddress.dto";
 import { UpdateAddressDto } from "./dto/updateAddress.dto";
+import { DeleteAddressDto } from "./dto/deleteAddress.dto";
 
 export class UserController {
   constructor(private userService: UserService) {}
@@ -359,7 +360,22 @@ export class UserController {
   };
   deleteMyAddress = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const user = req.user as IUserDocument;
+      const userId = user._id.toString();
+      const { addressId } = req.params as {
+        addressId: string;
+      };
+      const { confirmationPhrase } = req.body as { confirmationPhrase: string };
+
+      const input: DeleteAddressDto = new DeleteAddressDto({
+        userId,
+        addressId,
+        confirmationPhrase,
+      });
+
+      const result = await this.userService.deleteMyAddress(input);
+
+      return response(res, 200, result.message);
     } catch (err) {
       next(err);
     }

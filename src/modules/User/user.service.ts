@@ -19,6 +19,7 @@ import { ChangePasswordDto } from "./dto/changePassword.dto";
 import { RedisService } from "../../common/services/redis.service";
 import { AddAddressDto } from "./dto/addAddress.dto";
 import { UpdateAddressDto } from "./dto/updateAddress.dto";
+import { DeleteAddressDto } from "./dto/deleteAddress.dto";
 
 export class UserService {
   constructor(
@@ -526,5 +527,38 @@ export class UserService {
       message: "Address updated successfully :)",
       data: updatedUser,
     };
+  }
+  async deleteMyAddress(input: DeleteAddressDto) {
+    const user = await this.userRepository.findById(input.userId);
+    if (!user) throw new AppError("User not found :(", 404);
+
+    const address = user.addresses.find(
+      (address) => address._id == input.addressId,
+    );
+    if (!address)
+      throw new AppError("Address not found or its not for this user :(", 400);
+
+    //* Double Check
+    const expectedPhrase = `DELETE ADDRESS ${input.addressId}`;
+    if (input.confirmationPhrase !== expectedPhrase) {
+      throw new AppError(
+        `Invalid confirmation phrase. Expected: ${expectedPhrase}`,
+        400,
+      );
+    }
+
+    const deletedAddress = await this.userRepository.deleteAddress(input);
+
+    if (!deletedAddress) {
+      throw new AppError("Address not found for this user", 404);
+    }
+
+    if (deletedAddress.modifiedCount == 0)
+      throw new AppError(
+        "Cannot delete address please try again later :(",
+        500,
+      );
+
+    return { message: "Address deleted successfully :)" };
   }
 }

@@ -408,7 +408,13 @@ const updateAddressSchema = yup
   );
 
 const deleteAddressSchema = yup.object().shape({
-  // TODO
+  confirmationPhrase: yup
+    .string()
+    .required("Confirmation phrase is required")
+    .matches(
+      /^DELETE ADDRESS [a-zA-Z0-9_-]+$/i,
+      "Confirmation phrase must start with 'DELETE ADDRESS ' followed by the target addressId",
+    ),
 });
 
 const addressIdParamsSchema = yup.object().shape({
