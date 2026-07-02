@@ -235,9 +235,18 @@ const adminDeleteUserAddressSchema = yup.object().shape({
 
 //* ==================== *\\
 
-const updateMeSchema = yup.object().shape({
-  // TODO
-});
+const updateMeSchema = yup
+  .object()
+  .shape({
+    fullname: yup.string().optional().trim(),
+  })
+  .test(
+    "at-least-one-field",
+    "At least one field must be provided",
+    (value) => {
+      return !!value.fullname;
+    },
+  );
 
 const deleteMeSchema = yup.object().shape({
   // TODO

@@ -12,6 +12,7 @@ import { GetAllUsersDto } from "./dto/getAllUsers.dto";
 import { IPaginationData } from "../../common/types/utils";
 import { UserIdDto } from "../../common/dto/userId.dto";
 import { UserRepository } from "./user.repository";
+import { UpdateMeDto } from "./dto/updateMe.dto";
 
 export class UserService {
   constructor(private userRepository: UserRepository) {}
@@ -335,10 +336,7 @@ export class UserService {
     }
 
     if (user.role == UserRole.SUPER_ADMIN) {
-      throw new AppError(
-        "SuperAdmin cannot get demoted",
-        400,
-      );
+      throw new AppError("SuperAdmin cannot get demoted", 400);
     }
 
     const updatedUser = await this.userRepository.updateUserById(input.userId, {
@@ -349,5 +347,26 @@ export class UserService {
       throw new AppError("Cannot demote user please try again later :(", 500);
 
     return { message: "User Demoted Successfully :)", data: updatedUser };
+  }
+
+  //* ========== User Management ========== *\\
+
+  async updateMe(input: UpdateMeDto) {
+    const user = await this.userRepository.findById(input.userId);
+
+    if (!user) throw new AppError("User not found :(", 404);
+
+    if (user.fullname === input.fullname) {
+      throw new AppError("No changes detected in the provided data", 400);
+    }
+
+    const updatedUser = await this.userRepository.updateUserById(input.userId, {
+      fullname: input.fullname,
+    });
+
+    if (!updatedUser)
+      throw new AppError("Cannot update user please try again later :(", 500);
+
+    return { message: "User Updated Successfully :)", data: updatedUser };
   }
 }

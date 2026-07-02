@@ -10,6 +10,7 @@ import { IUserDocument } from "./user.model";
 import { UserIdDto } from "../../common/dto/userId.dto";
 import { UserService } from "./user.service";
 import response from "../../common/utils/response";
+import { UpdateMeDto } from "./dto/updateMe.dto";
 
 export class UserController {
   constructor(private userService: UserService) {}
@@ -238,7 +239,17 @@ export class UserController {
   };
   updateMe = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const user = req.user as IUserDocument;
+      const { fullname } = req.body as { fullname?: string };
+
+      const input: UpdateMeDto = new UpdateMeDto({
+        userId: user._id.toString(),
+        fullname,
+      });
+
+      const result = await this.userService.updateMe(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }
