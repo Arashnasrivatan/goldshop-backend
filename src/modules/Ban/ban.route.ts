@@ -16,11 +16,12 @@ import { BanRepository } from "./../Ban/ban.repository";
 import { BanService } from "../Ban/ban.service";
 import { UserService } from "./../User/user.service";
 import { UserRepository } from "../User/user.repository";
+import { redisService } from "../../common/services/redis.service";
 
 const userRepository = new UserRepository();
 const banRepository = new BanRepository();
 
-const userService = new UserService(userRepository);
+const userService = new UserService(userRepository, redisService);
 const banService = new BanService(banRepository, userService);
 
 const banController = new BanController(banService);

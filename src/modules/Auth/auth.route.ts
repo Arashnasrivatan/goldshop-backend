@@ -24,7 +24,7 @@ import { redisService } from "../../common/services/redis.service";
 const userRepository = new UserRepository();
 const banRepository = new BanRepository();
 
-const userService = new UserService(userRepository);
+const userService = new UserService(userRepository, redisService);
 const banService = new BanService(banRepository, userService);
 const authService = new AuthService(userService, banService, redisService);
 

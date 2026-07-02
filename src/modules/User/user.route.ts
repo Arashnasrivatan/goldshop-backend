@@ -22,10 +22,11 @@ import { userIdParamsSchema } from "../../common/utils/validation/params/sharedV
 
 import { UserService } from "./../User/user.service";
 import { UserRepository } from "../User/user.repository";
+import { redisService } from "../../common/services/redis.service";
 
 const userRepository = new UserRepository();
 
-const userService = new UserService(userRepository);
+const userService = new UserService(userRepository, redisService);
 
 const userController = new UserController(userService);
 

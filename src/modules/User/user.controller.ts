@@ -12,6 +12,7 @@ import { UserService } from "./user.service";
 import response from "../../common/utils/response";
 import { UpdateMeDto } from "./dto/updateMe.dto";
 import { DeleteMeDto } from "./dto/deleteMe.dto";
+import { ChangePasswordDto } from "./dto/changePassword.dto";
 
 export class UserController {
   constructor(private userService: UserService) {}
@@ -274,7 +275,23 @@ export class UserController {
   };
   changePassword = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const user = req.user as IUserDocument;
+      const { currentPassword, newPassword, confirmNewPassword } = req.body as {
+        currentPassword: string;
+        newPassword: string;
+        confirmNewPassword: string;
+      };
+
+      const input: ChangePasswordDto = new ChangePasswordDto({
+        userId: user._id.toString(),
+        currentPassword,
+        newPassword,
+        confirmNewPassword,
+      });
+
+      const result = await this.userService.changePassword(input);
+
+      return response(res, 200, result.message);
     } catch (err) {
       next(err);
     }

@@ -259,7 +259,31 @@ const deleteMeSchema = yup.object().shape({
 });
 
 const changePasswordSchema = yup.object().shape({
-  // TODO
+  currentPassword: yup
+    .string()
+    .required("Current password is required")
+    .min(8, "Password must be at least 8 characters long")
+    .max(24, "Password must be less than 24 characters long")
+    .matches(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*_?&])[A-Za-z\d@$!%_*?&]{8,}$/,
+      "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+    ),
+  newPassword: yup
+    .string()
+    .required("New password is required")
+    .min(8, "Password must be at least 8 characters long")
+    .max(24, "Password must be less than 24 characters long")
+    .matches(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*_?&])[A-Za-z\d@$!%_*?&]{8,}$/,
+      "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+    ),
+  confirmNewPassword: yup
+    .string()
+    .required("Please confirm your new password")
+    .oneOf(
+      [yup.ref("newPassword")],
+      "New password and confirmation do not match",
+    ),
 });
 
 const updateAddressSchema = yup.object().shape({

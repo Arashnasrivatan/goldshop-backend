@@ -1,12 +1,13 @@
 import { IUserDocument, UserRole } from "./user.model";
 import { createPaginationData, isLocationInIran } from "../../common/utils";
 
+import { AppError } from "../../common/errors/AppError";
+import bcrypt from "bcrypt";
 import { AdminAddUserAddressDto } from "./dto/adminAddAddress.dto";
 import { AdminDeleteUserAddressDto } from "./dto/adminDeleteAddress.dto";
 import { AdminUpdateUserAddressDto } from "./dto/adminUpdateAddress.dto";
 import { AdminUserDeleteDto } from "./dto/adminUserDelete.dto";
 import { AdminUserUpdateDto } from "./dto/adminUserUpdate.dto";
-import { AppError } from "../../common/errors/AppError";
 import { CreateUserDto } from "./dto/createUser.dto";
 import { GetAllUsersDto } from "./dto/getAllUsers.dto";
 import { IPaginationData } from "../../common/types/utils";
@@ -14,9 +15,14 @@ import { UserIdDto } from "../../common/dto/userId.dto";
 import { UserRepository } from "./user.repository";
 import { UpdateMeDto } from "./dto/updateMe.dto";
 import { DeleteMeDto } from "./dto/deleteMe.dto";
+import { ChangePasswordDto } from "./dto/changePassword.dto";
+import { RedisService } from "../../common/services/redis.service";
 
 export class UserService {
-  constructor(private userRepository: UserRepository) {}
+  constructor(
+    private userRepository: UserRepository,
+    private redisService: RedisService,
+  ) {}
 
   //* ========== Common User Methods ========== *\\
 
@@ -390,5 +396,35 @@ export class UserService {
     ]);
 
     return { message: "Account Deleted Successfully :(" };
+  }
+  async changePassword(input: ChangePasswordDto) {
+    const user = await this.userRepository.findById(input.userId);
+
+    if (!user) throw new AppError("User not found :(", 404);
+
+    //* Double Check
+    if (input.newPassword !== input.confirmNewPassword)
+      throw new AppError(
+        "New password and confirm new password do not match",
+        400,
+      );
+
+    const isCurrentPasswordValid = await bcrypt.compare(
+      input.currentPassword,
+      user.password,
+    );
+
+    if (!isCurrentPasswordValid) {
+      throw new AppError("Current password is incorrect", 400);
+    }
+
+    const hashedPassword = await bcrypt.hash(input.newPassword, 10);
+
+    await Promise.all([
+      this.userRepository.updatePasswordById(input.userId, hashedPassword),
+      this.redisService.del(`refreshToken:${input.userId}`),
+    ]);
+
+    return { message: "Password Changed Successfully :)" };
   }
 }
