@@ -14,6 +14,7 @@ import { UpdateMeDto } from "./dto/updateMe.dto";
 import { DeleteMeDto } from "./dto/deleteMe.dto";
 import { ChangePasswordDto } from "./dto/changePassword.dto";
 import { AddAddressDto } from "./dto/addAddress.dto";
+import { UpdateAddressDto } from "./dto/updateAddress.dto";
 
 export class UserController {
   constructor(private userService: UserService) {}
@@ -328,7 +329,30 @@ export class UserController {
   };
   updateMyAddress = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const user = req.user as IUserDocument;
+      const userId = user._id.toString();
+      const { addressId } = req.params as {
+        addressId: string;
+      };
+      const { title, postalCode, location, address } = req.body as {
+        title: string;
+        postalCode: string;
+        location: { lat: number; lng: number };
+        address: string;
+      };
+
+      const input: UpdateAddressDto = new UpdateAddressDto({
+        userId,
+        addressId,
+        title,
+        postalCode,
+        location,
+        address,
+      });
+
+      const result = await this.userService.updateMyAddress(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }

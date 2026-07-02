@@ -323,9 +323,89 @@ const addAddressSchema = yup.object().shape({
   address: yup.string().required("Address is required"),
 });
 
-const updateAddressSchema = yup.object().shape({
-  // TODO
-});
+const updateAddressSchema = yup
+  .object()
+  .shape({
+    title: yup.string().optional(),
+    postalCode: yup
+      .string()
+      .optional()
+      .length(10, "Postal code must be exactly 10 digits")
+      .matches(
+        /\b(?!(\d)\1{3})[13-9]{4}[1346-9][013-9]{5}\b/,
+        "please enter a valid postal code",
+      ), // IRAN Postal Code Length
+    location: yup.object().shape({
+      lat: yup
+        .number()
+        .optional()
+        .min(
+          iranBounds.latMin,
+          `Latitude (location.lat) must be at least ${iranBounds.latMin}`,
+        )
+        .max(
+          iranBounds.latMax,
+          `Latitude (location.lat) must be at most ${iranBounds.latMax}`,
+        ),
+      lng: yup
+        .number()
+        .optional()
+        .min(
+          iranBounds.lngMin,
+          `Longitude (location.lng) must be at least ${iranBounds.lngMin}`,
+        )
+        .max(
+          iranBounds.lngMax,
+          `Longitude (location.lng) must be at most ${iranBounds.lngMax}`,
+        ),
+    }),
+    address: yup.string().optional(),
+  })
+  .test(
+    "at-least-one-field",
+    "At least one field must be provided for update",
+    (value) => {
+      if (!value) return false;
+      return Object.keys(value).length > 0;
+    },
+  )
+  .test(
+    "location-fields-dependency",
+    "Location fields must be provided together",
+    (value) => {
+      if (!value) return true;
+      const hasLat = value.location?.lat !== undefined;
+      const hasLng = value.location?.lng !== undefined;
+      return hasLat === hasLng;
+    },
+  )
+  .test(
+    "location-fields-requirement",
+    "Both location fields (lat and lng) are required when updating location",
+    (value) => {
+      if (!value) return true;
+      const hasLat = value.location?.lat !== undefined;
+      const hasLng = value.location?.lng !== undefined;
+      if (hasLat || hasLng) {
+        return hasLat && hasLng;
+      }
+      return true;
+    },
+  )
+  .test(
+    "at-least-one-address-field",
+    "At least one address field (title, postalCode, address, location) must be provided for update",
+    (value) => {
+      if (!value) return false;
+      const { title, postalCode, address, location } = value;
+      return (
+        title !== undefined ||
+        postalCode !== undefined ||
+        address !== undefined ||
+        (location?.lat !== undefined && location?.lng !== undefined)
+      );
+    },
+  );
 
 const deleteAddressSchema = yup.object().shape({
   // TODO
