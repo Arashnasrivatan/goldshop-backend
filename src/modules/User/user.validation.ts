@@ -286,11 +286,44 @@ const changePasswordSchema = yup.object().shape({
     ),
 });
 
-const updateAddressSchema = yup.object().shape({
-  // TODO
+const addAddressSchema = yup.object().shape({
+  title: yup.string().required("title is required"),
+  postalCode: yup
+    .string()
+    .required("Postal code is required")
+    .length(10, "Postal code must be exactly 10 digits")
+    .matches(
+      /\b(?!(\d)\1{3})[13-9]{4}[1346-9][013-9]{5}\b/,
+      "please enter a valid postal code",
+    ), // IRAN Postal Code Length
+  location: yup.object().shape({
+    lat: yup
+      .number()
+      .required("Latitude (location.lat) is required")
+      .min(
+        iranBounds.latMin,
+        `Latitude (location.lat) must be at least ${iranBounds.latMin}`,
+      )
+      .max(
+        iranBounds.latMax,
+        `Latitude (location.lat) must be at most ${iranBounds.latMax}`,
+      ),
+    lng: yup
+      .number()
+      .required("Longitude (location.lng) is required")
+      .min(
+        iranBounds.lngMin,
+        `Longitude (location.lng) must be at least ${iranBounds.lngMin}`,
+      )
+      .max(
+        iranBounds.lngMax,
+        `Longitude (location.lng) must be at most ${iranBounds.lngMax}`,
+      ),
+  }),
+  address: yup.string().required("Address is required"),
 });
 
-const addAddressSchema = yup.object().shape({
+const updateAddressSchema = yup.object().shape({
   // TODO
 });
 

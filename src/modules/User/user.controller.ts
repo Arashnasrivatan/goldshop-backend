@@ -13,6 +13,7 @@ import response from "../../common/utils/response";
 import { UpdateMeDto } from "./dto/updateMe.dto";
 import { DeleteMeDto } from "./dto/deleteMe.dto";
 import { ChangePasswordDto } from "./dto/changePassword.dto";
+import { AddAddressDto } from "./dto/addAddress.dto";
 
 export class UserController {
   constructor(private userService: UserService) {}
@@ -301,7 +302,26 @@ export class UserController {
 
   addMyAddress = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const user = req.user as IUserDocument;
+      const userId = user._id.toString();
+      const { title, postalCode, location, address } = req.body as {
+        title: string;
+        postalCode: string;
+        location: { lat: number; lng: number };
+        address: string;
+      };
+
+      const input: AddAddressDto = new AddAddressDto({
+        userId,
+        title,
+        postalCode,
+        location,
+        address,
+      });
+
+      const result = await this.userService.AddMyAddress(input);
+
+      return response(res, 201, result.message, result.data);
     } catch (err) {
       next(err);
     }

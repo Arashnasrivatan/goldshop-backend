@@ -17,6 +17,7 @@ import { UpdateMeDto } from "./dto/updateMe.dto";
 import { DeleteMeDto } from "./dto/deleteMe.dto";
 import { ChangePasswordDto } from "./dto/changePassword.dto";
 import { RedisService } from "../../common/services/redis.service";
+import { AddAddressDto } from "./dto/addAddress.dto";
 
 export class UserService {
   constructor(
@@ -30,34 +31,27 @@ export class UserService {
     const user = await this.userRepository.findByPhone(phone);
     return !!user;
   }
-
   async isUserExistsById(userId: string) {
     const user = await this.userRepository.findById(userId);
     return !!user;
   }
-
   async findOneByPhone(phone: string) {
     return await this.userRepository.findByPhone(phone);
   }
-
   async findOneById(userId: string) {
     return await this.userRepository.findById(userId);
   }
-
   async createUser(input: CreateUserDto) {
     const newUser = await this.userRepository.create(input);
 
     return newUser;
   }
-
   async changeUserPassword(userId: string, newPassword: string) {
     await this.userRepository.updatePasswordById(userId, newPassword);
   }
-
   async markUserAsBanned(userId: string) {
     await this.userRepository.updateUserById(userId, { isBanned: true });
   }
-
   async markUserAsUnbanned(userId: string) {
     await this.userRepository.updateUserById(userId, { isBanned: false });
   }
@@ -95,7 +89,6 @@ export class UserService {
       },
     };
   }
-
   async getOneUser(input: UserIdDto) {
     const user = await this.userRepository.findById(input.userId);
 
@@ -111,7 +104,6 @@ export class UserService {
       data: safeUser,
     };
   }
-
   async adminUserUpdate(
     input: AdminUserUpdateDto,
   ): Promise<{ message: string; data: IUserDocument }> {
@@ -140,7 +132,6 @@ export class UserService {
 
     return { message: "User updated successfully", data: updatedUser };
   }
-
   async adminDeleteUser(input: AdminUserDeleteDto) {
     const user = await this.userRepository.findById(input.userId);
 
@@ -204,7 +195,6 @@ export class UserService {
 
     return { message: "Address Added Successfully :)", data };
   }
-
   async adminUpdateUserAddress(input: AdminUpdateUserAddressDto) {
     const user = await this.userRepository.findById(input.userId);
     if (!user) {
@@ -269,7 +259,6 @@ export class UserService {
       data: updatedUser,
     };
   }
-
   async adminDeleteUserAddress(input: AdminDeleteUserAddressDto) {
     const user = await this.userRepository.findById(input.userId);
     if (!user) throw new AppError("User not found :(", 404);
@@ -329,7 +318,6 @@ export class UserService {
 
     return { message: "User Promoted Successfully :)", data: updatedUser };
   }
-
   async demoteUser(input: UserIdDto) {
     const user = await this.userRepository.findById(input.userId);
 
@@ -426,5 +414,36 @@ export class UserService {
     ]);
 
     return { message: "Password Changed Successfully :)" };
+  }
+
+  //* ========== User Address Management ========== *\\
+
+  async AddMyAddress(input: AddAddressDto) {
+    const lat = Number(input.location.lat);
+    const lng = Number(input.location.lng);
+    const user = await this.userRepository.findById(input.userId);
+
+    if (!user) throw new AppError("User not found :(", 404);
+
+    // Double Check
+    const isAddressInIran = isLocationInIran(lat, lng);
+    if (!isAddressInIran)
+      throw new AppError("Location must be in iran !!!", 400);
+
+    const isDuplicate = user.addresses.some(
+      (addr) =>
+        addr.title === input.title || addr.postalCode === input.postalCode,
+    );
+    if (isDuplicate) {
+      throw new AppError(
+        "This address title or postal code already exists",
+        400,
+      );
+    }
+
+
+    const data = await this.userRepository.createAddress(input);
+
+    return { message: "Address Added Successfully :)", data };
   }
 }
