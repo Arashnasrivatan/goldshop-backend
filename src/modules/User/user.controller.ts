@@ -11,6 +11,7 @@ import { UserIdDto } from "../../common/dto/userId.dto";
 import { UserService } from "./user.service";
 import response from "../../common/utils/response";
 import { UpdateMeDto } from "./dto/updateMe.dto";
+import { DeleteMeDto } from "./dto/deleteMe.dto";
 
 export class UserController {
   constructor(private userService: UserService) {}
@@ -256,7 +257,17 @@ export class UserController {
   };
   deleteMe = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const user = req.user as IUserDocument;
+      const { confirmationPhrase } = req.body as { confirmationPhrase: string };
+
+      const input: DeleteMeDto = new DeleteMeDto({
+        userId: user._id.toString(),
+        confirmationPhrase,
+      });
+
+      const result = await this.userService.deleteMe(input);
+
+      return response(res, 200, result.message);
     } catch (err) {
       next(err);
     }

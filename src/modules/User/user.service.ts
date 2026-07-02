@@ -13,6 +13,7 @@ import { IPaginationData } from "../../common/types/utils";
 import { UserIdDto } from "../../common/dto/userId.dto";
 import { UserRepository } from "./user.repository";
 import { UpdateMeDto } from "./dto/updateMe.dto";
+import { DeleteMeDto } from "./dto/deleteMe.dto";
 
 export class UserService {
   constructor(private userRepository: UserRepository) {}
@@ -368,5 +369,26 @@ export class UserService {
       throw new AppError("Cannot update user please try again later :(", 500);
 
     return { message: "User Updated Successfully :)", data: updatedUser };
+  }
+  async deleteMe(input: DeleteMeDto) {
+    const user = await this.userRepository.findById(input.userId);
+
+    if (!user) throw new AppError("User not found :(", 404);
+
+    //* Double Check
+    const expectedPhrase = `DELETE MY ACCOUNT ${user.phone}`;
+    if (input.confirmationPhrase !== expectedPhrase) {
+      throw new AppError(
+        `Invalid confirmation phrase. Expected: ${expectedPhrase}`,
+        400,
+      );
+    }
+
+    await Promise.all([
+      this.userRepository.deleteUserById(input.userId),
+      this.userRepository.deleteUserRelatedData(input.userId),
+    ]);
+
+    return { message: "Account Deleted Successfully :(" };
   }
 }

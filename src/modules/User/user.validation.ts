@@ -249,7 +249,13 @@ const updateMeSchema = yup
   );
 
 const deleteMeSchema = yup.object().shape({
-  // TODO
+  confirmationPhrase: yup
+    .string()
+    .required("Confirmation phrase is required")
+    .matches(
+      /^DELETE MY ACCOUNT 09[0-9]{9}$/i,
+      "Confirmation phrase must be exactly 'DELETE MY ACCOUNT {phone number}'",
+    ),
 });
 
 const changePasswordSchema = yup.object().shape({
