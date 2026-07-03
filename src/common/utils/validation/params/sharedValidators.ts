@@ -10,4 +10,13 @@ const userIdParamsSchema = yup.object().shape({
     }),
 });
 
-export { userIdParamsSchema };
+const categoryIdParamsSchema = yup.object().shape({
+  categoryId: yup
+    .string()
+    .required("categoryId is required")
+    .test("isValidObjectId", "userId is invalid", (value) => {
+      return value === undefined || isValidObjectId(value);
+    }),
+});
+
+export { userIdParamsSchema, categoryIdParamsSchema };
