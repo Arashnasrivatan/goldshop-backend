@@ -17,7 +17,9 @@ export const createRefreshStrategy = (
   return new JwtStrategy(
     {
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (req: any) => (req && req.cookies ? req.cookies.refresh_token : null),
+        (req: any) => {
+          return req?.cookies?.refresh_token;
+        },
       ]),
       secretOrKey: configs.auth.refreshToken.secret,
     },

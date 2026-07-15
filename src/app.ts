@@ -20,6 +20,14 @@ const app = express();
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(express.json({ limit: "50mb" }));
 
+//* Static Files
+// app.use(express.static(path.resolve(__dirname, "..", "public")));
+app.use(
+  express.static(
+    path.resolve(__dirname, "..", "public/goldshop-frontend/public"),
+  ),
+);
+
 //* Helmet
 app.use(helmet());
 
@@ -39,7 +47,8 @@ app.use(setHeaders);
 app.use(cookieParser());
 app.use(
   cors({
-    origin: configs.app.cors,
+    // origin: configs.app.cors,
+    origin: "http://localhost:4000", // TODO: Change this to the frontend URL when deploying
     credentials: true,
   }),
 );
@@ -56,10 +65,6 @@ if (process.env.NODE_ENV === "development") {
     }),
   );
 }
-
-//* Static Files
-app.use(express.static(path.resolve(__dirname, "..", "public")));
-
 //* Session
 app.use(
   session({

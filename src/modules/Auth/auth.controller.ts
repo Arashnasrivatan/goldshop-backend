@@ -53,8 +53,8 @@ export class AuthController {
       res.cookie("refresh_token", result.data.refreshToken, {
         httpOnly: true,
         secure: configs.app.env === "production",
-        sameSite: "strict",
-        path: "/api/auth/refresh",
+        sameSite: "lax",
+        path: "/",
         maxAge: configs.auth.refreshToken.expiresIn * 1000,
       });
 
@@ -154,8 +154,8 @@ export class AuthController {
       res.clearCookie("refresh_token", {
         httpOnly: true,
         secure: configs.app.env === "production",
-        sameSite: "strict",
-        path: "/api/auth/refresh",
+        sameSite: "lax",
+        path: "/",
       });
 
       return response(res, 200, result.message);

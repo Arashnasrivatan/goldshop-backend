@@ -4,3 +4,4 @@ production.env
 development.env
 dist
 /logs
+public
