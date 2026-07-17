@@ -3,6 +3,7 @@ import { CategoryService } from "./category.service";
 import { CreateCategoryDto } from "./dto/createCategory.dto";
 import response from "./../../common/utils/response";
 import { UploadedFile } from "../../common/services/S3StorageService";
+import { GetAllCategoriesDto } from "./dto/getAllCategories.dto";
 
 export class CategoryController {
   constructor(private categoryService: CategoryService) {}
@@ -42,7 +43,7 @@ export class CategoryController {
 
   getCategoryTree = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+    // TODO
     } catch (err) {
       next(err);
     }
@@ -54,7 +55,25 @@ export class CategoryController {
     next: NextFunction,
   ) => {
     try {
-      // TODO
+      const queryParams = req.query;
+
+      const input: GetAllCategoriesDto = new GetAllCategoriesDto({
+        search: queryParams.search as string,
+        catId: queryParams.catId as string,
+        slug: queryParams.slug as string,
+        parent: queryParams.parent as string,
+        level: queryParams.level as string,
+        isActive: queryParams.isActive as string,
+        sort: queryParams.sort as string,
+        limit: queryParams.limit
+          ? parseInt(queryParams.limit as string, 10)
+          : 10,
+        page: queryParams.page ? parseInt(queryParams.page as string, 10) : 1,
+      });
+
+      const result = await this.categoryService.getAllCategories(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }

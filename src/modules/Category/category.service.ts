@@ -7,10 +7,13 @@ import { CreateCategoryDto } from "./dto/createCategory.dto";
 import { AppError } from "../../common/errors/AppError";
 import configs from "../../configs/env.config";
 import ImageProcessor from "../../common/services/image.processor";
+import { createPaginationData } from "../../common/utils";
+import { IPaginationData } from "../../common/types/utils";
 
 import S3StorageService, {
   type UploadedFile,
 } from "../../common/services/S3StorageService";
+import { GetAllCategoriesDto } from "./dto/getAllCategories.dto";
 
 export class CategoryService {
   constructor(
@@ -115,4 +118,40 @@ export class CategoryService {
       data: category,
     };
   }
+
+  async getAllCategories(input: GetAllCategoriesDto) {
+    const page = input.page ?? 1;
+    const limit = input.limit ?? 10;
+    const sort = input.sort ?? "asc";
+
+    const { data: categories, meta } = await this.categoryRepository.findAll(
+      {
+        search: input.search,
+        catId: input.catId,
+        slug: input.slug,
+        parent: input.parent,
+        level: input.level,
+        isActive: input.isActive,
+      },
+      limit,
+      page,
+      sort,
+    );
+
+    const paginationData: IPaginationData = createPaginationData(
+      meta.page,
+      meta.limit,
+      meta.total,
+      "Categories",
+    );
+
+    return {
+      message: "Categories fetched Successfully :)",
+      data: {
+        paginationData,
+        categories,
+      },
+    };
+  }
+
 }

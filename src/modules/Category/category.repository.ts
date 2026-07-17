@@ -1,6 +1,7 @@
 import CategoryModel, { ICategoryDocument } from "./category.model";
 import { Types } from "mongoose";
 import { CreateCategoryDto } from "./dto/createCategory.dto";
+import { ICategoryFilter } from "./category.types";
 
 export class CategoryRepository {
   async findById(categoryId: string): Promise<ICategoryDocument | null> {
@@ -13,6 +14,67 @@ export class CategoryRepository {
 
   async findByName(name: string): Promise<ICategoryDocument | null> {
     return await CategoryModel.findOne({ name });
+  }
+
+  async findAll(
+    filter: ICategoryFilter = {},
+    limit: number = 10,
+    page: number = 1,
+    sort: string = "asc",
+  ) {
+    const sortOrder = sort === "desc" ? -1 : 1;
+    const skip = (page - 1) * limit;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const query: any = {};
+
+    if (filter.search) {
+      query.$or = [
+        { name: new RegExp(filter.search, "i") },
+        { slug: new RegExp(filter.search, "i") },
+        { description: new RegExp(filter.search, "i") },
+      ];
+    }
+
+    if (filter.catId) {
+      query._id = filter.catId;
+    }
+
+    if (filter.slug) {
+      query.slug = filter.slug;
+    }
+
+    if (filter.parent) {
+      query.parent = filter.parent;
+    }
+
+    if (filter.level !== undefined) {
+      query.level = Number(filter.level);
+    }
+
+    if (filter.isActive !== undefined) {
+      query.isActive = filter.isActive === "true";
+    }
+
+    const [data, total] = await Promise.all([
+      CategoryModel.find(query)
+        .select("-__v")
+        .sort({ createdAt: sortOrder })
+        .skip(skip)
+        .limit(limit)
+        .lean<ICategoryDocument[]>(),
+
+      CategoryModel.countDocuments(query),
+    ]);
+
+    return {
+      data,
+      meta: {
+        page,
+        limit,
+        total,
+      },
+    };
   }
 
   async create(input: CreateCategoryDto): Promise<ICategoryDocument> {
