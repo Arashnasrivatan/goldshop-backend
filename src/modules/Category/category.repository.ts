@@ -77,6 +77,13 @@ export class CategoryRepository {
     };
   }
 
+  async findAllForTree(): Promise<ICategoryDocument[]> {
+    return await CategoryModel.find()
+      .select("-__v")
+      .sort({ order: 1, createdAt: 1 })
+      .lean<ICategoryDocument[]>();
+  }
+
   async create(input: CreateCategoryDto): Promise<ICategoryDocument> {
     const {
       name,

@@ -3,6 +3,8 @@ import { Types } from "mongoose";
 
 import { CategoryRepository } from "./category.repository";
 import { CreateCategoryDto } from "./dto/createCategory.dto";
+import { ICategoryDocument } from "./category.model";
+import { ICategoryTreeNode } from "./category.types";
 
 import { AppError } from "../../common/errors/AppError";
 import configs from "../../configs/env.config";
@@ -154,4 +156,92 @@ export class CategoryService {
     };
   }
 
+  async getCategoryTree() {
+    const categories = await this.categoryRepository.findAllForTree();
+
+    const tree = this.buildCategoryTree(categories);
+
+    return {
+      message: "Category tree fetched successfully :)",
+      data: {
+        categories: tree,
+      },
+    };
+  }
+
+  private buildCategoryTree(
+    categories: ICategoryDocument[],
+  ): ICategoryTreeNode[] {
+    const categoryMap = new Map<string, ICategoryTreeNode>();
+
+    categories.forEach((category) => {
+      const id = category._id.toString();
+
+      categoryMap.set(id, {
+        _id: category._id,
+        name: category.name,
+        slug: category.slug,
+        description: category.description ?? null,
+        parent: category.parent ?? null,
+        path: category.path ?? [],
+        image: category.image ?? null,
+        level: category.level,
+        isActive: category.isActive,
+        order: category.order,
+        createdAt: category.createdAt,
+        updatedAt: category.updatedAt,
+        children: [],
+      });
+    });
+
+    const roots: ICategoryTreeNode[] = [];
+
+    categories.forEach((category) => {
+      const id = category._id.toString();
+
+      const node = categoryMap.get(id);
+
+      if (!node) return;
+
+      const parentId = category.parent?.toString();
+
+      if (!parentId) {
+        roots.push(node);
+        return;
+      }
+
+      const parentNode = categoryMap.get(parentId);
+
+      if (parentNode) {
+        parentNode.children.push(node);
+      } else {
+        roots.push(node);
+      }
+    });
+
+    const sortRecursive = (nodes: ICategoryTreeNode[]) => {
+      nodes.sort((a, b) => {
+        const orderDiff = a.order - b.order;
+
+        if (orderDiff !== 0) {
+          return orderDiff;
+        }
+
+        const aDate = a.createdAt?.getTime() ?? 0;
+        const bDate = b.createdAt?.getTime() ?? 0;
+
+        return aDate - bDate;
+      });
+
+      nodes.forEach((node) => {
+        if (node.children.length > 0) {
+          sortRecursive(node.children);
+        }
+      });
+    };
+
+    sortRecursive(roots);
+
+    return roots;
+  }
 }

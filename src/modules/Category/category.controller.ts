@@ -43,7 +43,9 @@ export class CategoryController {
 
   getCategoryTree = async (req: Request, res: Response, next: NextFunction) => {
     try {
-    // TODO
+      const result = await this.categoryService.getCategoryTree();
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }
