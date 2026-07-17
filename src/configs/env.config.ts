@@ -36,7 +36,9 @@ const configs = {
       cooldown: Number(process.env.RESET_TOKEN_COOLDOWN ?? 5), // 5 min
     },
     resetPassword: {
-      link: process.env.RESET_PASSWORD_LINK ?? "http://localhost:3000/reset-password",
+      link:
+        process.env.RESET_PASSWORD_LINK ??
+        "http://localhost:3000/reset-password",
     },
   },
 
@@ -49,10 +51,11 @@ const configs = {
 
   storage: {
     arvan: {
-      endpoint: required("ARVAN_ENDPOINT"),
-      bucketName: required("ARVAN_BUCKET_NAME"),
       accessKey: required("ARVAN_ACCESS_KEY"),
       secretKey: required("ARVAN_SECRET_KEY"),
+      bucketName: required("ARVAN_BUCKET_NAME"),
+      endpoint: required("ARVAN_ENDPOINT"),
+      publicUrl: required("ARVAN_PUBLIC_URL"),
     },
   },
 

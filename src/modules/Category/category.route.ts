@@ -10,14 +10,22 @@ import {
   deleteCategorySchema,
   slugParamsSchema,
 } from "./category.validation";
+import configs from "../../configs/env.config";
+import uploader from "../../common/middlewares/uploader";
 
 import { CategoryService } from "./../Category/category.service";
 import { CategoryRepository } from "../Category/category.repository";
+import S3StorageService from "../../common/services/S3StorageService";
 import { categoryIdParamsSchema } from "../../common/utils/validation/params/sharedValidators";
 
 const categoryRepository = new CategoryRepository();
 
-const categoryService = new CategoryService(categoryRepository);
+const s3StorageService = new S3StorageService(configs.storage.arvan);
+
+const categoryService = new CategoryService(
+  categoryRepository,
+  s3StorageService,
+);
 
 const categoryController = new CategoryController(categoryService);
 
@@ -44,6 +52,7 @@ router
   .post(
     authGuard,
     roleGuard("SUPER_ADMIN", "ADMIN"),
+    uploader([{ name: "image", type: "image", maxCount: 1 }], 5),
     validate(createCategorySchema),
     categoryController.createCategory,
   );

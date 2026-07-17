@@ -19,6 +19,13 @@ const CategorySchema = new Schema<ICategoryDocument>(
         index: true,
       },
     ],
+    image: {
+      type: {
+        url: { type: String, required: true },
+        key: { type: String, required: true },
+      },
+      default: null,
+    },
     level: { type: Number, default: 0, index: true },
     isActive: { type: Boolean, default: true },
     order: { type: Number, default: 0 },

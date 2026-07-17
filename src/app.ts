@@ -47,8 +47,7 @@ app.use(setHeaders);
 app.use(cookieParser());
 app.use(
   cors({
-    // origin: configs.app.cors,
-    origin: "http://localhost:4000", // TODO: Change this to the frontend URL when deploying
+    origin: configs.app.cors,
     credentials: true,
   }),
 );

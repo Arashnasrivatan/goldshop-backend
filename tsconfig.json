@@ -27,7 +27,7 @@
     "sourceMap": true,
 
     /* ===== Express / Node ===== */
-    "types": ["node", "jest"],
+    "types": ["node", "jest", "multer"],
 
     /* ===== Emit ===== */
     "declaration": false

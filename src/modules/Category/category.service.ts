@@ -1,21 +1,50 @@
 import slugify from "slugify";
+import { Types } from "mongoose";
+
 import { CategoryRepository } from "./category.repository";
 import { CreateCategoryDto } from "./dto/createCategory.dto";
+
 import { AppError } from "../../common/errors/AppError";
-import { Types } from "mongoose";
-import configs from "./../../configs/env.config";
+import configs from "../../configs/env.config";
+import ImageProcessor from "../../common/services/image.processor";
+
+import S3StorageService, {
+  type UploadedFile,
+} from "../../common/services/S3StorageService";
 
 export class CategoryService {
-  constructor(private categoryRepository: CategoryRepository) {}
+  constructor(
+    private readonly categoryRepository: CategoryRepository,
+    private readonly storageService: S3StorageService,
+  ) {}
 
-  categoryMaxDepth = configs.other.categoryMaxDepth || 2;
+  private readonly categoryMaxDepth = configs.other.categoryMaxDepth || 2;
 
-    //* ========== Category Management ========== *\\`
+  async createCategory(input: CreateCategoryDto, image?: UploadedFile) {
+    const slug = slugify(input.slug, {
+      lower: true,
+      strict: true,
+      trim: true,
+      replacement: "-",
+    });
 
-  async createCategory(input: CreateCategoryDto) {
+    const name = input.name.trim();
+
+    const [existingSlug, existingName] = await Promise.all([
+      this.categoryRepository.findBySlug(slug),
+      this.categoryRepository.findByName(name),
+    ]);
+
+    if (existingSlug) {
+      throw new AppError("Category slug already exists", 409);
+    }
+
+    if (existingName) {
+      throw new AppError("Category name already exists", 409);
+    }
+
     let level = 0;
     let path: string[] = [];
-    const slug = slugify(input.slug, { lower: true, strict: true, trim: true, replacement: "-"});
 
     if (input.parent) {
       const parentCategory = await this.categoryRepository.findById(
@@ -34,20 +63,56 @@ export class CategoryService {
       }
 
       level = parentCategory.level + 1;
+
       path = [
-        ...(parentCategory.path || []).map((id: Types.ObjectId | string) =>
-          typeof id === "string" ? id : id.toString(),
+        ...(parentCategory.path ?? []).map((id: Types.ObjectId) =>
+          id.toString(),
         ),
         parentCategory._id.toString(),
       ];
     }
 
+    let categoryImage:
+      | {
+          url: string;
+          key: string;
+        }
+      | undefined;
+
+    if (image) {
+      if (
+        !image.mimetype ||
+        !ImageProcessor.isSupportedImageMimeType(image.mimetype)
+      ) {
+        throw new AppError(
+          "Unsupported image format. Allowed: JPEG, PNG, WebP, AVIF, GIF, SVG, TIFF, HEIF",
+          400,
+        );
+      }
+
+      const uploaded = await this.storageService.upload(image, {
+        folder: "categories",
+        visibility: "public",
+      });
+
+      categoryImage = {
+        url: uploaded.url,
+        key: uploaded.key,
+      };
+    }
+
     const category = await this.categoryRepository.create({
       ...input,
+      name,
       slug,
       level,
       path,
+      image: categoryImage,
     });
-    return { message: "Category created Successfully :)", data: category };
+
+    return {
+      message: "Category created Successfully :)",
+      data: category,
+    };
   }
 }
