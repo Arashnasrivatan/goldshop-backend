@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import { UserService } from "../User/user.service";
 import { BanService } from "../Ban/ban.service";
 import { RedisService } from "../../common/services/redis.service";
-import { sendSms } from "../../common/services/sms.service";
+import { smsService } from "../../common/services/sms.service";
 import configs from "../../configs/env.config";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
@@ -103,7 +103,7 @@ export class AuthService {
     const otpCode = await this.generateOtp(phone);
 
     //* SMS Service
-    const smsResult = await sendSms(
+    const smsResult = await smsService.send(
       phone,
       [{ name: "Code", value: otpCode }],
       configs.app.env === "production" ? configs.sms.pattern : "123456",
@@ -233,7 +233,7 @@ export class AuthService {
     const resetLink: string = `${configs.auth.resetPassword.link}${resetToken}`;
 
     if (configs.app.env === "production") {
-      const smsResult = await sendSms(
+      const smsResult = await smsService.send(
         phone,
         [{ name: "TOKEN", value: resetLink }],
         configs.sms.patternForgot,
