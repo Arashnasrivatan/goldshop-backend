@@ -1,7 +1,7 @@
-import configs from "./../../configs/env.config";
 import axios from "axios";
+import configs from "./../../configs/env.config";
 
-interface SmsParameters {
+export interface SmsParameter {
   name: string;
   value: string | number;
 }
@@ -12,39 +12,56 @@ export interface SmsResponse {
   data?: Record<string, unknown>;
 }
 
-const sendSms = async (
-  phone: string,
-  parameters: SmsParameters[],
-  templateId: string = configs.sms.pattern
-): Promise<SmsResponse> => {
-  try {
-    const requestData = {
-      mobile: phone,
-      templateId: templateId,
-      parameters: parameters,
-    };
+class SmsService {
+  private readonly apiKey: string;
+  private readonly baseUrl: string;
+  private readonly defaultTemplateId: string;
 
-    const response = await axios.post(configs.sms.baseUrl, requestData, {
-      headers: {
-        "x-api-key": configs.sms.apiKey,
-        "Content-Type": "application/json",
-      },
-    });
+  constructor() {
+    this.apiKey = configs.sms.apiKey;
+    this.baseUrl = configs.sms.baseUrl;
+    this.defaultTemplateId = configs.sms.pattern;
+  }
 
-    return response.data;
-  } catch (err) {
-    if (axios.isAxiosError(err)) {
+  async send(
+    phone: string,
+    parameters: SmsParameter[],
+    templateId: string = this.defaultTemplateId,
+  ): Promise<SmsResponse> {
+    try {
+      const requestData = {
+        mobile: phone,
+        templateId,
+        parameters,
+      };
+
+      const response = await axios.post<SmsResponse>(
+        this.baseUrl,
+        requestData,
+        {
+          headers: {
+            "x-api-key": this.apiKey,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      return response.data;
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        return {
+          status: err.response?.status || 500,
+          message: err.response?.data?.message || err.message,
+        };
+      }
+
       return {
-        status: err.response?.status || 500,
-        message: err.response?.data?.message || err.message,
+        status: 500,
+        message:
+          err instanceof Error ? err.message : "An unknown error occurred",
       };
     }
-
-    return {
-      status: 500,
-      message: err instanceof Error ? err.message : "An unknown error occurred",
-    };
   }
-};
+}
 
-export { sendSms };
+export const smsService = new SmsService();

@@ -6,9 +6,10 @@ import { BanRepository } from "../modules/Ban/ban.repository";
 import { BanService } from "../modules/Ban/ban.service";
 import { createJwtStrategy } from "../common/strategies/jwt.strategy";
 import { createRefreshStrategy } from "../common/strategies/refresh.strategy";
+import { redisService } from "../common/services/redis.service";
 
 const userRepository = new UserRepository();
-const userService = new UserService(userRepository);
+const userService = new UserService(userRepository, redisService);
 
 const banRepository = new BanRepository();
 const banService = new BanService(banRepository, userService);
