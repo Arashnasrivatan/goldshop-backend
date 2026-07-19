@@ -16,6 +16,7 @@ import S3StorageService, {
   type UploadedFile,
 } from "../../common/services/S3StorageService";
 import { GetAllCategoriesDto } from "./dto/getAllCategories.dto";
+import { GetCategoryBySlugDto } from "./dto/getCategoryBySlug.dto";
 
 export class CategoryService {
   constructor(
@@ -24,6 +25,84 @@ export class CategoryService {
   ) {}
 
   private readonly categoryMaxDepth = configs.other.categoryMaxDepth || 2;
+
+  private buildCategoryTree(
+    categories: ICategoryDocument[],
+  ): ICategoryTreeNode[] {
+    const categoryMap = new Map<string, ICategoryTreeNode>();
+
+    categories.forEach((category) => {
+      const id = category._id.toString();
+
+      categoryMap.set(id, {
+        _id: category._id,
+        name: category.name,
+        slug: category.slug,
+        description: category.description ?? null,
+        parent: category.parent ?? null,
+        path: category.path ?? [],
+        image: category.image ?? null,
+        level: category.level,
+        isActive: category.isActive,
+        order: category.order,
+        createdAt: category.createdAt,
+        updatedAt: category.updatedAt,
+        children: [],
+      });
+    });
+
+    const roots: ICategoryTreeNode[] = [];
+
+    categories.forEach((category) => {
+      const id = category._id.toString();
+
+      const node = categoryMap.get(id);
+
+      if (!node) return;
+
+      const parentId = category.parent?.toString();
+
+      if (!parentId) {
+        roots.push(node);
+        return;
+      }
+
+      const parentNode = categoryMap.get(parentId);
+
+      if (parentNode) {
+        parentNode.children.push(node);
+      } else {
+        roots.push(node);
+      }
+    });
+
+    const sortRecursive = (nodes: ICategoryTreeNode[]) => {
+      nodes.sort((a, b) => {
+        const orderDiff = a.order - b.order;
+
+        if (orderDiff !== 0) {
+          return orderDiff;
+        }
+
+        const aDate = a.createdAt?.getTime() ?? 0;
+        const bDate = b.createdAt?.getTime() ?? 0;
+
+        return aDate - bDate;
+      });
+
+      nodes.forEach((node) => {
+        if (node.children.length > 0) {
+          sortRecursive(node.children);
+        }
+      });
+    };
+
+    sortRecursive(roots);
+
+    return roots;
+  }
+
+  //* =================== *\\
 
   async createCategory(input: CreateCategoryDto, image?: UploadedFile) {
     const slug = slugify(input.slug, {
@@ -169,79 +248,19 @@ export class CategoryService {
     };
   }
 
-  private buildCategoryTree(
-    categories: ICategoryDocument[],
-  ): ICategoryTreeNode[] {
-    const categoryMap = new Map<string, ICategoryTreeNode>();
-
-    categories.forEach((category) => {
-      const id = category._id.toString();
-
-      categoryMap.set(id, {
-        _id: category._id,
-        name: category.name,
-        slug: category.slug,
-        description: category.description ?? null,
-        parent: category.parent ?? null,
-        path: category.path ?? [],
-        image: category.image ?? null,
-        level: category.level,
-        isActive: category.isActive,
-        order: category.order,
-        createdAt: category.createdAt,
-        updatedAt: category.updatedAt,
-        children: [],
-      });
+  async getCategoryBySlug(input: GetCategoryBySlugDto) {
+    const slug = slugify(input.slug, {
+      lower: true,
+      strict: true,
+      trim: true,
+      replacement: "-",
     });
 
-    const roots: ICategoryTreeNode[] = [];
+    const category = await this.categoryRepository.findBySlug(slug);
 
-    categories.forEach((category) => {
-      const id = category._id.toString();
+    if (!category) throw new AppError("Category not found :(", 404);
+    // TODO: get products of this category and return them in the response
 
-      const node = categoryMap.get(id);
-
-      if (!node) return;
-
-      const parentId = category.parent?.toString();
-
-      if (!parentId) {
-        roots.push(node);
-        return;
-      }
-
-      const parentNode = categoryMap.get(parentId);
-
-      if (parentNode) {
-        parentNode.children.push(node);
-      } else {
-        roots.push(node);
-      }
-    });
-
-    const sortRecursive = (nodes: ICategoryTreeNode[]) => {
-      nodes.sort((a, b) => {
-        const orderDiff = a.order - b.order;
-
-        if (orderDiff !== 0) {
-          return orderDiff;
-        }
-
-        const aDate = a.createdAt?.getTime() ?? 0;
-        const bDate = b.createdAt?.getTime() ?? 0;
-
-        return aDate - bDate;
-      });
-
-      nodes.forEach((node) => {
-        if (node.children.length > 0) {
-          sortRecursive(node.children);
-        }
-      });
-    };
-
-    sortRecursive(roots);
-
-    return roots;
+    return { message: "Category Fetched Successfully :)", data: category };
   }
 }

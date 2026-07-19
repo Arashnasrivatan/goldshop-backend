@@ -4,6 +4,7 @@ import { CreateCategoryDto } from "./dto/createCategory.dto";
 import response from "./../../common/utils/response";
 import { UploadedFile } from "../../common/services/S3StorageService";
 import { GetAllCategoriesDto } from "./dto/getAllCategories.dto";
+import { GetCategoryBySlugDto } from "./dto/getCategoryBySlug.dto";
 
 export class CategoryController {
   constructor(private categoryService: CategoryService) {}
@@ -35,7 +36,13 @@ export class CategoryController {
     next: NextFunction,
   ) => {
     try {
-      // TODO
+      const { slug } = req.params as { slug: string };
+
+      const input: GetCategoryBySlugDto = new GetCategoryBySlugDto({ slug });
+
+      const result = await this.categoryService.getCategoryBySlug(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }
