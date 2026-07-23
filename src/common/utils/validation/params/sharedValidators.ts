@@ -14,7 +14,7 @@ const categoryIdParamsSchema = yup.object().shape({
   categoryId: yup
     .string()
     .required("categoryId is required")
-    .test("isValidObjectId", "userId is invalid", (value) => {
+    .test("isValidObjectId", "categoryId is invalid", (value) => {
       return value === undefined || isValidObjectId(value);
     }),
 });

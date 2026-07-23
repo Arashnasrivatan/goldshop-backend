@@ -17,6 +17,7 @@ import S3StorageService, {
 } from "../../common/services/S3StorageService";
 import { GetAllCategoriesDto } from "./dto/getAllCategories.dto";
 import { GetCategoryBySlugDto } from "./dto/getCategoryBySlug.dto";
+import { GetCategoryByIdDto } from "./dto/getCategoryById.dto";
 
 export class CategoryService {
   constructor(
@@ -257,6 +258,17 @@ export class CategoryService {
     });
 
     const category = await this.categoryRepository.findBySlug(slug);
+
+    if (!category) throw new AppError("Category not found :(", 404);
+    // TODO: get products of this category and return them in the response
+
+    return { message: "Category Fetched Successfully :)", data: category };
+  }
+
+  async getCategoryById(input: GetCategoryByIdDto) {
+    const categoryId = input.categoryId;
+
+    const category = await this.categoryRepository.findById(categoryId);
 
     if (!category) throw new AppError("Category not found :(", 404);
     // TODO: get products of this category and return them in the response

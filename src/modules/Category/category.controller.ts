@@ -5,6 +5,7 @@ import response from "./../../common/utils/response";
 import { UploadedFile } from "../../common/services/S3StorageService";
 import { GetAllCategoriesDto } from "./dto/getAllCategories.dto";
 import { GetCategoryBySlugDto } from "./dto/getCategoryBySlug.dto";
+import { GetCategoryByIdDto } from "./dto/getCategoryById.dto";
 
 export class CategoryController {
   constructor(private categoryService: CategoryService) {}
@@ -120,7 +121,13 @@ export class CategoryController {
 
   getCategoryById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const { categoryId } = req.params as { categoryId: string };
+
+      const input: GetCategoryByIdDto = new GetCategoryByIdDto({ categoryId });
+
+      const result = await this.categoryService.getCategoryById(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }
