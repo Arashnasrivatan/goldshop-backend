@@ -6,6 +6,7 @@ import { UploadedFile } from "../../common/services/S3StorageService";
 import { GetAllCategoriesDto } from "./dto/getAllCategories.dto";
 import { GetCategoryBySlugDto } from "./dto/getCategoryBySlug.dto";
 import { GetCategoryByIdDto } from "./dto/getCategoryById.dto";
+import { UpdateCategoryDto } from "./dto/updateCategory.dto";
 
 export class CategoryController {
   constructor(private categoryService: CategoryService) {}
@@ -135,7 +136,41 @@ export class CategoryController {
 
   updateCategory = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const { categoryId } = req.params as { categoryId: string };
+
+      const image = this.getUploadedImage(req);
+
+      const hasBodyData = Object.keys(req.body ?? {}).length > 0;
+
+      if (!hasBodyData && !image) {
+        return response(
+          res,
+          400,
+          "At least one field must be provided for update",
+        );
+      }
+      const { name, slug, description, parent, isActive, order } = req.body as {
+        name?: string;
+        slug?: string;
+        description?: string;
+        parent?: string;
+        isActive?: boolean;
+        order?: number;
+      };
+
+      const input: UpdateCategoryDto = new UpdateCategoryDto({
+        categoryId,
+        name,
+        slug,
+        description,
+        parent,
+        isActive,
+        order,
+      });
+
+      const result = await this.categoryService.updateCategory(input, image);
+
+      return response(res, 201, result.message, result.data);
     } catch (err) {
       next(err);
     }

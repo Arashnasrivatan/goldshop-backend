@@ -2,6 +2,7 @@ import CategoryModel, { ICategoryDocument } from "./category.model";
 import { Types } from "mongoose";
 import { CreateCategoryDto } from "./dto/createCategory.dto";
 import { ICategoryFilter } from "./category.types";
+import { AppError } from "../../common/errors/AppError";
 
 export class CategoryRepository {
   async findById(categoryId: string): Promise<ICategoryDocument | null> {
@@ -78,7 +79,7 @@ export class CategoryRepository {
   }
 
   async findAllForTree(): Promise<ICategoryDocument[]> {
-    return await CategoryModel.find()
+    return await CategoryModel.find({ isActive: true })
       .select("-__v")
       .sort({ order: 1, createdAt: 1 })
       .lean<ICategoryDocument[]>();
@@ -110,5 +111,66 @@ export class CategoryRepository {
     });
 
     return category;
+  }
+
+  async update(
+    categoryId: string,
+    updateData: Partial<ICategoryDocument>,
+  ): Promise<ICategoryDocument> {
+    const category = await CategoryModel.findByIdAndUpdate(
+      categoryId,
+      {
+        $set: updateData,
+      },
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
+
+    if (!category) {
+      throw new AppError("Category not found", 404);
+    }
+
+    return category;
+  }
+
+  async findChildren(parentId: Types.ObjectId): Promise<ICategoryDocument[]> {
+    return CategoryModel.find({
+      parent: parentId,
+    });
+  }
+
+  async updateMany(
+    updates: Array<{
+      id: Types.ObjectId;
+      data: Partial<ICategoryDocument>;
+    }>,
+  ): Promise<void> {
+    if (!updates.length) {
+      return;
+    }
+
+    const operations = updates.map((item) => ({
+      updateOne: {
+        filter: {
+          _id: item.id,
+        },
+
+        update: {
+          $set: item.data,
+        },
+      },
+    }));
+
+    await CategoryModel.bulkWrite(operations);
+  }
+
+  async findDescendants(
+    categoryId: Types.ObjectId,
+  ): Promise<ICategoryDocument[]> {
+    return CategoryModel.find({
+      path: categoryId,
+    });
   }
 }

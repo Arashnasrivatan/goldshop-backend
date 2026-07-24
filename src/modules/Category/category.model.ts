@@ -17,6 +17,7 @@ const CategorySchema = new Schema<ICategoryDocument>(
         type: Schema.Types.ObjectId,
         ref: "Category",
         index: true,
+        default: [],
       },
     ],
     image: {

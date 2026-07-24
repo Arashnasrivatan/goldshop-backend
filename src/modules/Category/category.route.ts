@@ -69,6 +69,7 @@ router
     authGuard,
     roleGuard("SUPER_ADMIN", "ADMIN"),
     validate(categoryIdParamsSchema, "params"),
+    uploader([{ name: "image", type: "image", maxCount: 1 }], 5),
     validate(updateCategorySchema),
     categoryController.updateCategory,
   )
