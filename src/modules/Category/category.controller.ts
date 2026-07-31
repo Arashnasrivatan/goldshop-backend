@@ -7,6 +7,7 @@ import { GetAllCategoriesDto } from "./dto/getAllCategories.dto";
 import { GetCategoryBySlugDto } from "./dto/getCategoryBySlug.dto";
 import { GetCategoryByIdDto } from "./dto/getCategoryById.dto";
 import { UpdateCategoryDto } from "./dto/updateCategory.dto";
+import { DeleteCategoryDto } from "./dto/deleteCategory.dto";
 
 export class CategoryController {
   constructor(private categoryService: CategoryService) {}
@@ -178,7 +179,17 @@ export class CategoryController {
 
   deleteCategory = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const { categoryId } = req.params as { categoryId: string };
+      const { confirmationPhrase } = req.body as { confirmationPhrase: string };
+
+      const input: DeleteCategoryDto = new DeleteCategoryDto({
+        categoryId,
+        confirmationPhrase,
+      });
+
+      const result = await this.categoryService.deleteCategory(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }

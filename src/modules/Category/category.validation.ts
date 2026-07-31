@@ -141,7 +141,13 @@ const updateCategorySchema = yup.object({
 });
 
 const deleteCategorySchema = yup.object({
-  // TODO
+  confirmationPhrase: yup
+    .string()
+    .required("Confirmation phrase is required")
+    .matches(
+      /^DELETE CATEGORY [a-zA-Z0-9_-]+$/i,
+      "Confirmation phrase must start with 'DELETE CATEGORY ' followed by the target categoryId",
+    ),
 });
 
 const slugParamsSchema = yup.object({

@@ -19,6 +19,7 @@ import { GetAllCategoriesDto } from "./dto/getAllCategories.dto";
 import { GetCategoryBySlugDto } from "./dto/getCategoryBySlug.dto";
 import { GetCategoryByIdDto } from "./dto/getCategoryById.dto";
 import { UpdateCategoryDto } from "./dto/updateCategory.dto";
+import { DeleteCategoryDto } from "./dto/deleteCategory.dto";
 
 export class CategoryService {
   constructor(
@@ -465,6 +466,38 @@ export class CategoryService {
     return {
       message: "Category updated Successfully :)",
       data: updatedCategory,
+    };
+  }
+
+  async deleteCategory(input: DeleteCategoryDto) {
+    const category = await this.categoryRepository.findById(input.categoryId);
+
+    if (!category) {
+      throw new AppError("Category not found", 404);
+    }
+
+    // TODO: Check if the category or its descendants has any products associated with it before deletion If it does, throw an error indicating that the category cannot be deleted
+
+    //* Double Check
+    const confirmationPhrase = `DELETE CATEGORY ${category._id.toString()}`;
+
+    if (input.confirmationPhrase !== confirmationPhrase) {
+      throw new AppError(
+        `Confirmation phrase does not match. To delete this category, please provide the following confirmation phrase: "${confirmationPhrase}"`,
+        400,
+      );
+    }
+    if (category.image?.key) {
+      await this.storageService.deleteFile(category.image.key);
+    }
+
+    const deletedCategory = await this.categoryRepository.delete(
+      category._id.toString(),
+    );
+
+    return {
+      message: "Category deleted Successfully :)",
+      data: deletedCategory,
     };
   }
 }

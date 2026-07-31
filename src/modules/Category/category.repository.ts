@@ -136,7 +136,7 @@ export class CategoryRepository {
   }
 
   async findChildren(parentId: Types.ObjectId): Promise<ICategoryDocument[]> {
-    return CategoryModel.find({
+    return await CategoryModel.find({
       parent: parentId,
     });
   }
@@ -169,8 +169,12 @@ export class CategoryRepository {
   async findDescendants(
     categoryId: Types.ObjectId,
   ): Promise<ICategoryDocument[]> {
-    return CategoryModel.find({
+    return await CategoryModel.find({
       path: categoryId,
     });
+  }
+
+  async delete(categoryId: string): Promise<ICategoryDocument | null> {
+    return await CategoryModel.findByIdAndDelete(categoryId);
   }
 }
