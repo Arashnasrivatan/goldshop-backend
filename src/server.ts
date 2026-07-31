@@ -2,7 +2,9 @@ import app from "./app";
 import redis from "./configs/redis.config";
 import { connectToMongo, disconnectFromMongo } from "./configs/database.config";
 import configs from "./configs/env.config";
-import { Server } from "http";
+import { Server, createServer } from "http";
+import { socketManager } from "./configs/socket.config";
+import { startPriceCronJob } from "./common/jobs/price.job";
 
 let server: Server;
 
@@ -16,8 +18,17 @@ async function startServer() {
     await redis.ping();
     console.log("✅ Connected to Redis");
 
+    //* Create HTTP Server
+    server = createServer(app);
+
+    //* SOCKET.IO
+    socketManager.init(server);
+
+    //* Jobs
+    startPriceCronJob();
+
     //* Start Express App
-    server = app.listen(configs.app.port, () => {
+    server.listen(configs.app.port, () => {
       console.log(`Server started on port ${configs.app.port} 🚀`);
     });
   } catch (err) {
