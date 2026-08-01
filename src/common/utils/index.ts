@@ -83,4 +83,32 @@ const createPaginationData = (
   };
 };
 
-export { createPaginationData, getLocationDetails, isLocationInIran };
+const getTimeAgo = (date: Date | string): string => {
+  const now = new Date();
+  const past = new Date(date);
+  const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000);
+
+  if (diffInSeconds < 60) {
+    return `${diffInSeconds}sec ago`;
+  }
+
+  const days = Math.floor(diffInSeconds / 86400);
+  const hours = Math.floor((diffInSeconds % 86400) / 3600);
+  const minutes = Math.floor((diffInSeconds % 3600) / 60);
+  const seconds = diffInSeconds % 60;
+
+  const parts = [];
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+  if (seconds > 0) parts.push(`${seconds}sec`);
+
+  return parts.join(" ") + " ago";
+};
+
+export {
+  createPaginationData,
+  getLocationDetails,
+  isLocationInIran,
+  getTimeAgo,
+};
