@@ -42,6 +42,12 @@ const configs = {
     },
   },
 
+  price: {
+    maxFailures: Number(process.env.MAX_FAILURES ?? 5),
+    startHour: Number(process.env.START_HOUR ?? 10),
+    endHour: Number(process.env.END_HOUR ?? 22),
+  },
+
   sms: {
     baseUrl: required("SMS_BASE_URL"),
     apiKey: required("SMS_API_KEY"),

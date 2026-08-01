@@ -34,11 +34,6 @@ const CategorySchema = new Schema<ICategoryDocument>(
   { timestamps: true },
 );
 
-CategorySchema.index({ slug: 1 }, { unique: true });
-CategorySchema.index({ parent: 1 });
-CategorySchema.index({ path: 1 });
-CategorySchema.index({ level: 1 });
-
 const CategoryModel: Model<ICategoryDocument> =
   mongoose.model<ICategoryDocument>("Category", CategorySchema);
 

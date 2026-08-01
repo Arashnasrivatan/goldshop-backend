@@ -19,6 +19,8 @@ const PriceSchema = new Schema<IPriceDocument>(
   { timestamps: true },
 );
 
+PriceSchema.index({ createdAt: 1 }, { expireAfterSeconds: 86400 });
+
 const PriceModel: Model<IPriceDocument> = mongoose.model<IPriceDocument>(
   "Price",
   PriceSchema,
