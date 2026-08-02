@@ -8,10 +8,21 @@ export interface ICategoryDocument extends ICategory, Document {
 
 const CategorySchema = new Schema<ICategoryDocument>(
   {
-    name: { type: String, required: true, unique: true },
-    slug: { type: String, required: true, unique: true },
+    name: { type: String, required: true },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
     description: { type: String, default: null },
-    parent: { type: Schema.Types.ObjectId, ref: "Category", default: null },
+    parent: {
+      type: Schema.Types.ObjectId,
+      ref: "Category",
+      default: null,
+      index: true,
+    },
     path: [
       {
         type: Schema.Types.ObjectId,
@@ -28,7 +39,7 @@ const CategorySchema = new Schema<ICategoryDocument>(
       default: null,
     },
     level: { type: Number, default: 0, index: true },
-    isActive: { type: Boolean, default: true },
+    isActive: { type: Boolean, default: true, index: true },
     order: { type: Number, default: 0 },
   },
   { timestamps: true },
