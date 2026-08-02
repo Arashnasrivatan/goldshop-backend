@@ -1,6 +1,8 @@
 import { Server as HttpServer } from "http";
 import { Server as SocketIOServer, Namespace } from "socket.io";
+import { instrument } from "@socket.io/admin-ui";
 import logger from "../common/utils/logger";
+import configs from "./env.config";
 
 class SocketManager {
   private static instance: SocketManager;
@@ -18,8 +20,14 @@ class SocketManager {
 
   public init(server: HttpServer): SocketIOServer {
     this.io = new SocketIOServer(server, {
-      cors: { origin: "*", methods: ["GET", "POST"] },
+      cors: { origin: configs.app.cors, methods: ["GET", "POST"] },
     });
+    if (configs.app.env === "development") {
+      instrument(this.io, {
+        auth: false,
+        mode: "development",
+      });
+    }
     console.log("Socket is Running 🔹");
     return this.io;
   }
