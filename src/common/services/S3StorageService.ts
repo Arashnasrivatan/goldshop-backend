@@ -21,9 +21,9 @@ import ImageProcessor, {
 } from "./image.processor";
 
 import { AppError } from "../errors/AppError";
+import logger from "../utils/logger";
 
 export type UploadVisibility = "public" | "private";
-
 
 export interface UploadedFile {
   fieldname?: string;
@@ -273,11 +273,7 @@ export class S3StorageService {
     });
   }
 
-  private fail(
-    message: string,
-    statusCode = 500,
-    cause?: unknown,
-  ): never {
+  private fail(message: string, statusCode = 500, cause?: unknown): never {
     throw this.errorFactory(message, statusCode, cause);
   }
 
@@ -357,16 +353,9 @@ export class S3StorageService {
     }
 
     try {
-      const processed = await ImageProcessor.process(
-        buffer,
-        options.processor,
-      );
+      const processed = await ImageProcessor.process(buffer, options.processor);
 
-      const key = joinKey(
-        options.folder,
-        originalName,
-        processed.extension,
-      );
+      const key = joinKey(options.folder, originalName, processed.extension);
 
       const command = new PutObjectCommand({
         Bucket: this.bucketName,
@@ -427,11 +416,25 @@ export class S3StorageService {
   ): Promise<UploadResult[]> {
     const results: UploadResult[] = [];
 
-    for (const file of files) {
-      results.push(await this.upload(file, options));
-    }
+    try {
+      for (const file of files) {
+        results.push(await this.upload(file, options));
+      }
 
-    return results;
+      return results;
+    } catch (err) {
+      if (results.length > 0) {
+        const keysToDelete = results.map((res) => res.key);
+
+        this.deleteManyFiles(keysToDelete).catch((deleteErr) => {
+          logger.error(
+            "Critical: Failed to clean up partially uploaded files in uploadMany",
+            deleteErr,
+          );
+        });
+      }
+      throw err;
+    }
   }
 
   async generateSignedUrl(
@@ -570,9 +573,7 @@ export class S3StorageService {
     }
   }
 
-  async listFiles(
-    options: ListFilesOptions = {},
-  ): Promise<ListFilesResult> {
+  async listFiles(options: ListFilesOptions = {}): Promise<ListFilesResult> {
     try {
       const result: ListObjectsV2CommandOutput = await this.client.send(
         new ListObjectsV2Command({

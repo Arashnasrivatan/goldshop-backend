@@ -7,6 +7,7 @@ import BanRouter from "./Ban/ban.route";
 import UserRouter from "./User/user.route";
 import CategoryRouter from "./Category/category.route";
 import PriceRouter from "./Price/price.route";
+import ProductRouter from "./Product/product.route";
 
 const apiRouter: Router = Router();
 
@@ -49,5 +50,6 @@ apiRouter.use("/api/bans", BanRouter);
 apiRouter.use("/api/users", UserRouter);
 apiRouter.use("/api/categories", CategoryRouter);
 apiRouter.use("/api/prices", PriceRouter);
+apiRouter.use("/api/products", ProductRouter);
 
 export default apiRouter;

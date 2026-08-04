@@ -111,9 +111,9 @@ export class CategoryController {
         order,
       });
 
-      const image = this.getUploadedImage(req);
+      const uploadedImage = this.getUploadedImage(req);
 
-      const result = await this.categoryService.createCategory(input, image);
+      const result = await this.categoryService.createCategory(input, uploadedImage);
 
       return response(res, 201, result.message, result.data);
     } catch (err) {

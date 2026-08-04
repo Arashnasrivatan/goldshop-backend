@@ -15,6 +15,8 @@ import uploader from "../../common/middlewares/uploader";
 
 import { ProductService } from "./../Product/product.service";
 import { ProductRepository } from "../Product/product.repository";
+import { CategoryRepository } from "../Category/category.repository";
+
 import S3StorageService from "../../common/services/S3StorageService";
 import {
   productIdParamsSchema,
@@ -22,10 +24,15 @@ import {
 } from "../../common/utils/validation/params/sharedValidators";
 
 const productRepository = new ProductRepository();
+const categoryRepository = new CategoryRepository();
 
 const s3StorageService = new S3StorageService(configs.storage.arvan);
 
-const productService = new ProductService(productRepository, s3StorageService);
+const productService = new ProductService(
+  productRepository,
+  categoryRepository,
+  s3StorageService,
+);
 
 const productController = new ProductController(productService);
 

@@ -30,7 +30,6 @@ const ProductSchema = new Schema<IProductDocument>(
         key: { type: String, required: true },
       },
     ],
-
     category: {
       type: Schema.Types.ObjectId,
       required: true,
@@ -43,22 +42,37 @@ const ProductSchema = new Schema<IProductDocument>(
       required: function (this: IProductDocument) {
         return this.type === "JEWELRY";
       },
+      default: undefined,
     },
-
     wage: {
       type: Number,
       required: function (this: IProductDocument) {
         return this.type === "JEWELRY";
       },
+      default: undefined,
     },
     wageType: {
       type: String,
       enum: ["PERCENT", "FIXED"],
-      default: "PERCENT",
+      required: function (this: IProductDocument) {
+        return this.type === "JEWELRY";
+      },
+      default: undefined,
     },
-
-    profitMargin: { type: Number, default: 7 },
-    taxRate: { type: Number, default: 10 },
+    profitMargin: {
+      type: Number,
+      required: function (this: IProductDocument) {
+        return this.type === "JEWELRY";
+      },
+      default: undefined,
+    },
+    taxRate: {
+      type: Number,
+      required: function (this: IProductDocument) {
+        return this.type === "JEWELRY";
+      },
+      default: undefined,
+    },
 
     coinType: {
       type: String,
@@ -66,17 +80,22 @@ const ProductSchema = new Schema<IProductDocument>(
       required: function (this: IProductDocument) {
         return this.type === "COIN";
       },
+      default: undefined,
     },
     coinProfit: {
       type: Number,
       required: function (this: IProductDocument) {
         return this.type === "COIN";
       },
+      default: undefined,
     },
     coinProfitType: {
       type: String,
       enum: ["PERCENT", "FIXED"],
-      default: "FIXED",
+      required: function (this: IProductDocument) {
+        return this.type === "COIN";
+      },
+      default: undefined,
     },
 
     isActive: { type: Boolean, default: true, index: true },
