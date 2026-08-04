@@ -8,7 +8,6 @@ import {
   createCategorySchema,
   updateCategorySchema,
   deleteCategorySchema,
-  slugParamsSchema,
 } from "./category.validation";
 import configs from "../../configs/env.config";
 import uploader from "../../common/middlewares/uploader";
@@ -16,7 +15,10 @@ import uploader from "../../common/middlewares/uploader";
 import { CategoryService } from "./../Category/category.service";
 import { CategoryRepository } from "../Category/category.repository";
 import S3StorageService from "../../common/services/S3StorageService";
-import { categoryIdParamsSchema } from "../../common/utils/validation/params/sharedValidators";
+import {
+  categoryIdParamsSchema,
+  slugParamsSchema,
+} from "../../common/utils/validation/params/sharedValidators";
 
 const categoryRepository = new CategoryRepository();
 

@@ -150,20 +150,9 @@ const deleteCategorySchema = yup.object({
     ),
 });
 
-const slugParamsSchema = yup.object({
-  slug: yup
-    .string()
-    .required("Category slug is required")
-    .matches(
-      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-      "Slug must be URL-friendly (lowercase letters, numbers, and hyphens)",
-    ),
-});
-
 export {
   getAllCategoriesQuerySchema,
   createCategorySchema,
-  slugParamsSchema,
   updateCategorySchema,
   deleteCategorySchema,
 };
