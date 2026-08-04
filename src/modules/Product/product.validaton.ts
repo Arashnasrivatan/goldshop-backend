@@ -2,7 +2,51 @@ import * as yup from "yup";
 import { isValidObjectId } from "mongoose";
 
 const getAllProductsQuerySchema = yup.object({
-  // TODO
+  search: yup.string().optional().trim(),
+  type: yup
+    .string()
+    .oneOf(["JEWELRY", "COIN"], "Type must be either JEWELRY or COIN")
+    .optional(),
+  category: yup.string().optional().trim(),
+  minStock: yup
+    .number()
+    .integer("minStock must be an integer")
+    .min(0, "minStock cannot be negative")
+    .optional(),
+  maxStock: yup
+    .number()
+    .integer("maxStock must be an integer")
+    .min(0, "maxStock cannot be negative")
+    .optional(),
+  minWeight: yup
+    .number()
+    .positive("minWeight must be a positive number")
+    .optional(),
+  maxWeight: yup
+    .number()
+    .positive("maxWeight must be a positive number")
+    .optional(),
+  limit: yup
+    .number()
+    .optional()
+    .integer("Limit must be a positive integer")
+    .positive("Limit must be a positive integer")
+    .max(100, "Maximum allowed limit is 100"),
+  page: yup
+    .number()
+    .optional()
+    .integer("Page must be a positive integer")
+    .positive("Page must be a positive integer"),
+  sort: yup
+    .string()
+    .oneOf(
+      ["newest", "oldest", "min_weight", "max_weight", "min_wage", "max_wage"],
+      "Invalid sort option | Must be one of: newest, oldest, min_weight, max_weight, min_wage, max_wage",
+    ),
+
+  inStockOnly: yup.boolean().optional(),
+  includeInactive: yup.boolean().optional(),
+  isActive: yup.boolean().optional(),
 });
 
 const createProductSchema = yup.object({

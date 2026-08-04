@@ -108,6 +108,13 @@ const ProductSchema = new Schema<IProductDocument>(
   { timestamps: true },
 );
 
+ProductSchema.virtual("inStock").get(function () {
+  return this.stock > 0;
+});
+
+ProductSchema.set("toJSON", { virtuals: true });
+ProductSchema.set("toObject", { virtuals: true });
+
 const ProductModel: Model<IProductDocument> = mongoose.model<IProductDocument>(
   "Product",
   ProductSchema,

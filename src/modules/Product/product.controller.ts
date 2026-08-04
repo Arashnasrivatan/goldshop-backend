@@ -3,6 +3,8 @@ import { ProductService } from "./product.service";
 import response from "./../../common/utils/response";
 import { UploadedFile } from "../../common/services/S3StorageService";
 import { CreateProductDto } from "./dto/createProduct.dto";
+import { IProductFilter } from "./product.types";
+import { GetAllProductsDto } from "./dto/getAllProducts.dto";
 
 export class ProductController {
   constructor(private productService: ProductService) {}
@@ -33,7 +35,41 @@ export class ProductController {
 
   getAllProducts = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const {
+        search,
+        type,
+        category,
+        minStock,
+        maxStock,
+        minWeight,
+        maxWeight,
+        page,
+        limit,
+        sort,
+        inStockOnly,
+        includeInactive,
+        isActive,
+      } = req.query as IProductFilter;
+
+      const input: GetAllProductsDto = new GetAllProductsDto({
+        search,
+        type,
+        category,
+        minStock,
+        maxStock,
+        minWeight,
+        maxWeight,
+        page,
+        limit,
+        sort,
+        inStockOnly,
+        includeInactive,
+        isActive
+      });
+
+      const result = await this.productService.getAllProducts(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }

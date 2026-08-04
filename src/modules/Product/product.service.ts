@@ -10,6 +10,9 @@ import S3StorageService, {
 import { CreateProductDto } from "./dto/createProduct.dto";
 import slugify from "slugify";
 import logger from "../../common/utils/logger";
+import { GetAllProductsDto } from "./dto/getAllProducts.dto";
+import { IPaginationData } from "../../common/types/utils";
+import { createPaginationData } from "../../common/utils";
 
 export class ProductService {
   constructor(
@@ -17,6 +20,33 @@ export class ProductService {
     private readonly categoryRepository: CategoryRepository,
     private readonly storageService: S3StorageService,
   ) {}
+
+  async getAllProducts(input: GetAllProductsDto) {
+    try {
+      const page = Number(input.page) || 1;
+      const limit = Number(input.limit) || 20;
+
+      const { products, totalCount } = await this.productRepository.find({
+        ...input,
+        page,
+        limit,
+      });
+
+      const pagination: IPaginationData = createPaginationData(
+        page,
+        limit,
+        totalCount,
+        "Product",
+      );
+
+      return {
+        message: "Products fetched successfully",
+        data: { pagination, products },
+      };
+    } catch (err) {
+      throw new AppError(`Failed to fetch products`, 500, err);
+    }
+  }
 
   async createProduct(input: CreateProductDto, images: UploadedFile[]) {
     const slug = slugify(input.slug, {

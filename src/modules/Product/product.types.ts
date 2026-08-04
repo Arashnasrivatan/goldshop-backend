@@ -27,3 +27,31 @@ export interface IProduct {
   isActive?: boolean;
   customFilters?: Map<string, unknown>;
 }
+
+export type ProductSortOption =
+  | "newest"
+  | "oldest"
+  | "min_weight"
+  | "max_weight"
+  | "min_wage"
+  | "max_wage";
+
+export interface IProductFilter {
+  search?: string;
+  type?: "JEWELRY" | "COIN";
+  category?: string;
+
+  minStock?: number;
+  maxStock?: number;
+
+  minWeight?: number;
+  maxWeight?: number;
+
+  page?: number;
+  limit?: number;
+  sort?: ProductSortOption;
+
+  inStockOnly?: string;
+  includeInactive?: string;
+  isActive?: string;
+}
