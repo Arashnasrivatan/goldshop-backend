@@ -11,7 +11,7 @@ export class PriceService {
   public async getValidPriceForTransaction(): Promise<{
     allowed: boolean;
     message?: string;
-    priceData?: IPriceDocument;
+    priceData?: IPriceDocument & { timeAgo: string };
   }> {
     const status = PriceStatusService.isPriceDisplayAllowed();
 
@@ -28,7 +28,12 @@ export class PriceService {
       };
     }
 
-    return { allowed: true, priceData: latestPrice };
+    const priceData = {
+      ...latestPrice.toObject(),
+      timeAgo: getTimeAgo(latestPrice.createdAt),
+    };
+
+    return { allowed: true, priceData };
   }
 
   async getPriceHistory(input: GetPriceHistoryDto) {

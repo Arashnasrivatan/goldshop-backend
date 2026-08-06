@@ -22,5 +22,5 @@ const cleanUpOldPrices = async () => {
 export const startDeletePriceCronJob = () => {
   cleanUpOldPrices();
 
-  cron.schedule("0 0 * * *", cleanUpOldPrices);
+  cron.schedule("0 */6 * * *", cleanUpOldPrices);
 };
