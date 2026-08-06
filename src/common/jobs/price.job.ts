@@ -20,7 +20,9 @@ let currentPrices = {
 const fluctuatePrice = (currentPrice: number, maxChange: number) => {
   const randomFactor = Math.random() * 2 - 1;
   const change = Math.floor(randomFactor * maxChange);
-  return Math.round(currentPrice + change);
+  const newPrice = currentPrice + change;
+  const rounded = Math.round(newPrice / 1000) * 1000;
+  return { newPrice, rounded };
 };
 
 const fetchPriceFromApi = async () => {
@@ -35,14 +37,16 @@ const fetchPriceFromApi = async () => {
   const COIN_MAX_CHANGE = 200000;
 
   currentPrices = {
-    gold18k: fluctuatePrice(currentPrices.gold18k, GOLD_MAX_CHANGE),
-    goldBuy: fluctuatePrice(currentPrices.goldBuy, GOLD_MAX_CHANGE),
-    goldExchange: fluctuatePrice(currentPrices.goldExchange, GOLD_MAX_CHANGE),
+    gold18k: fluctuatePrice(currentPrices.gold18k, GOLD_MAX_CHANGE).rounded,
+    goldBuy: fluctuatePrice(currentPrices.goldBuy, GOLD_MAX_CHANGE).rounded,
+    goldExchange: fluctuatePrice(currentPrices.goldExchange, GOLD_MAX_CHANGE)
+      .rounded,
 
-    coinQuarter: fluctuatePrice(currentPrices.coinQuarter, COIN_MAX_CHANGE),
-    coinHalf: fluctuatePrice(currentPrices.coinHalf, COIN_MAX_CHANGE),
-    coinFull: fluctuatePrice(currentPrices.coinFull, COIN_MAX_CHANGE),
-    coinEmami: fluctuatePrice(currentPrices.coinEmami, COIN_MAX_CHANGE),
+    coinQuarter: fluctuatePrice(currentPrices.coinQuarter, COIN_MAX_CHANGE)
+      .rounded,
+    coinHalf: fluctuatePrice(currentPrices.coinHalf, COIN_MAX_CHANGE).rounded,
+    coinFull: fluctuatePrice(currentPrices.coinFull, COIN_MAX_CHANGE).rounded,
+    coinEmami: fluctuatePrice(currentPrices.coinEmami, COIN_MAX_CHANGE).rounded,
   };
 
   return { ...currentPrices };
@@ -90,6 +94,8 @@ export const startPriceCronJob = () => {
       const newPrices = await fetchPriceFromApi();
       PriceStatusService.recordSuccess();
       const savedPrice = await priceRepository.create(newPrices);
+
+      logger.info("Prices updated");
 
       pricesNamespace.emit("livePricesUpdate", {
         isAvailable: true,
