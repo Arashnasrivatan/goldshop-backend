@@ -4,7 +4,7 @@ import { connectToMongo, disconnectFromMongo } from "./configs/database.config";
 import configs from "./configs/env.config";
 import { Server, createServer } from "http";
 import { socketManager } from "./configs/socket.config";
-import { startPriceCronJob } from "./common/jobs/price.job";
+import startCronJobs from "./common/jobs";
 
 let server: Server;
 
@@ -25,7 +25,7 @@ async function startServer() {
     socketManager.init(server);
 
     //* Jobs
-    startPriceCronJob();
+    startCronJobs();
 
     //* Start Express App
     server.listen(configs.app.port, () => {

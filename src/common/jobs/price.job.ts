@@ -7,8 +7,20 @@ import configs from "../../configs/env.config";
 
 const priceRepository = new PriceRepository();
 
-const generateRandomPrice = (min: number, max: number): number => {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+let currentPrices = {
+  gold18k: 18450000,
+  goldBuy: 18200000,
+  goldExchange: 18300000,
+  coinQuarter: 51000000,
+  coinHalf: 92500000,
+  coinFull: 175000000,
+  coinEmami: 179000000,
+};
+
+const fluctuatePrice = (currentPrice: number, maxChange: number) => {
+  const randomFactor = Math.random() * 2 - 1;
+  const change = Math.floor(randomFactor * maxChange);
+  return Math.round(currentPrice + change);
 };
 
 const fetchPriceFromApi = async () => {
@@ -19,15 +31,21 @@ const fetchPriceFromApi = async () => {
     throw new Error("External price API unreachable");
   }
 
-  return {
-    gold18k: generateRandomPrice(18200000, 18850000),
-    goldBuy: generateRandomPrice(17900000, 18550000),
-    goldExchange: generateRandomPrice(18100000, 18650000),
-    coinQuarter: generateRandomPrice(49000000, 53000000),
-    coinHalf: generateRandomPrice(92000000, 93000000),
-    coinFull: generateRandomPrice(174000000, 176000000),
-    coinEmami: generateRandomPrice(178000000, 179900000),
+  const GOLD_MAX_CHANGE = 50000;
+  const COIN_MAX_CHANGE = 200000;
+
+  currentPrices = {
+    gold18k: fluctuatePrice(currentPrices.gold18k, GOLD_MAX_CHANGE),
+    goldBuy: fluctuatePrice(currentPrices.goldBuy, GOLD_MAX_CHANGE),
+    goldExchange: fluctuatePrice(currentPrices.goldExchange, GOLD_MAX_CHANGE),
+
+    coinQuarter: fluctuatePrice(currentPrices.coinQuarter, COIN_MAX_CHANGE),
+    coinHalf: fluctuatePrice(currentPrices.coinHalf, COIN_MAX_CHANGE),
+    coinFull: fluctuatePrice(currentPrices.coinFull, COIN_MAX_CHANGE),
+    coinEmami: fluctuatePrice(currentPrices.coinEmami, COIN_MAX_CHANGE),
   };
+
+  return { ...currentPrices };
 };
 
 export const startPriceCronJob = () => {

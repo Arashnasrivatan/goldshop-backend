@@ -31,4 +31,13 @@ export class PriceRepository {
       },
     };
   }
+  async deleteMany(where: object) {
+    if (!where || Object.keys(where).length === 0) {
+      throw new Error(
+        "Delete operation requires a valid filter Please provide a filter to specify which documents to delete",
+      );
+    }
+
+    return await PriceModel.deleteMany(where);
+  }
 }
