@@ -44,8 +44,10 @@ const configs = {
 
   price: {
     maxFailures: Number(process.env.MAX_FAILURES ?? 5),
-    startHour: Number(process.env.START_HOUR ?? 10),
-    endHour: Number(process.env.END_HOUR ?? 22),
+    startTime: process.env.MARKET_START_TIME || "10:30",
+    endTime: process.env.MARKET_END_TIME || "22:00",
+
+    alwaysOpen: process.env.MARKET_ALWAYS_OPEN === "true" ? true : false,
   },
 
   sms: {

@@ -1,4 +1,6 @@
-import { IPaginationData } from "../types/utils";
+import { IPriceDocument } from "../../modules/Price/price.model";
+import { IProductDocument } from "../../modules/Product/product.model";
+import { IPaginationData, IPriceCalculationResult } from "../types/utils";
 import axios from "axios";
 
 interface INominatimResponse {
@@ -106,9 +108,102 @@ const getTimeAgo = (date: Date | string): string => {
   return parts.join(" ") + " ago";
 };
 
+const calculateProductPrice = (
+  product: IProductDocument,
+  prices: IPriceDocument,
+): IPriceCalculationResult => {
+
+  let rawPrice = 0;
+  let details: IPriceCalculationResult["details"] = { basePrice: 0, profit: 0 };
+
+  switch (product.type) {
+    case "JEWELRY": {
+      const rawGold = prices.gold18k;
+      const weight = product.weight || 0;
+
+      let wagePerGram = 0;
+      if (product.wageType === "PERCENT") {
+        wagePerGram = rawGold * ((product.wage || 0) / 100);
+      } else if (product.wageType === "FIXED") {
+        wagePerGram = product.wage || 0;
+      }
+
+      const profitMargin = product.profitMargin || 0;
+      const profitPerGram = (rawGold + wagePerGram) * (profitMargin / 100);
+
+      const taxRate = product.taxRate || 0;
+      const taxableAmount = wagePerGram + profitPerGram;
+      const taxPerGram = taxableAmount * (taxRate / 100);
+
+      const pricePerGram = rawGold + wagePerGram + profitPerGram + taxPerGram;
+      rawPrice = pricePerGram * weight;
+
+      details = {
+        basePrice: rawGold * weight,
+        wage: Math.round(wagePerGram * weight / 1000) * 1000,
+        profit: Math.round(profitPerGram * weight / 1000) * 1000,
+        tax: Math.round(taxPerGram * weight / 1000) * 1000,
+        weight: weight,
+      };
+      break;
+    }
+
+    case "COIN": {
+      let baseCoinPrice = 0;
+
+      switch (product.coinType) {
+        case "EMAMI":
+          baseCoinPrice = prices.coinEmami;
+          break;
+        case "BAHAR_AZADI":
+          baseCoinPrice = prices.coinFull;
+          break;
+        case "HALF":
+          baseCoinPrice = prices.coinHalf;
+          break;
+        case "QUARTER":
+          baseCoinPrice = prices.coinQuarter;
+          break;
+        // case "GRAM":
+        // TODO
+        //   baseCoinPrice = 0;
+        //  break;
+      }
+
+      const coinProfitValue = product.coinProfit || 0;
+      let coinProfit = 0;
+
+      if (product.coinProfitType === "PERCENT") {
+        coinProfit = baseCoinPrice * (coinProfitValue / 100);
+      } else if (product.coinProfitType === "FIXED") {
+        coinProfit = coinProfitValue;
+      }
+
+      rawPrice = baseCoinPrice + coinProfit;
+
+      details = {
+        basePrice: baseCoinPrice,
+        profit: coinProfit,
+      };
+      break;
+    }
+  }
+
+  const exactRawPrice = Math.round(rawPrice);
+
+  const roundedMarketPrice = Math.round(exactRawPrice / 1000) * 1000;
+
+  return {
+    rawPrice: exactRawPrice,
+    roundedPrice: roundedMarketPrice,
+    details: details,
+  };
+};
+
 export {
   createPaginationData,
   getLocationDetails,
   isLocationInIran,
   getTimeAgo,
+  calculateProductPrice,
 };

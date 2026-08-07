@@ -85,7 +85,7 @@ export const startPriceCronJob = () => {
       if (!PriceStatusService.isMarketOpen()) {
         pricesNamespace.emit("livePricesUpdate", {
           isAvailable: false,
-          message: `Market is currently closed. Operating hours are ${configs.price.startHour}:00 to ${configs.price.endHour}:00.`,
+          message: `Market is currently closed. Operating hours are ${configs.price.startTime} to ${configs.price.endTime}.`,
           data: null,
         });
         return;

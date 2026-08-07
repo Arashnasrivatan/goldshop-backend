@@ -4,3 +4,15 @@ export interface IPaginationData {
   totalPage: number;
   [key: string]: number;
 }
+
+export interface IPriceCalculationResult {
+  rawPrice: number;
+  roundedPrice: number;
+  details: {
+    basePrice: number;
+    wage?: number;
+    profit: number;
+    tax?: number;
+    weight?: number;
+  };
+}
