@@ -2,7 +2,7 @@
 import ProductModel, { IProductDocument } from "./product.model";
 import { CreateProductDto } from "./dto/createProduct.dto";
 import { GetAllProductsDto } from "./dto/getAllProducts.dto";
-import { Types } from "mongoose";
+import { PopulateOptions, Types } from "mongoose";
 
 export class ProductRepository {
   private getSortQuery(sortOption?: string): Record<string, 1 | -1> {
@@ -25,12 +25,30 @@ export class ProductRepository {
 
   //* ========================== *\\
 
-  async findById(ProductId: string): Promise<IProductDocument | null> {
-    return await ProductModel.findOne({ _id: ProductId });
+  async findById(
+    ProductId: string,
+    populate?: string | PopulateOptions | (string | PopulateOptions)[],
+  ): Promise<IProductDocument | null> {
+    let query = ProductModel.findById(ProductId);
+
+    if (populate) {
+      query = query.populate(populate as any);
+    }
+
+    return await query.exec();
   }
 
-  async findBySlug(slug: string): Promise<IProductDocument | null> {
-    return await ProductModel.findOne({ slug });
+  async findBySlug(
+    slug: string,
+    populate?: string | PopulateOptions | (string | PopulateOptions)[],
+  ): Promise<IProductDocument | null> {
+    let query = ProductModel.findOne({ slug });
+
+    if (populate) {
+      query = query.populate(populate as any);
+    }
+
+    return await query.exec();
   }
 
   async create(input: CreateProductDto): Promise<IProductDocument> {

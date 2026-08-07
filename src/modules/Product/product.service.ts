@@ -13,6 +13,7 @@ import logger from "../../common/utils/logger";
 import { GetAllProductsDto } from "./dto/getAllProducts.dto";
 import { IPaginationData } from "../../common/types/utils";
 import { createPaginationData } from "../../common/utils";
+import { GetProductBySlugDto } from "./dto/getProductBySlug.dto";
 
 export class ProductService {
   constructor(
@@ -134,5 +135,25 @@ export class ProductService {
 
       throw new AppError(`Failed to save product in database`, 500, err);
     }
+  }
+
+  async getProductBySlug(input: GetProductBySlugDto) {
+    let slug = input.slug;
+
+    slug = slugify(slug, {
+      lower: true,
+      strict: true,
+      trim: true,
+      replacement: "-",
+    });
+
+    const product = await this.productRepository.findBySlug(slug, {
+      path: "category",
+      select: "name slug",
+    });
+
+    if (!product) throw new AppError("Product not found :(", 404);
+
+    return { message: "Product fetched successfully :)", data: product };
   }
 }

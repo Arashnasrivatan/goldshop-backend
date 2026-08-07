@@ -5,6 +5,7 @@ import { UploadedFile } from "../../common/services/S3StorageService";
 import { CreateProductDto } from "./dto/createProduct.dto";
 import { IProductFilter } from "./product.types";
 import { GetAllProductsDto } from "./dto/getAllProducts.dto";
+import { GetProductBySlugDto } from "./dto/getProductBySlug.dto";
 
 export class ProductController {
   constructor(private productService: ProductService) {}
@@ -64,7 +65,7 @@ export class ProductController {
         sort,
         inStockOnly,
         includeInactive,
-        isActive
+        isActive,
       });
 
       const result = await this.productService.getAllProducts(input);
@@ -134,7 +135,13 @@ export class ProductController {
     next: NextFunction,
   ) => {
     try {
-      // TODO
+      const { slug } = req.params as { slug: string };
+
+      const input: GetProductBySlugDto = new GetProductBySlugDto({ slug });
+
+      const result = await this.productService.getProductBySlug(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }
