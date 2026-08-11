@@ -353,8 +353,16 @@ const deleteProductSchema = yup.object({
     ),
 });
 
-const ProductImagesSchema = yup.object({
-  // TODO
+const addProductImagesSchema = yup.object({});
+
+const deleteProductImagesSchema = yup.object({
+  imageKeys: yup
+    .array()
+    .of(
+      yup.string().trim().required("Each imageKey must be a non-empty string"),
+    )
+    .required("imageKeys is required")
+    .min(1, "At least one imageKey is required"),
 });
 
 export {
@@ -362,5 +370,6 @@ export {
   createProductSchema,
   deleteProductSchema,
   updateProductSchema,
-  ProductImagesSchema,
+  addProductImagesSchema,
+  deleteProductImagesSchema,
 };

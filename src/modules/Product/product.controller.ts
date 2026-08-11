@@ -9,6 +9,7 @@ import { GetProductBySlugDto } from "./dto/getProductBySlug.dto";
 import { GetProductByIdDto } from "./dto/getProductById.dto";
 import { UpdateProductDto } from "./dto/updateProduct.dto";
 import { DeleteProductDto } from "./dto/deleteProduct.dto";
+import { AddProductImagesDto } from "./dto/addProductImages.dto";
 
 export class ProductController {
   constructor(private productService: ProductService) {}
@@ -228,7 +229,24 @@ export class ProductController {
     next: NextFunction,
   ) => {
     try {
-      // TODO
+      const { productId } = req.params as { productId: string };
+
+      const uploadedImages = this.getUploadedImages(req, "images");
+
+      if (uploadedImages.length === 0) {
+        return response(res, 400, "At least one image file is required.");
+      }
+
+      const input: AddProductImagesDto = new AddProductImagesDto({
+        productId,
+      });
+
+      const result = await this.productService.addProductImages(
+        input,
+        uploadedImages,
+      );
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }
@@ -240,7 +258,7 @@ export class ProductController {
     next: NextFunction,
   ) => {
     try {
-      // TODO
+     // TODO
     } catch (err) {
       next(err);
     }

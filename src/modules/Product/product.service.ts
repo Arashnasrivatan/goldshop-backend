@@ -16,6 +16,7 @@ import { createPaginationData } from "../../common/utils";
 import { GetProductBySlugDto } from "./dto/getProductBySlug.dto";
 import { GetProductByIdDto } from "./dto/getProductById.dto";
 import { UpdateProductDto } from "./dto/updateProduct.dto";
+import { AddProductImagesDto } from "./dto/addProductImages.dto";
 import { COIN_FIELDS, JEWELRY_FIELDS } from "./product.validaton";
 import { DeleteProductDto } from "./dto/deleteProduct.dto";
 
@@ -292,4 +293,70 @@ export class ProductService {
       data: productImages,
     };
   }
+
+  async addProductImages(input: AddProductImagesDto, images: UploadedFile[]) {
+    if (!images || images.length === 0) {
+      throw new AppError("At least one image file is required.", 400);
+    }
+
+    const product = await this.productRepository.findById(input.productId);
+
+    if (!product) throw new AppError("Product not found :(", 404);
+
+    if (product.images.length + images.length > 10) {
+      throw new AppError("products can not have more than 10 images", 400);
+    }
+
+    for (const image of images) {
+      if (
+        !image.mimetype ||
+        !ImageProcessor.isSupportedImageMimeType(image.mimetype)
+      ) {
+        throw new AppError(
+          "Unsupported image format. Allowed formats: JPEG, PNG, WebP, AVIF, GIF, SVG, TIFF, HEIF.",
+          400,
+        );
+      }
+    }
+
+    let uploadedImages: { url: string; key: string }[] = [];
+
+    try {
+      uploadedImages = await this.storageService.uploadMany(images, {
+        folder: "products",
+        visibility: "public",
+      });
+    } catch (err) {
+      throw new AppError(
+        "Failed to upload images to the storage server.",
+        500,
+        err,
+      );
+    }
+
+    try {
+      const updatedProduct = await this.productRepository.addImages(
+        input.productId,
+        uploadedImages,
+      );
+
+      return {
+        message: "Product images added successfully",
+        data: updatedProduct,
+      };
+    } catch (err) {
+      if (uploadedImages.length > 0) {
+        const keysToDelete = uploadedImages.map((img) => img.key);
+        this.storageService.deleteManyFiles(keysToDelete).catch((deleteErr) => {
+          logger.error(
+            `Failed to delete uploaded images after addProductImages failure: ${deleteErr.message}`,
+          );
+        });
+      }
+
+      throw new AppError("Failed to add product images", 500, err);
+    }
+  }
+
+
 }

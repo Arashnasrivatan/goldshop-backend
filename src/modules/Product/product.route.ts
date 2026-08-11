@@ -8,7 +8,8 @@ import {
   createProductSchema,
   updateProductSchema,
   deleteProductSchema,
-  ProductImagesSchema,
+  addProductImagesSchema,
+  deleteProductImagesSchema,
 } from "./product.validaton";
 import configs from "../../configs/env.config";
 import uploader from "../../common/middlewares/uploader";
@@ -96,14 +97,14 @@ router
     roleGuard("SUPER_ADMIN", "ADMIN"),
     validate(productIdParamsSchema, "params"),
     uploader([{ name: "images", type: "image", maxCount: 10 }], 5),
-    validate(ProductImagesSchema),
+    validate(addProductImagesSchema),
     productController.addProductImages,
   )
   .delete(
     authGuard,
     roleGuard("SUPER_ADMIN", "ADMIN"),
     validate(productIdParamsSchema, "params"),
-    validate(ProductImagesSchema),
+    validate(deleteProductImagesSchema),
     productController.deleteProductImages,
   );
 

@@ -180,6 +180,22 @@ export class ProductRepository {
     return updatedProduct;
   }
 
+  async addImages(
+    productId: string,
+    images: Array<{ url: string; key: string }>,
+  ) {
+    const updatedProduct = await ProductModel.findByIdAndUpdate(
+      productId,
+      { $push: { images: { $each: images } } },
+      {
+        new: true,
+        runValidators: true,
+      },
+    ).lean();
+
+    return updatedProduct;
+  }
+
   async delete(productId: string) {
     return await ProductModel.findByIdAndDelete(productId);
   }
