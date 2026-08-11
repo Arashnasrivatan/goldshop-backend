@@ -144,4 +144,17 @@ export class ProductRepository {
       totalCount,
     };
   }
+
+  async update(productId: string, updateData: any) {
+    const updatedProduct = await ProductModel.findByIdAndUpdate(
+      productId,
+      { $set: updateData },
+      {
+        new: true,
+        runValidators: true,
+      },
+    ).lean();
+
+    return updatedProduct;
+  }
 }

@@ -7,6 +7,7 @@ import { IProductFilter } from "./product.types";
 import { GetAllProductsDto } from "./dto/getAllProducts.dto";
 import { GetProductBySlugDto } from "./dto/getProductBySlug.dto";
 import { GetProductByIdDto } from "./dto/getProductById.dto";
+import { UpdateProductDto } from "./dto/updateProduct.dto";
 
 export class ProductController {
   constructor(private productService: ProductService) {}
@@ -164,7 +165,17 @@ export class ProductController {
 
   updateProduct = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const { productId } = req.params as { productId: string };
+      const updatePayload = req.body;
+
+      const input: UpdateProductDto = new UpdateProductDto({
+        productId,
+        updateData: updatePayload,
+      });
+
+      const result = await this.productService.updateProduct(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }

@@ -1,6 +1,15 @@
 import * as yup from "yup";
 import { isValidObjectId } from "mongoose";
 
+export const JEWELRY_FIELDS = [
+  "weight",
+  "wage",
+  "wageType",
+  "profitMargin",
+  "taxRate",
+];
+export const COIN_FIELDS = ["coinType", "coinProfit", "coinProfitType"];
+
 const getAllProductsQuerySchema = yup.object({
   search: yup.string().optional().trim(),
   type: yup
@@ -219,9 +228,120 @@ const createProductSchema = yup.object({
   customFilters: yup.object().optional(),
 });
 
-const updateProductSchema = yup.object({
-  // TODO
-});
+const updateProductSchema = yup
+  .object({
+    name: yup.string().trim().optional(),
+
+    slug: yup
+      .string()
+      .trim()
+      .matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be URL-friendly")
+      .optional(),
+
+    description: yup.string().nullable().optional(),
+
+    type: yup
+      .mixed()
+      .test(
+        "no-type-update",
+        "Updating product type is not allowed.",
+        (value) => value === undefined,
+      ),
+
+    stock: yup
+      .number()
+      .typeError("Stock must be a number")
+      .integer("Stock must be an integer")
+      .min(0, "Stock cannot be negative")
+      .optional(),
+
+    category: yup
+      .string()
+      .test(
+        "is-valid-object-id",
+        "Category must be a valid ObjectId",
+        (value) => {
+          if (!value) return true;
+          return isValidObjectId(value);
+        },
+      )
+      .optional(),
+
+    weight: yup
+      .number()
+      .typeError("Weight must be a number")
+      .positive()
+      .optional(),
+
+    wage: yup.number().typeError("Wage must be a number").min(0).optional(),
+
+    wageType: yup
+      .string()
+      .oneOf(["PERCENT", "FIXED"], "Wage type must be PERCENT or FIXED")
+      .optional(),
+
+    profitMargin: yup
+      .number()
+      .typeError("Profit margin must be a number")
+      .min(0)
+      .optional(),
+
+    taxRate: yup
+      .number()
+      .typeError("Tax rate must be a number")
+      .min(0)
+      .optional(),
+
+    coinType: yup
+      .string()
+      .oneOf(
+        ["EMAMI", "BAHAR_AZADI", "HALF", "QUARTER", "GRAM"],
+        "Invalid coin type",
+      )
+      .optional(),
+
+    coinProfit: yup
+      .number()
+      .typeError("Coin profit must be a number")
+      .min(0)
+      .optional(),
+
+    coinProfitType: yup
+      .string()
+      .oneOf(["PERCENT", "FIXED"], "Coin profit type must be PERCENT or FIXED")
+      .optional(),
+
+    isActive: yup.boolean().optional(),
+
+    customFilters: yup.object().optional(),
+  })
+  .test(
+    "not-empty",
+    "Request body cannot be empty. Please provide at least one field to update.",
+    (bodyObject) => {
+      if (!bodyObject) return false;
+      return Object.keys(bodyObject).length > 0;
+    },
+  )
+  .test(
+    "mutually-exclusive-fields",
+    "Field conflict: Cannot send jewelry and coin fields in the same request.",
+    function (bodyObject) {
+      if (!bodyObject) return true;
+
+      const hasJewelryField = JEWELRY_FIELDS.some(
+        (field) => (bodyObject as Record<string, unknown>)[field] !== undefined,
+      );
+      const hasCoinField = COIN_FIELDS.some(
+        (field) => (bodyObject as Record<string, unknown>)[field] !== undefined,
+      );
+
+      if (hasJewelryField && hasCoinField) {
+        return false;
+      }
+      return true;
+    },
+  );
 
 const deleteProductSchema = yup.object({
   confirmationPhrase: yup

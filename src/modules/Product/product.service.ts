@@ -15,6 +15,8 @@ import { IPaginationData } from "../../common/types/utils";
 import { createPaginationData } from "../../common/utils";
 import { GetProductBySlugDto } from "./dto/getProductBySlug.dto";
 import { GetProductByIdDto } from "./dto/getProductById.dto";
+import { UpdateProductDto } from "./dto/updateProduct.dto";
+import { COIN_FIELDS, JEWELRY_FIELDS } from "./product.validaton";
 
 export class ProductService {
   constructor(
@@ -169,6 +171,84 @@ export class ProductService {
     return {
       message: "Product Fetched Successfully",
       data: product,
+    };
+  }
+
+  async updateProduct(input: UpdateProductDto) {
+    const { productId, updateData } = input;
+
+    if (Object.keys(updateData).length === 0) {
+      throw new AppError("No valid fields provided for update", 400);
+    }
+
+    const product = await this.productRepository.findById(productId);
+
+    if (!product) throw new AppError("Product not found :(", 404);
+
+    const type = product.type;
+
+    switch (type) {
+      case "JEWELRY": {
+        const hasCoinField = COIN_FIELDS.some(
+          (field) =>
+            (updateData as Record<string, unknown>)[field] !== undefined,
+        );
+
+        if (hasCoinField)
+          throw new AppError("Jewelry products can't have coin fields", 400);
+        break;
+      }
+      case "COIN": {
+        const hasJewelryField = JEWELRY_FIELDS.some(
+          (field) =>
+            (updateData as Record<string, unknown>)[field] !== undefined,
+        );
+
+        if (hasJewelryField)
+          throw new AppError("Coin products can't have jewelry fields", 400);
+        break;
+      }
+    }
+
+    if (updateData.slug) {
+      const newSlug = slugify(updateData.slug, {
+        lower: true,
+        strict: true,
+        trim: true,
+        replacement: "-",
+      });
+
+      const existingProductWithSlug =
+        await this.productRepository.findBySlug(newSlug);
+
+      if (
+        existingProductWithSlug &&
+        existingProductWithSlug._id.toString() !== productId
+      ) {
+        throw new AppError("A product with this slug already exists.", 409);
+      }
+
+      updateData.slug = newSlug;
+    }
+
+    if (updateData.category) {
+      const newCategory = await this.categoryRepository.findById(
+        updateData.category,
+      );
+
+      if (!newCategory) throw new AppError("Category not found :(", 404);
+
+      updateData.category = newCategory._id.toString();
+    }
+
+    const updatedProduct = await this.productRepository.update(
+      productId,
+      updateData,
+    );
+
+    return {
+      message: "Product Updated Successfully :)",
+      data: updatedProduct,
     };
   }
 }
