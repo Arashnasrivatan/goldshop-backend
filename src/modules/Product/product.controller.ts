@@ -10,6 +10,7 @@ import { GetProductByIdDto } from "./dto/getProductById.dto";
 import { UpdateProductDto } from "./dto/updateProduct.dto";
 import { DeleteProductDto } from "./dto/deleteProduct.dto";
 import { AddProductImagesDto } from "./dto/addProductImages.dto";
+import { DeleteProductImagesDto } from "./dto/deleteProductImages.dto";
 
 export class ProductController {
   constructor(private productService: ProductService) {}
@@ -258,7 +259,17 @@ export class ProductController {
     next: NextFunction,
   ) => {
     try {
-     // TODO
+      const { productId } = req.params as { productId: string };
+      const { imageKeys } = req.body as { imageKeys: string[] };
+
+      const input: DeleteProductImagesDto = new DeleteProductImagesDto({
+        productId,
+        imageKeys,
+      });
+
+      const result = await this.productService.deleteProductImages(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }

@@ -196,6 +196,19 @@ export class ProductRepository {
     return updatedProduct;
   }
 
+  async deleteImages(productId: string, keys: string[]) {
+    const updatedProduct = await ProductModel.findByIdAndUpdate(
+      productId,
+      { $pull: { images: { key: { $in: keys } } } },
+      {
+        new: true,
+        runValidators: true,
+      },
+    ).lean();
+
+    return updatedProduct;
+  }
+
   async delete(productId: string) {
     return await ProductModel.findByIdAndDelete(productId);
   }

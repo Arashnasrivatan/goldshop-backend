@@ -17,6 +17,7 @@ import { GetProductBySlugDto } from "./dto/getProductBySlug.dto";
 import { GetProductByIdDto } from "./dto/getProductById.dto";
 import { UpdateProductDto } from "./dto/updateProduct.dto";
 import { AddProductImagesDto } from "./dto/addProductImages.dto";
+import { DeleteProductImagesDto } from "./dto/deleteProductImages.dto";
 import { COIN_FIELDS, JEWELRY_FIELDS } from "./product.validaton";
 import { DeleteProductDto } from "./dto/deleteProduct.dto";
 
@@ -358,5 +359,58 @@ export class ProductService {
     }
   }
 
+  async deleteProductImages(input: DeleteProductImagesDto) {
+    if (!input.imageKeys || input.imageKeys.length === 0) {
+      throw new AppError("At least one imageKey must be provided", 400);
+    }
 
+    const product = await this.productRepository.findById(input.productId);
+
+    if (!product) throw new AppError("Product not found :(", 404);
+
+    const keysToDelete = input.imageKeys.filter((key) =>
+      product.images.some((image) => image.key === key),
+    );
+
+    if (keysToDelete.length === 0) {
+      throw new AppError(
+        "None of the provided image keys belong to the specified product.",
+        404,
+      );
+    }
+
+    const updatedImages = product.images.filter(
+      (image) => !keysToDelete.includes(image.key),
+    );
+
+    const updatedProduct = await this.productRepository.update(
+      input.productId,
+      {
+        images: updatedImages,
+      },
+    );
+
+    try {
+      await this.storageService.deleteManyFiles(keysToDelete);
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "unknown error while deleting product image files from storage";
+
+      logger.error(
+        `Failed to delete product image files from storage after DB update: ${message}`,
+      );
+      throw new AppError(
+        "Failed to delete product image files from storage.",
+        500,
+        err,
+      );
+    }
+
+    return {
+      message: "Product images deleted successfully",
+      data: updatedProduct,
+    };
+  }
 }
