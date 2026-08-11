@@ -2,7 +2,7 @@
 import ProductModel, { IProductDocument } from "./product.model";
 import { CreateProductDto } from "./dto/createProduct.dto";
 import { GetAllProductsDto } from "./dto/getAllProducts.dto";
-import { PopulateOptions, Types } from "mongoose";
+import { PipelineStage, PopulateOptions, Types } from "mongoose";
 
 export class ProductRepository {
   private getSortQuery(sortOption?: string): Record<string, 1 | -1> {
@@ -71,11 +71,14 @@ export class ProductRepository {
       maxWeight,
       inStockOnly,
       includeInactive,
+      includeDeleted,
       isActive,
+      isDeleted,
     } = input;
 
-    const matchQuery: any = {};
+    const matchQuery: Record<string, any> = {};
 
+    //* 1. Search Query
     if (search) {
       matchQuery.$or = [
         { name: { $regex: search, $options: "i" } },
@@ -83,39 +86,57 @@ export class ProductRepository {
       ];
     }
 
+    //* 2. Exact Matches
     if (type) matchQuery.type = type;
 
     if (category && Types.ObjectId.isValid(category)) {
       matchQuery.category = new Types.ObjectId(category);
     }
 
-    if (inStockOnly) {
+    //* 3. Stock Logic
+    const isInStockOnly = inStockOnly === "true";
+    if (isInStockOnly) {
       matchQuery.stock = { $gt: 0 };
     } else if (minStock !== undefined || maxStock !== undefined) {
       matchQuery.stock = {
-        ...(minStock !== undefined && { $gte: minStock }),
-        ...(maxStock !== undefined && { $lte: maxStock }),
+        ...(minStock !== undefined && { $gte: Number(minStock) }),
+        ...(maxStock !== undefined && { $lte: Number(maxStock) }),
       };
     }
 
+    //* 4. Weight Logic
     if (minWeight !== undefined || maxWeight !== undefined) {
       matchQuery.weight = {
-        ...(minWeight !== undefined && { $gte: minWeight }),
-        ...(maxWeight !== undefined && { $lte: maxWeight }),
+        ...(minWeight !== undefined && { $gte: Number(minWeight) }),
+        ...(maxWeight !== undefined && { $lte: Number(maxWeight) }),
       };
     }
+    //* 5 & 6. Status & Trash Logic (Combined)
+    const reqIsDeleted = isDeleted === "true";
+    const reqIncludeDeleted = includeDeleted === "true";
 
-    // By default only active products are returned
-    if (isActive !== undefined) {
-      matchQuery.isActive = isActive === "true";
-    } else if (includeInactive !== "true") {
-      matchQuery.isActive = true;
+    if (reqIsDeleted) {
+      matchQuery.isDeleted = true;
+    } else {
+      if (!reqIncludeDeleted) {
+        matchQuery.isDeleted = { $ne: true };
+      }
+
+      if (isActive !== undefined) {
+        matchQuery.isActive = isActive === "true";
+      } else if (includeInactive !== "true" && !reqIncludeDeleted) {
+        matchQuery.isActive = true;
+      }
     }
 
+    //* 7. Pagination & Sorting setup
+    const parsedPage = Number(page) || 1;
+    const parsedLimit = Number(limit) || 20;
+    const skip = (parsedPage - 1) * parsedLimit;
     const sortQuery = this.getSortQuery(sort);
-    const skip = (page - 1) * limit;
 
-    const pipeline: any = [
+    //* 8. Aggregation Pipeline
+    const pipeline: PipelineStage[] = [
       { $match: matchQuery },
       {
         $addFields: {
@@ -123,21 +144,22 @@ export class ProductRepository {
           isOutOfStock: { $cond: [{ $lte: ["$stock", 0] }, 1, 0] },
         },
       },
-
-      { $sort: { isOutOfStock: 1 as const, ...sortQuery } },
-
+      {
+        $sort: { isOutOfStock: 1, ...sortQuery },
+      },
       {
         $facet: {
           metadata: [{ $count: "total" }],
-          data: [{ $skip: skip }, { $limit: Number(limit) }],
+          data: [{ $skip: skip }, { $limit: parsedLimit }],
         },
       },
     ];
 
+    //* 9. Execute Query
     const [result] = await ProductModel.aggregate(pipeline);
 
-    const totalCount = result.metadata[0]?.total || 0;
-    const products = result.data;
+    const totalCount = result?.metadata?.[0]?.total || 0;
+    const products = result?.data || [];
 
     return {
       products,

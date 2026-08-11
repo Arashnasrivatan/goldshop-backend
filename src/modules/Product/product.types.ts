@@ -54,5 +54,7 @@ export interface IProductFilter {
 
   inStockOnly?: string;
   includeInactive?: string;
+  includeDeleted?: string;
   isActive?: string;
+  isDeleted?: string;
 }

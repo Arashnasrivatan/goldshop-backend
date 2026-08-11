@@ -272,11 +272,11 @@ export class ProductService {
       // Soft Delete
       this.productRepository.update(
         input.productId,
-        { isDeleted: true },
+        { isDeleted: true, isActive: false },
         // TODO: Delete product from users cart
       ),
     ]);
 
-    return {message:"Product Deleted Successfully"}
+    return { message: "Product Deleted Successfully" };
   }
 }

@@ -52,7 +52,9 @@ export class ProductController {
         sort,
         inStockOnly,
         includeInactive,
+        includeDeleted,
         isActive,
+        isDeleted,
       } = req.query as IProductFilter;
 
       const input: GetAllProductsDto = new GetAllProductsDto({
@@ -68,7 +70,9 @@ export class ProductController {
         sort,
         inStockOnly,
         includeInactive,
+        includeDeleted,
         isActive,
+        isDeleted,
       });
 
       const result = await this.productService.getAllProducts(input);

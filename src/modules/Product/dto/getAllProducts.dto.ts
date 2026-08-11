@@ -16,7 +16,9 @@ export class GetAllProductsDto {
   // Inactive products are hidden by business logic, not for security reasons
   // Exposing them does not pose a security risk
   public includeInactive?: string;
+  public includeDeleted?: string;
   public isActive?: string;
+  public isDeleted?: string;
 
   constructor(data: {
     search?: string;
@@ -31,7 +33,9 @@ export class GetAllProductsDto {
     sort?: ProductSortOption;
     inStockOnly?: string;
     includeInactive?: string;
+    includeDeleted?: string;
     isActive?: string;
+    isDeleted?: string;
   }) {
     this.search = data.search;
     this.type = data.type;
@@ -45,6 +49,8 @@ export class GetAllProductsDto {
     this.sort = data.sort;
     this.inStockOnly = data.inStockOnly;
     this.includeInactive = data.includeInactive;
+    this.includeDeleted = data.includeDeleted;
     this.isActive = data.isActive;
+    this.isDeleted = data.isDeleted;
   }
 }
