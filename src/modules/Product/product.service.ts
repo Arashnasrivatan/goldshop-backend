@@ -14,6 +14,7 @@ import { GetAllProductsDto } from "./dto/getAllProducts.dto";
 import { IPaginationData } from "../../common/types/utils";
 import { createPaginationData } from "../../common/utils";
 import { GetProductBySlugDto } from "./dto/getProductBySlug.dto";
+import { GetProductByIdDto } from "./dto/getProductById.dto";
 
 export class ProductService {
   constructor(
@@ -155,5 +156,19 @@ export class ProductService {
     if (!product) throw new AppError("Product not found :(", 404);
 
     return { message: "Product fetched successfully :)", data: product };
+  }
+
+  async getProductById(input: GetProductByIdDto) {
+    const product = await this.productRepository.findById(input.productId, {
+      path: "category",
+      select: "name slug",
+    });
+
+    if (!product) throw new AppError("Product not found :(", 404);
+
+    return {
+      message: "Product Fetched Successfully",
+      data: product,
+    };
   }
 }

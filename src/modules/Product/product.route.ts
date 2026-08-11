@@ -54,7 +54,7 @@ router
   );
 
 router
-  .route("/:slug")
+  .route("/slug/:slug")
   .get(
     validate(slugParamsSchema, "params"),
     productController.getProductBySlug,
@@ -95,8 +95,8 @@ router
     authGuard,
     roleGuard("SUPER_ADMIN", "ADMIN"),
     validate(productIdParamsSchema, "params"),
-    validate(ProductImagesSchema),
     uploader([{ name: "images", type: "image", maxCount: 10 }], 5),
+    validate(ProductImagesSchema),
     productController.addProductImages,
   )
   .delete(
@@ -104,7 +104,6 @@ router
     roleGuard("SUPER_ADMIN", "ADMIN"),
     validate(productIdParamsSchema, "params"),
     validate(ProductImagesSchema),
-
     productController.deleteProductImages,
   );
 

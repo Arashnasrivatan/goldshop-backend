@@ -6,6 +6,7 @@ import { CreateProductDto } from "./dto/createProduct.dto";
 import { IProductFilter } from "./product.types";
 import { GetAllProductsDto } from "./dto/getAllProducts.dto";
 import { GetProductBySlugDto } from "./dto/getProductBySlug.dto";
+import { GetProductByIdDto } from "./dto/getProductById.dto";
 
 export class ProductController {
   constructor(private productService: ProductService) {}
@@ -149,7 +150,13 @@ export class ProductController {
 
   getProductById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const { productId } = req.params as { productId: string };
+
+      const input: GetProductByIdDto = new GetProductByIdDto({ productId });
+
+      const result = await this.productService.getProductById(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }
