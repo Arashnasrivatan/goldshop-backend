@@ -210,7 +210,13 @@ export class ProductController {
     next: NextFunction,
   ) => {
     try {
-      // TODO
+      const { productId } = req.params as { productId: string };
+
+      const input: GetProductByIdDto = new GetProductByIdDto({ productId });
+
+      const result = await this.productService.getProductImages(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }

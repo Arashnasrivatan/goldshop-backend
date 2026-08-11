@@ -183,4 +183,8 @@ export class ProductRepository {
   async delete(productId: string) {
     return await ProductModel.findByIdAndDelete(productId);
   }
+
+  async getImagesOnly(productId: string) {
+    return await ProductModel.findById(productId).select("images").lean();
+  }
 }

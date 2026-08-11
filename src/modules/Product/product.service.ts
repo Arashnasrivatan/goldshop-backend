@@ -279,4 +279,17 @@ export class ProductService {
 
     return { message: "Product Deleted Successfully" };
   }
+
+  async getProductImages(input: GetProductByIdDto) {
+    const productImages = await this.productRepository.getImagesOnly(
+      input.productId,
+    );
+
+    if (!productImages) throw new AppError("Product not found", 404);
+
+    return {
+      message: "Product images fetched successfully",
+      data: productImages,
+    };
+  }
 }
