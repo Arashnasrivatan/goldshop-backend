@@ -157,4 +157,8 @@ export class ProductRepository {
 
     return updatedProduct;
   }
+
+  async delete(productId: string) {
+    return await ProductModel.findByIdAndDelete(productId);
+  }
 }

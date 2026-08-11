@@ -99,6 +99,7 @@ const ProductSchema = new Schema<IProductDocument>(
     },
 
     isActive: { type: Boolean, default: true, index: true },
+    isDeleted: {type: Boolean, default: false, index: true},
     customFilters: {
       type: Map,
       of: Schema.Types.Mixed,

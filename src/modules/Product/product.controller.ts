@@ -8,6 +8,7 @@ import { GetAllProductsDto } from "./dto/getAllProducts.dto";
 import { GetProductBySlugDto } from "./dto/getProductBySlug.dto";
 import { GetProductByIdDto } from "./dto/getProductById.dto";
 import { UpdateProductDto } from "./dto/updateProduct.dto";
+import { DeleteProductDto } from "./dto/deleteProduct.dto";
 
 export class ProductController {
   constructor(private productService: ProductService) {}
@@ -183,7 +184,17 @@ export class ProductController {
 
   deleteProduct = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const { productId } = req.params as { productId: string };
+      const { confirmationPhrase } = req.body as { confirmationPhrase: string };
+
+      const input: DeleteProductDto = new DeleteProductDto({
+        productId,
+        confirmationPhrase,
+      });
+
+      const result = await this.productService.deleteProduct(input);
+
+      return response(res, 200, result.message);
     } catch (err) {
       next(err);
     }

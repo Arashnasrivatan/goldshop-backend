@@ -17,6 +17,7 @@ import { GetProductBySlugDto } from "./dto/getProductBySlug.dto";
 import { GetProductByIdDto } from "./dto/getProductById.dto";
 import { UpdateProductDto } from "./dto/updateProduct.dto";
 import { COIN_FIELDS, JEWELRY_FIELDS } from "./product.validaton";
+import { DeleteProductDto } from "./dto/deleteProduct.dto";
 
 export class ProductService {
   constructor(
@@ -250,5 +251,32 @@ export class ProductService {
       message: "Product Updated Successfully :)",
       data: updatedProduct,
     };
+  }
+
+  async deleteProduct(input: DeleteProductDto) {
+    const product = await this.productRepository.findById(input.productId);
+
+    if (!product) throw new AppError("Product not found :(", 404);
+
+    //* Double Check
+    const confirmationPhrase = `DELETE PRODUCT ${product._id.toString()}`;
+
+    if (input.confirmationPhrase !== confirmationPhrase) {
+      throw new AppError(
+        `Confirmation phrase does not match. To delete this Product, please provide the following confirmation phrase: "${confirmationPhrase}"`,
+        400,
+      );
+    }
+
+    await Promise.all([
+      // Soft Delete
+      this.productRepository.update(
+        input.productId,
+        { isDeleted: true },
+        // TODO: Delete product from users cart
+      ),
+    ]);
+
+    return {message:"Product Deleted Successfully"}
   }
 }

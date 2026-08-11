@@ -25,6 +25,7 @@ export interface IProduct {
   coinProfitType?: "PERCENT" | "FIXED";
 
   isActive?: boolean;
+  isDeleted?: boolean;
   customFilters?: Map<string, unknown>;
 }
 
