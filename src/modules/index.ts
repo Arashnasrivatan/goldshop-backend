@@ -44,7 +44,7 @@ apiRouter.get("/api/status", (req: Request, res: Response) => {
   return response(res, 200, "🚀 Server is up and running", data);
 });
 
-// TODO: modules routes
+//* Routes
 apiRouter.use("/api/auth", AuthRouter);
 apiRouter.use("/api/bans", BanRouter);
 apiRouter.use("/api/users", UserRouter);

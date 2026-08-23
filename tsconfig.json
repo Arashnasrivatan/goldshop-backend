@@ -33,6 +33,6 @@
     "declaration": false
   },
 
-  "include": ["src/**/*.ts", "tests/**/*.ts"], // TODO
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

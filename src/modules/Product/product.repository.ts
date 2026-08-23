@@ -57,14 +57,14 @@ export class ProductRepository {
     return product;
   }
 
-  async find(input: GetAllProductsDto) {
+  async find(input: GetAllProductsDto & { categoryIds?: Types.ObjectId[] }) {
     const {
       page = 1,
       limit = 20,
       sort = "newest",
       search,
       type,
-      category,
+      categoryIds,
       minStock,
       maxStock,
       minWeight,
@@ -89,8 +89,8 @@ export class ProductRepository {
     //* 2. Exact Matches
     if (type) matchQuery.type = type;
 
-    if (category && Types.ObjectId.isValid(category)) {
-      matchQuery.category = new Types.ObjectId(category);
+    if (categoryIds?.length) {
+      matchQuery.category = { $in: categoryIds };
     }
 
     //* 3. Stock Logic

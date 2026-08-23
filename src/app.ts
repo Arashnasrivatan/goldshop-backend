@@ -74,7 +74,6 @@ app.use(
 );
 
 //* Passport
-// TODO
 app.use(passportConfig.initialize());
 app.use(passportConfig.session());
 

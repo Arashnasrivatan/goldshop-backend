@@ -20,6 +20,7 @@ import { AddProductImagesDto } from "./dto/addProductImages.dto";
 import { DeleteProductImagesDto } from "./dto/deleteProductImages.dto";
 import { COIN_FIELDS, JEWELRY_FIELDS } from "./product.validaton";
 import { DeleteProductDto } from "./dto/deleteProduct.dto";
+import { Types } from "mongoose";
 
 export class ProductService {
   constructor(
@@ -33,10 +34,19 @@ export class ProductService {
       const page = Number(input.page) || 1;
       const limit = Number(input.limit) || 20;
 
+      let categoryIds: Types.ObjectId[] | undefined;
+
+      if (input.category && Types.ObjectId.isValid(input.category)) {
+        categoryIds = await this.categoryRepository.getCategoryAndDescendantIds(
+          new Types.ObjectId(input.category),
+        );
+      }
+
       const { products, totalCount } = await this.productRepository.find({
         ...input,
         page,
         limit,
+        categoryIds,
       });
 
       const pagination: IPaginationData = createPaginationData(

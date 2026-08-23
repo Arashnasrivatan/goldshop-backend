@@ -174,6 +174,19 @@ export class CategoryRepository {
     });
   }
 
+  async getCategoryAndDescendantIds(
+    categoryId: Types.ObjectId,
+  ): Promise<Types.ObjectId[]> {
+    const categories = await CategoryModel.find(
+      {
+        $or: [{ _id: categoryId }, { path: categoryId }],
+      },
+      { _id: 1 },
+    ).lean();
+
+    return categories.map((c) => c._id as Types.ObjectId);
+  }
+
   async delete(categoryId: string): Promise<ICategoryDocument | null> {
     return await CategoryModel.findByIdAndDelete(categoryId);
   }
