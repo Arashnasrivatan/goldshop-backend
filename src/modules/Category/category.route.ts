@@ -19,14 +19,17 @@ import {
   categoryIdParamsSchema,
   slugParamsSchema,
 } from "../../common/utils/validation/params/sharedValidators";
+import { ProductRepository } from "../Product/product.repository";
 
 const categoryRepository = new CategoryRepository();
+const productRepository = new ProductRepository();
 
 const s3StorageService = new S3StorageService(configs.storage.arvan);
 
 const categoryService = new CategoryService(
   categoryRepository,
   s3StorageService,
+  productRepository,
 );
 
 const categoryController = new CategoryController(categoryService);

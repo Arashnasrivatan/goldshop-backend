@@ -216,4 +216,13 @@ export class ProductRepository {
   async getImagesOnly(productId: string) {
     return await ProductModel.findById(productId).select("images").lean();
   }
+  
+  async countByCategoryIds(categoryIds: Types.ObjectId[]): Promise<number> {
+    if (!categoryIds.length) return 0;
+
+    return ProductModel.countDocuments({
+      category: { $in: categoryIds },
+      isDeleted: { $ne: true },
+    });
+  }
 }

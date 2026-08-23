@@ -20,11 +20,13 @@ import { GetCategoryBySlugDto } from "./dto/getCategoryBySlug.dto";
 import { GetCategoryByIdDto } from "./dto/getCategoryById.dto";
 import { UpdateCategoryDto } from "./dto/updateCategory.dto";
 import { DeleteCategoryDto } from "./dto/deleteCategory.dto";
+import { ProductRepository } from "../Product/product.repository";
 
 export class CategoryService {
   constructor(
     private readonly categoryRepository: CategoryRepository,
     private readonly storageService: S3StorageService,
+    private readonly productRepository: ProductRepository,
   ) {}
 
   private readonly categoryMaxDepth = configs.other.categoryMaxDepth || 2;
@@ -474,8 +476,20 @@ export class CategoryService {
       throw new AppError("Category not found", 404);
     }
 
-    // TODO: Check if the category or its descendants has any products associated with it before deletion If it does, throw an error indicating that the category cannot be deleted
+    const categoryIds =
+      await this.categoryRepository.getCategoryAndDescendantIds(
+        category._id as Types.ObjectId,
+      );
 
+    const productCount =
+      await this.productRepository.countByCategoryIds(categoryIds);
+
+    if (productCount > 0) {
+      throw new AppError(
+        `Cannot delete this category. It or its subcategories contain ${productCount} product(s). Please move or delete the products first.`,
+        400,
+      );
+    }
     //* Double Check
     const confirmationPhrase = `DELETE CATEGORY ${category._id.toString()}`;
 
