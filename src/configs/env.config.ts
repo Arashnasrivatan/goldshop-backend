@@ -6,7 +6,7 @@ const required = (key: string) => {
   return value;
 };
 
-const configs = {
+const envConfigs = {
   app: {
     port: Number(process.env.PORT ?? 4000),
     domain: process.env.DOMAIN ?? "http://localhost:4000",
@@ -81,4 +81,6 @@ const configs = {
   },
 };
 
-export default Object.freeze(configs);
+const configs = Object.freeze(envConfigs);
+
+export default configs;

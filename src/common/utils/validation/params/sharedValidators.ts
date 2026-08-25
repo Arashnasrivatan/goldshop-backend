@@ -1,6 +1,8 @@
 import { isValidObjectId } from "mongoose";
 import * as yup from "yup";
 
+// The Validators that i use in diffrent modules
+
 const userIdParamsSchema = yup.object().shape({
   userId: yup
     .string()
@@ -38,9 +40,19 @@ const slugParamsSchema = yup.object({
     ),
 });
 
+const shippingIdParamsSchema = yup.object().shape({
+  shippingId: yup
+    .string()
+    .required("shippingId is required")
+    .test("isValidObjectId", "shippingId is invalid", (value) => {
+      return value === undefined || isValidObjectId(value);
+    }),
+});
+
 export {
   userIdParamsSchema,
   categoryIdParamsSchema,
   productIdParamsSchema,
   slugParamsSchema,
+  shippingIdParamsSchema,
 };
