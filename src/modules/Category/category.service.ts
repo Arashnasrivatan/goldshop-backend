@@ -76,8 +76,6 @@ export class CategoryService {
 
       if (parentNode) {
         parentNode.children.push(node);
-      } else {
-        roots.push(node);
       }
     });
 
