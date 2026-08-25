@@ -17,6 +17,7 @@ import {
 
 import { shippingIdParamsSchema } from "../../common/utils/validation/params/sharedValidators";
 import S3StorageService from "../../common/services/S3StorageService";
+import uploader from "../../common/middlewares/uploader";
 
 const shippingRepository = new ShippingRepository();
 
@@ -55,6 +56,7 @@ router
   .post(
     authGuard,
     roleGuard("SUPER_ADMIN", "ADMIN"),
+    uploader([{ name: "image", type: "image", maxCount: 1 }], 5),
     validate(createShippingSchema),
     shippingController.createShippingMethod,
   );

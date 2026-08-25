@@ -1,12 +1,12 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
+import mongoose, { Schema, Model, HydratedDocument } from "mongoose";
 import { IShippingMethod } from "./shipping.types";
 
-export interface IShippingMethodDocument extends IShippingMethod, Document {
+export type IShippingMethodDocument = HydratedDocument<IShippingMethod> & {
   createdAt: Date;
   updatedAt: Date;
-}
+};
 
-const ShippingMethodSchema = new Schema<IShippingMethodDocument>(
+const ShippingMethodSchema = new Schema<IShippingMethod>(
   {
     name: {
       type: String,
@@ -14,25 +14,27 @@ const ShippingMethodSchema = new Schema<IShippingMethodDocument>(
       trim: true,
       unique: true,
     },
-
     description: {
       type: String,
       trim: true,
       default: null,
     },
-
     price: {
       type: Number,
       required: true,
       min: 0,
       default: 0,
     },
-
+    image: {
+      type: {
+        url: { type: String, required: true },
+        key: { type: String, required: true },
+      },
+    },
     isActive: {
       type: Boolean,
       default: true,
     },
-
     sortOrder: {
       type: Number,
       default: 0,
@@ -43,10 +45,9 @@ const ShippingMethodSchema = new Schema<IShippingMethodDocument>(
   },
 );
 
-const ShippingModel: Model<IShippingMethodDocument> =
-  mongoose.model<IShippingMethodDocument>(
-    "ShippingMethod",
-    ShippingMethodSchema,
-  );
+const ShippingModel: Model<IShippingMethod> = mongoose.model<IShippingMethod>(
+  "ShippingMethod",
+  ShippingMethodSchema,
+);
 
 export default ShippingModel;

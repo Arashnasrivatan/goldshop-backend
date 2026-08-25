@@ -1,0 +1,25 @@
+import { ShippingMethodImage } from "./../shipping.types";
+export class CreateShippingDto {
+  public name: string;
+  public description?: string;
+  public price: string;
+  public image?: ShippingMethodImage;
+  public isActive?: string;
+  public sortOrder?: string;
+
+  constructor(data: {
+    name: string;
+    description?: string;
+    price: string;
+    image?: ShippingMethodImage;
+    isActive?: string;
+    sortOrder?: string;
+  }) {
+    this.name = data.name;
+    this.description = data.description;
+    this.price = data.price;
+    this.image = data.image;
+    this.isActive = data.isActive;
+    this.sortOrder = data.sortOrder;
+  }
+}
