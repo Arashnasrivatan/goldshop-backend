@@ -6,6 +6,11 @@ export class ShippingRepository {
   async findByName(name: string) {
     return await ShippingModel.findOne({ name });
   }
+
+  async countDocuments(): Promise<number> {
+    return await ShippingModel.countDocuments();
+  }
+
   async create(input: CreateShippingDto) {
     const { name, description, price, image, isActive, sortOrder } = input;
 

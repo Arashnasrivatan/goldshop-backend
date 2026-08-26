@@ -14,6 +14,12 @@ export class ShippingService {
   ) {}
 
   async createShipping(input: CreateShippingDto, image?: UploadedFile) {
+    const totalShippingMethods = await this.shippingRepository.countDocuments();
+
+    if (totalShippingMethods >= 10) {
+      throw new AppError("Maximum number of shipping methods is 10", 400);
+    }
+
     const name = input.name.trim();
 
     const isNameDuplicated = await this.shippingRepository.findByName(name);
