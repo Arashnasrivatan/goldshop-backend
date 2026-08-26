@@ -13,6 +13,15 @@ export class ShippingService {
     private readonly storageService: S3StorageService,
   ) {}
 
+  async getAllActive() {
+    const activeShippings = await this.shippingRepository.findAllActive();
+
+    return {
+      message: "Shipping Methods fetched successfully :)",
+      data: activeShippings,
+    };
+  }
+
   async createShipping(input: CreateShippingDto, image?: UploadedFile) {
     const totalShippingMethods = await this.shippingRepository.countDocuments();
 

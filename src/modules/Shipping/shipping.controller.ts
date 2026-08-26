@@ -34,7 +34,9 @@ export class ShippingController {
     next: NextFunction,
   ) => {
     try {
-      // TODO
+      const result = await this.shippingService.getAllActive();
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }

@@ -7,8 +7,20 @@ export class ShippingRepository {
     return await ShippingModel.findOne({ name });
   }
 
+  async findById(shippingId: string) {
+    return await ShippingModel.findOne({ _id: shippingId });
+  }
+
   async countDocuments(): Promise<number> {
     return await ShippingModel.countDocuments();
+  }
+
+  async findAllActive() {
+    return await ShippingModel.find({
+      isActive: true,
+    }).sort({
+      sortOrder: 1,
+    });
   }
 
   async create(input: CreateShippingDto) {
@@ -18,9 +30,11 @@ export class ShippingRepository {
       name,
       description: description || null,
       price: Number(price),
-      image: image,
-      isActive: String(isActive) === "true",
-      sortOrder: sortOrder ? Number(sortOrder) : 0,
+      image,
+      sortOrder: sortOrder !== undefined ? Number(sortOrder) : 0,
+      ...(isActive !== undefined && {
+        isActive: Boolean(isActive),
+      }),
     };
 
     const shipping = await ShippingModel.create(shippingData);

@@ -27,15 +27,10 @@ const updateShippingSchema = yup.object({
 });
 
 const getAllShippingQuerySchema = yup.object({
-  search: yup.string().optional().trim(),
-});
-
-const getAllShippingAdminQuerySchema = yup.object({
   // TODO
 });
 export {
   createShippingSchema,
   updateShippingSchema,
   getAllShippingQuerySchema,
-  getAllShippingAdminQuerySchema,
 };

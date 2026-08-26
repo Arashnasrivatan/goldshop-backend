@@ -13,7 +13,6 @@ import {
   createShippingSchema,
   updateShippingSchema,
   getAllShippingQuerySchema,
-  getAllShippingAdminQuerySchema
 } from "./shipping.validation";
 
 import { shippingIdParamsSchema } from "../../common/utils/validation/params/sharedValidators";
@@ -40,7 +39,6 @@ const router: Router = express.Router();
 router
   .route("/")
   .get(
-    validate(getAllShippingQuerySchema, "query"),
     shippingController.getActiveShippingMethods,
   );
 
@@ -51,7 +49,7 @@ router
   .get(
     authGuard,
     roleGuard("SUPER_ADMIN", "ADMIN"),
-    validate(getAllShippingAdminQuerySchema, "query"),
+    validate(getAllShippingQuerySchema, "query"),
     shippingController.getAllShippingMethods,
   )
   .post(
