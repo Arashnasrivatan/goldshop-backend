@@ -1,4 +1,5 @@
 import { CreateShippingDto } from "./dto/createShipping.dto";
+import { GetAllShippingsDto } from "./dto/getAllShippings.dto";
 import ShippingModel from "./shipping.model";
 import { IShippingMethod } from "./shipping.types";
 
@@ -21,6 +22,41 @@ export class ShippingRepository {
     }).sort({
       sortOrder: 1,
     });
+  }
+
+  async findAll(filters: GetAllShippingsDto) {
+    const { search, isActive } = filters;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const filter: any = {};
+
+    if (isActive !== undefined) {
+      filter.isActive = isActive === "true";
+    }
+
+    if (search?.trim()) {
+      filter.$or = [
+        {
+          name: {
+            $regex: search.trim(),
+            $options: "i",
+          },
+        },
+        {
+          description: {
+            $regex: search.trim(),
+            $options: "i",
+          },
+        },
+      ];
+    }
+
+    return ShippingModel.find(filter)
+      .sort({
+        sortOrder: 1,
+        createdAt: 1,
+      })
+      .lean();
   }
 
   async create(input: CreateShippingDto) {

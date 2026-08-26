@@ -4,6 +4,7 @@ import S3StorageService, {
   UploadedFile,
 } from "../../common/services/S3StorageService";
 import { CreateShippingDto } from "./dto/createShipping.dto";
+import { GetAllShippingsDto } from "./dto/getAllShippings.dto";
 import { ShippingRepository } from "./shipping.repository";
 import { ShippingMethodImage } from "./shipping.types";
 
@@ -22,6 +23,15 @@ export class ShippingService {
     };
   }
 
+  async getAllShippings(input: GetAllShippingsDto) {
+    const shippings = await this.shippingRepository.findAll(input);
+
+    return {
+      message: "Shipping Methods Fetched Successfully",
+      data: shippings,
+    };
+  }
+  
   async createShipping(input: CreateShippingDto, image?: UploadedFile) {
     const totalShippingMethods = await this.shippingRepository.countDocuments();
 

@@ -3,6 +3,7 @@ import { ShippingService } from "./shipping.service";
 import { UploadedFile } from "../../common/services/S3StorageService";
 import { CreateShippingDto } from "./dto/createShipping.dto";
 import response from "../../common/utils/response";
+import { GetAllShippingsDto } from "./dto/getAllShippings.dto";
 
 export class ShippingController {
   constructor(private shippingService: ShippingService) {}
@@ -48,7 +49,19 @@ export class ShippingController {
     next: NextFunction,
   ) => {
     try {
-      // TODO
+      const { search, isActive } = req.query as {
+        search: string;
+        isActive: string;
+      };
+
+      const input: GetAllShippingsDto = new GetAllShippingsDto({
+        search,
+        isActive,
+      });
+
+      const result = await this.shippingService.getAllShippings(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }

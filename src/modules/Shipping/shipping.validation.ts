@@ -27,7 +27,8 @@ const updateShippingSchema = yup.object({
 });
 
 const getAllShippingQuerySchema = yup.object({
-  // TODO
+  search: yup.string().optional().trim(),
+  isActive: yup.boolean().optional(),
 });
 export {
   createShippingSchema,
