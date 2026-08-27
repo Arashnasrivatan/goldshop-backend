@@ -93,4 +93,10 @@ export class ShippingRepository {
       },
     );
   }
+
+  async deleteById(
+    shippingId: string,
+  ): Promise<IShippingMethodDocument | null> {
+    return ShippingModel.findByIdAndDelete(shippingId);
+  }
 }

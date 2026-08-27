@@ -6,6 +6,7 @@ import response from "../../common/utils/response";
 import { GetAllShippingsDto } from "./dto/getAllShippings.dto";
 import { GetShippingDto } from "./dto/getShipping.dto";
 import { UpdateShippingDto } from "./dto/updateShipping.dto";
+import { DeleteShippingDto } from "./dto/deleteShipping.dto";
 
 export class ShippingController {
   constructor(private shippingService: ShippingService) {}
@@ -165,7 +166,17 @@ export class ShippingController {
     next: NextFunction,
   ) => {
     try {
-      // TODO
+      const { shippingId } = req.params as { shippingId: string };
+      const { confirmationPhrase } = req.body as { confirmationPhrase: string };
+
+      const input: DeleteShippingDto = new DeleteShippingDto({
+        shippingId,
+        confirmationPhrase,
+      });
+
+      const result = await this.shippingService.deleteShipping(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }

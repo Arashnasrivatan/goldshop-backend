@@ -4,6 +4,7 @@ import S3StorageService, {
   UploadedFile,
 } from "../../common/services/S3StorageService";
 import { CreateShippingDto } from "./dto/createShipping.dto";
+import { DeleteShippingDto } from "./dto/deleteShipping.dto";
 import { GetAllShippingsDto } from "./dto/getAllShippings.dto";
 import { GetShippingDto } from "./dto/getShipping.dto";
 import { UpdateShippingDto } from "./dto/updateShipping.dto";
@@ -180,6 +181,48 @@ export class ShippingService {
     return {
       message: "Shipping Method Updated Successfully",
       data: updatedShippingMethod,
+    };
+  }
+
+  async deleteShipping(input: DeleteShippingDto) {
+    const { shippingId, confirmationPhrase } = input;
+
+    const shipping = await this.shippingRepository.findById(shippingId);
+
+    if (!shipping) {
+      throw new AppError("Shipping Method not found", 404);
+    }
+
+    //* Double Check
+    const phrase = `DELETE SHIPPING ${shipping._id.toString()}`;
+
+    if (confirmationPhrase !== phrase) {
+      throw new AppError(
+        `Confirmation phrase does not match. To delete this Shipping Method, please provide the following confirmation phrase: "${phrase}"`,
+        400,
+      );
+    }
+
+    const imageKey = shipping.image?.key;
+
+    const deletedShipping =
+      await this.shippingRepository.deleteById(shippingId);
+
+    if (!deletedShipping) {
+      throw new AppError("Failed to delete Shipping Method", 500);
+    }
+
+    if (imageKey) {
+      try {
+        await this.storageService.deleteFile(imageKey);
+      } catch (error) {
+        console.error(`Failed to delete shipping image: ${imageKey}`, error);
+      }
+    }
+
+    return {
+      message: "Shipping Method Deleted successfully",
+      data: deletedShipping,
     };
   }
 }

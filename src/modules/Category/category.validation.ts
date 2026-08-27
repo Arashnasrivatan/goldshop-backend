@@ -94,51 +94,65 @@ const createCategorySchema = yup.object({
     .min(0, "Order must be zero or greater"),
 });
 
-const updateCategorySchema = yup.object({
-  name: yup
-    .string()
-    .optional()
-    .trim()
-    .min(2, "Category name must be at least 2 characters")
-    .max(100, "Category name must be at most 100 characters"),
+const updateCategorySchema = yup
+  .object({
+    name: yup
+      .string()
+      .optional()
+      .trim()
+      .min(2, "Category name must be at least 2 characters")
+      .max(100, "Category name must be at most 100 characters"),
 
-  slug: yup
-    .string()
-    .optional()
-    .trim()
-    .matches(
-      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-      "Slug must be URL-friendly (lowercase letters, numbers, and hyphens)",
-    ),
+    slug: yup
+      .string()
+      .optional()
+      .trim()
+      .matches(
+        /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+        "Slug must be URL-friendly (lowercase letters, numbers, and hyphens)",
+      ),
 
-  description: yup
-    .string()
-    .optional()
-    .trim()
-    .max(500, "Description must be at most 500 characters"),
+    description: yup
+      .string()
+      .optional()
+      .trim()
+      .max(500, "Description must be at most 500 characters"),
 
-  parent: yup
-    .string()
-    .nullable()
-    .optional()
-    .test(
-      "parent-is-valid-objectid",
-      "Parent category ID must be a valid MongoDB ObjectId",
-      (value) =>
-        value === undefined ||
-        value === null ||
-        value === "null" ||
-        isValidObjectId(value),
-    ),
+    parent: yup
+      .string()
+      .nullable()
+      .optional()
+      .test(
+        "parent-is-valid-objectid",
+        "Parent category ID must be a valid MongoDB ObjectId",
+        (value) =>
+          value === undefined ||
+          value === null ||
+          value === "null" ||
+          isValidObjectId(value),
+      ),
 
-  isActive: yup.boolean().optional(),
+    isActive: yup.boolean().optional(),
 
-  order: yup
-    .number()
-    .optional()
-    .integer("Order must be an integer")
-    .min(0, "Order must be zero or greater"),
-});
+    order: yup
+      .number()
+      .optional()
+      .integer("Order must be an integer")
+      .min(0, "Order must be zero or greater"),
+  })
+  .test(
+    "not-empty",
+    "At least one field must be provided for update",
+    function (bodyObject) {
+      const hasBody = !!bodyObject && Object.keys(bodyObject).length > 0;
+
+      const hasFile = Boolean(this.options.context?.file);
+
+      const hasFiles = Boolean(this.options.context?.files);
+
+      return hasBody || hasFile || hasFiles;
+    },
+  );
 
 const deleteCategorySchema = yup.object({
   confirmationPhrase: yup

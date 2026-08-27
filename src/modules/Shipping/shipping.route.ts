@@ -13,6 +13,7 @@ import {
   createShippingSchema,
   updateShippingSchema,
   getAllShippingQuerySchema,
+  deleteShippingSchema,
 } from "./shipping.validation";
 
 import { shippingIdParamsSchema } from "../../common/utils/validation/params/sharedValidators";
@@ -76,6 +77,7 @@ router
     authGuard,
     roleGuard("SUPER_ADMIN", "ADMIN"),
     validate(shippingIdParamsSchema, "params"),
+    validate(deleteShippingSchema),
     shippingController.deleteShippingMethod,
   );
 

@@ -62,8 +62,19 @@ const getAllShippingQuerySchema = yup.object({
   search: yup.string().optional().trim(),
   isActive: yup.boolean().optional(),
 });
+
+const deleteShippingSchema = yup.object({
+  confirmationPhrase: yup
+    .string()
+    .required("Confirmation phrase is required")
+    .matches(
+      /^DELETE SHIPPING [a-zA-Z0-9_-]+$/i,
+      "Confirmation phrase must start with 'DELETE SHIPPING ' followed by the target ShippingId",
+    ),
+});
 export {
   createShippingSchema,
   updateShippingSchema,
   getAllShippingQuerySchema,
+  deleteShippingSchema,
 };
