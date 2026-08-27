@@ -5,6 +5,7 @@ import S3StorageService, {
 } from "../../common/services/S3StorageService";
 import { CreateShippingDto } from "./dto/createShipping.dto";
 import { GetAllShippingsDto } from "./dto/getAllShippings.dto";
+import { GetShippingDto } from "./dto/getShipping.dto";
 import { ShippingRepository } from "./shipping.repository";
 import { ShippingMethodImage } from "./shipping.types";
 
@@ -31,7 +32,7 @@ export class ShippingService {
       data: shippings,
     };
   }
-  
+
   async createShipping(input: CreateShippingDto, image?: UploadedFile) {
     const totalShippingMethods = await this.shippingRepository.countDocuments();
 
@@ -79,5 +80,13 @@ export class ShippingService {
       message: "Shipping Method created Successfully :)",
       data: shipping,
     };
+  }
+
+  async getShippingById(input: GetShippingDto) {
+    const shipping = await this.shippingRepository.findById(input.shippingId);
+
+    if (!shipping) throw new AppError("Shipping Method not found", 404);
+
+    return { message: "Shipping Method Fetched Successfully", data: shipping };
   }
 }
