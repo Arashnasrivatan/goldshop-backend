@@ -5,6 +5,7 @@ import { CreateShippingDto } from "./dto/createShipping.dto";
 import response from "../../common/utils/response";
 import { GetAllShippingsDto } from "./dto/getAllShippings.dto";
 import { GetShippingDto } from "./dto/getShipping.dto";
+import { UpdateShippingDto } from "./dto/updateShipping.dto";
 
 export class ShippingController {
   constructor(private shippingService: ShippingService) {}
@@ -127,7 +128,32 @@ export class ShippingController {
     next: NextFunction,
   ) => {
     try {
-      // TODO
+      const { shippingId } = req.params as { shippingId: string };
+      const { name, description, price, isActive, sortOrder } = req.body as {
+        name: string;
+        description: string;
+        price: string;
+        isActive: string;
+        sortOrder: string;
+      };
+
+      const input: UpdateShippingDto = new UpdateShippingDto({
+        shippingId,
+        name,
+        description,
+        price,
+        isActive,
+        sortOrder,
+      });
+
+      const uploadedImage = this.getUploadedImage(req);
+
+      const result = await this.shippingService.updateShipping(
+        input,
+        uploadedImage,
+      );
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }

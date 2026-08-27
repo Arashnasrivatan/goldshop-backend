@@ -36,6 +36,10 @@ const validate =
       const validatedData = await validator.validate(dataToValidate, {
         abortEarly: false,
         stripUnknown: true,
+        context: {
+          file: req.file,
+          files: req.files,
+        },
       });
 
       req.validatedData = validatedData;

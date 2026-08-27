@@ -36,11 +36,7 @@ const router: Router = express.Router();
 
 //* Public Routes
 
-router
-  .route("/")
-  .get(
-    shippingController.getActiveShippingMethods,
-  );
+router.route("/").get(shippingController.getActiveShippingMethods);
 
 //* Admin Routes
 
@@ -71,6 +67,7 @@ router
   .patch(
     authGuard,
     roleGuard("SUPER_ADMIN", "ADMIN"),
+    uploader([{ name: "image", type: "image", maxCount: 1 }], 5),
     validate(shippingIdParamsSchema, "params"),
     validate(updateShippingSchema),
     shippingController.updateShippingMethod,

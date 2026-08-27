@@ -1,6 +1,6 @@
 import { CreateShippingDto } from "./dto/createShipping.dto";
 import { GetAllShippingsDto } from "./dto/getAllShippings.dto";
-import ShippingModel from "./shipping.model";
+import ShippingModel, { IShippingMethodDocument } from "./shipping.model";
 import { IShippingMethod } from "./shipping.types";
 
 export class ShippingRepository {
@@ -76,5 +76,21 @@ export class ShippingRepository {
     const shipping = await ShippingModel.create(shippingData);
 
     return shipping;
+  }
+
+  async updateById(
+    shippingId: string,
+    updateData: Partial<IShippingMethod>,
+  ): Promise<IShippingMethodDocument | null> {
+    return ShippingModel.findByIdAndUpdate(
+      shippingId,
+      {
+        $set: updateData,
+      },
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
   }
 }
