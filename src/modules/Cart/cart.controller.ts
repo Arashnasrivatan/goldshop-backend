@@ -4,6 +4,7 @@ import { CartService } from "./cart.service";
 import { AddItemDto } from "./dto/addItem.dto";
 import { IUserDocument } from "../User/user.model";
 import { UpdateItemDto } from "./dto/updateItem.dto";
+import { RemoveItemDto } from "./dto/removeItem.dto";
 
 export class CartController {
   constructor(private readonly cartService: CartService) {}
@@ -77,7 +78,19 @@ export class CartController {
 
   removeItem = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const userData = req.user as IUserDocument;
+      const userId = String(userData._id);
+
+      const { productId } = req.params as { productId: string };
+
+      const input: RemoveItemDto = new RemoveItemDto({
+        userId,
+        productId,
+      });
+
+      const result = await this.cartService.removeItem(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }

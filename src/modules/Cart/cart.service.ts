@@ -5,6 +5,7 @@ import { UserRepository } from "../User/user.repository";
 import { CartRepository } from "./cart.repository";
 import { AddItemDto } from "./dto/addItem.dto";
 import { UpdateItemDto } from "./dto/updateItem.dto";
+import { RemoveItemDto } from "./dto/removeItem.dto";
 
 export class CartService {
   constructor(
@@ -87,8 +88,7 @@ export class CartService {
     }
 
     const itemExists = cart.items.some(
-      (item) =>
-        String((item.productId)._id) === String(productId),
+      (item) => String(item.productId._id) === String(productId),
     );
 
     if (!itemExists) {
@@ -125,6 +125,21 @@ export class CartService {
 
     return {
       message: "Cart item updated successfully",
+      data: updatedCart,
+    };
+  }
+
+  async removeItem(input: RemoveItemDto) {
+    const { userId, productId } = input;
+
+    const updatedCart = await this.cartRepository.removeItem(userId, productId);
+
+    if (!updatedCart) {
+      throw new AppError("Product is not in your cart", 404);
+    }
+
+    return {
+      message: "Product removed from cart successfully",
       data: updatedCart,
     };
   }

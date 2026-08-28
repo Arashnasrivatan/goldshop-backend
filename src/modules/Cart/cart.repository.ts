@@ -137,4 +137,26 @@ export class CartRepository {
       ].join(" "),
     });
   }
+
+  async removeItem(
+    userId: string,
+    productId: string,
+  ): Promise<ICartDocument | null> {
+    return CartModel.findOneAndUpdate(
+      {
+        userId,
+        "items.productId": productId,
+      },
+      {
+        $pull: {
+          items: {
+            productId,
+          },
+        },
+      },
+      {
+        new: true,
+      },
+    );
+  }
 }
