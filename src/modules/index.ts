@@ -9,6 +9,7 @@ import CategoryRouter from "./Category/category.route";
 import PriceRouter from "./Price/price.route";
 import ProductRouter from "./Product/product.route";
 import ShippingRouter from "./Shipping/shipping.route";
+import CartRouter from "./Cart/cart.route";
 
 const apiRouter: Router = Router();
 
@@ -53,5 +54,6 @@ apiRouter.use("/api/categories", CategoryRouter);
 apiRouter.use("/api/prices", PriceRouter);
 apiRouter.use("/api/products", ProductRouter);
 apiRouter.use("/api/shipping-methods", ShippingRouter);
+apiRouter.use("/api/carts", CartRouter);
 
 export default apiRouter;

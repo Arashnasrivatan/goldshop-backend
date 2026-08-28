@@ -27,6 +27,8 @@ export interface IProduct {
   isActive?: boolean;
   isDeleted?: boolean;
   customFilters?: Map<string, unknown>;
+
+  inStock: boolean;
 }
 
 export type ProductSortOption =
