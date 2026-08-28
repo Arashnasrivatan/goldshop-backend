@@ -6,6 +6,26 @@ export class CartRepository {
   async findByUserId(userId: string): Promise<ICartDocument | null> {
     return CartModel.findOne({
       userId: new Types.ObjectId(userId),
+    }).populate({
+      path: "items.productId",
+      select: [
+        "_id",
+        "name",
+        "slug",
+        "type",
+        "stock",
+        "images",
+        "weight",
+        "wage",
+        "wageType",
+        "profitMargin",
+        "taxRate",
+        "coinType",
+        "coinProfit",
+        "coinProfitType",
+        "isActive",
+        "isDeleted",
+      ].join(" "),
     });
   }
 
@@ -40,7 +60,26 @@ export class CartRepository {
         new: true,
         runValidators: true,
       },
-    );
+    ).populate({
+      path: "items.productId",
+      select: [
+        "_id",
+        "name",
+        "slug",
+        "type",
+        "stock",
+        "images",
+        "weight",
+        "wage",
+        "wageType",
+        "profitMargin",
+        "taxRate",
+        "coinType",
+        "coinProfit",
+        "coinProfitType",
+        "isActive",
+        "isDeleted",
+      ].join(" "),
+    });
   }
 }
- 

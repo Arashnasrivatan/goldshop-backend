@@ -43,4 +43,23 @@ export class CartService {
 
     return { message: "Product Added Successfully", data: updatedCart };
   }
+
+  async getCart(userId: string) {
+    const cart = await this.cartRepository.findByUserId(userId);
+
+    if (!cart) {
+      return {
+        message: "Cart retrieved successfully",
+        data: {
+          userId,
+          items: [],
+        },
+      };
+    }
+
+    return {
+      message: "Cart retrieved successfully",
+      data: cart,
+    };
+  }
 }
