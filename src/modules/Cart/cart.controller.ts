@@ -3,6 +3,7 @@ import response from "../../common/utils/response";
 import { CartService } from "./cart.service";
 import { AddItemDto } from "./dto/addItem.dto";
 import { IUserDocument } from "../User/user.model";
+import { UpdateItemDto } from "./dto/updateItem.dto";
 
 export class CartController {
   constructor(private readonly cartService: CartService) {}
@@ -51,7 +52,24 @@ export class CartController {
 
   updateItem = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const userData = req.user as IUserDocument;
+      const userId = String(userData._id);
+
+      const { productId } = req.params as { productId: string };
+
+      const { quantity } = req.body as {
+        quantity: number;
+      };
+
+      const input: UpdateItemDto = new UpdateItemDto({
+        userId,
+        productId,
+        quantity,
+      });
+
+      const result = await this.cartService.updateItem(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }

@@ -9,7 +9,6 @@ export class CartRepository {
     }).populate({
       path: "items.productId",
       select: [
-        "_id",
         "name",
         "slug",
         "type",
@@ -63,7 +62,6 @@ export class CartRepository {
     ).populate({
       path: "items.productId",
       select: [
-        "_id",
         "name",
         "slug",
         "type",
@@ -97,5 +95,46 @@ export class CartRepository {
         new: true,
       },
     );
+  }
+
+  async updateItemQuantity(
+    userId: string,
+    productId: string,
+    quantity: number,
+  ): Promise<ICartDocument | null> {
+    return CartModel.findOneAndUpdate(
+      {
+        userId,
+        "items.productId": productId,
+      },
+      {
+        $set: {
+          "items.$.quantity": quantity,
+        },
+      },
+      {
+        new: true,
+        runValidators: true,
+      },
+    ).populate({
+      path: "items.productId",
+      select: [
+        "name",
+        "slug",
+        "type",
+        "stock",
+        "images",
+        "weight",
+        "wage",
+        "wageType",
+        "profitMargin",
+        "taxRate",
+        "coinType",
+        "coinProfit",
+        "coinProfitType",
+        "isActive",
+        "isDeleted",
+      ].join(" "),
+    });
   }
 }

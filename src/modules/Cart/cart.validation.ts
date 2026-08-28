@@ -12,7 +12,12 @@ const addCartItemSchema = yup
 
 const updateCartItemSchema = yup
   .object({
-    // TODO
+    quantity: yup
+      .number()
+      .typeError("Quantity must be a number")
+      .integer("Quantity must be an integer")
+      .min(1, "Quantity must be at least 1")
+      .required("Quantity is required"),
   })
   .noUnknown();
 
