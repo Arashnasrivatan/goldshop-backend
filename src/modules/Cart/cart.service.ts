@@ -62,4 +62,17 @@ export class CartService {
       data: cart,
     };
   }
+
+  async clearCart(userId: string) {
+    const cart = await this.cartRepository.clearCart(userId);
+
+    if (!cart) {
+      throw new AppError("Cart not found", 404);
+    }
+
+    return {
+      message: "Cart cleared successfully",
+      data: cart,
+    };
+  }
 }

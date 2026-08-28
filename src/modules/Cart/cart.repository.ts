@@ -82,4 +82,20 @@ export class CartRepository {
       ].join(" "),
     });
   }
+
+  async clearCart(userId: string): Promise<ICartDocument | null> {
+    return CartModel.findOneAndUpdate(
+      {
+        userId,
+      },
+      {
+        $set: {
+          items: [],
+        },
+      },
+      {
+        new: true,
+      },
+    );
+  }
 }

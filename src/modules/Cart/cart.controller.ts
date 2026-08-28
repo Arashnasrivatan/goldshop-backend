@@ -22,7 +22,12 @@ export class CartController {
 
   clearCart = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const userData = req.user as IUserDocument;
+      const userId = String(userData._id);
+
+      const result = await this.cartService.clearCart(userId);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }
