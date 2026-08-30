@@ -261,6 +261,12 @@ export class ProductService {
       updateData,
     );
 
+    const isActive = String(updateData.isActive) === "true";
+
+    if (!isActive) {
+      await this.cartRepository.removeItemFromAllCarts(productId);
+    }
+
     return {
       message: "Product Updated Successfully :)",
       data: updatedProduct,
