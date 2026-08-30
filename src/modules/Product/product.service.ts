@@ -21,11 +21,13 @@ import { DeleteProductImagesDto } from "./dto/deleteProductImages.dto";
 import { COIN_FIELDS, JEWELRY_FIELDS } from "./product.validaton";
 import { DeleteProductDto } from "./dto/deleteProduct.dto";
 import { Types } from "mongoose";
+import { CartRepository } from "../Cart/cart.repository";
 
 export class ProductService {
   constructor(
     private readonly productRepository: ProductRepository,
     private readonly categoryRepository: CategoryRepository,
+    private readonly cartRepository: CartRepository,
     private readonly storageService: S3StorageService,
   ) {}
 
@@ -282,11 +284,11 @@ export class ProductService {
 
     await Promise.all([
       // Soft Delete
-      this.productRepository.update(
-        input.productId,
-        { isDeleted: true, isActive: false },
-        // TODO: Delete product from users cart
-      ),
+      this.productRepository.update(input.productId, {
+        isDeleted: true,
+        isActive: false,
+      }),
+      this.cartRepository.removeItemFromAllCarts(input.productId),
     ]);
 
     return { message: "Product Deleted Successfully" };

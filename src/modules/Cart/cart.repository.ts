@@ -159,4 +159,19 @@ export class CartRepository {
       },
     );
   }
+
+  async removeItemFromAllCarts(productId: string): Promise<void> {
+    await CartModel.updateMany(
+      {
+        "items.productId": productId,
+      },
+      {
+        $pull: {
+          items: {
+            productId,
+          },
+        },
+      },
+    );
+  }
 }

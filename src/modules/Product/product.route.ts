@@ -23,15 +23,18 @@ import {
   productIdParamsSchema,
   slugParamsSchema,
 } from "../../common/utils/validation/params/sharedValidators";
+import { CartRepository } from "../Cart/cart.repository";
 
 const productRepository = new ProductRepository();
 const categoryRepository = new CategoryRepository();
+const cartRepository = new CartRepository();
 
 const s3StorageService = new S3StorageService(configs.storage.arvan);
 
 const productService = new ProductService(
   productRepository,
   categoryRepository,
+  cartRepository,
   s3StorageService,
 );
 
