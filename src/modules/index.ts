@@ -10,6 +10,7 @@ import PriceRouter from "./Price/price.route";
 import ProductRouter from "./Product/product.route";
 import ShippingRouter from "./Shipping/shipping.route";
 import CartRouter from "./Cart/cart.route";
+import OrderRouter from "./Order/order.route";
 
 const apiRouter: Router = Router();
 
@@ -55,5 +56,6 @@ apiRouter.use("/api/prices", PriceRouter);
 apiRouter.use("/api/products", ProductRouter);
 apiRouter.use("/api/shipping-methods", ShippingRouter);
 apiRouter.use("/api/carts", CartRouter);
+apiRouter.use("/api/orders", OrderRouter);
 
 export default apiRouter;
