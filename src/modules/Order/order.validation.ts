@@ -10,6 +10,40 @@ const orderIdParamsSchema = yup.object({
     }),
 });
 
+const getMyOrdersSchema = yup
+  .object({
+    limit: yup
+      .number()
+      .optional()
+      .integer("Limit must be a positive integer")
+      .positive("Limit must be a positive integer")
+      .max(100, "Maximum allowed limit is 100"),
+    page: yup
+      .number()
+      .optional()
+      .integer("Page must be a positive integer")
+      .positive("Page must be a positive integer"),
+
+    sort: yup
+      .string()
+      .oneOf(["asc", "desc"], "Sort must be either asc or desc")
+      .default("desc"),
+
+    status: yup
+      .string()
+      .oneOf([
+        "PENDING_PAYMENT",
+        "PAID",
+        "PROCESSING",
+        "SHIPPED",
+        "DELIVERED",
+        "CANCELLED",
+        "REFUNDED",
+      ])
+      .optional(),
+  })
+  .noUnknown();
+
 const getAllOrdersQuerySchema = yup.object({
   search: yup.string().trim().optional(),
   userId: yup
@@ -112,6 +146,7 @@ const deleteOrderSchema = yup.object({
 
 export {
   orderIdParamsSchema,
+  getMyOrdersSchema,
   getAllOrdersQuerySchema,
   updateOrderSchema,
   deleteOrderSchema,

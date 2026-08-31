@@ -8,6 +8,7 @@ import {
   getAllOrdersQuerySchema,
   orderIdParamsSchema,
   updateOrderSchema,
+  getMyOrdersSchema,
 } from "./order.validation";
 import OrderRepository from "./order.repository";
 import { OrderService } from "./order.service";
@@ -21,7 +22,7 @@ const orderController = new OrderController(orderService);
 
 const router: Router = express.Router();
 
-router.route("/me").get(authGuard, orderController.getMyOrders);
+router.route("/me").get(authGuard, validate(getMyOrdersSchema), orderController.getMyOrders);
 
 router
   .route("/me/:orderId")
