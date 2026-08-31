@@ -4,6 +4,7 @@ import { OrderStatus } from "./order.types";
 import { IUserDocument } from "../User/user.model";
 import { GetMyOrdersDto } from "./dto/getMyOrders.dto";
 import response from "../../common/utils/response";
+import { GetMyOrderByIdDto } from "./dto/getMyOrderById.dto";
 
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
@@ -39,7 +40,18 @@ export class OrderController {
 
   getMyOrderById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const userData = req.user as IUserDocument;
+
+      const { orderId } = req.params as { orderId: string };
+
+      const input = new GetMyOrderByIdDto({
+        userId: userData._id.toString(),
+        orderId,
+      });
+
+      const result = await this.orderService.getMyOrderById(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }
