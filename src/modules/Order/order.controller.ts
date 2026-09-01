@@ -24,10 +24,10 @@ export class OrderController {
         status?: OrderStatus;
       };
 
-      const input: GetMyOrdersDto = new GetMyOrdersDto({
+      const input = new GetMyOrdersDto({
         userId,
-        page,
-        limit,
+        page: page ? Number(page) : undefined,
+        limit: limit ? Number(limit) : undefined,
         sort,
         status,
       });

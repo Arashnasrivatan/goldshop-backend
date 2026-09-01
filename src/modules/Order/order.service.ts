@@ -11,11 +11,7 @@ export class OrderService {
   constructor(private readonly orderRepository: OrderRepository) {}
 
   async getMyOrders(input: GetMyOrdersDto) {
-    const userId = input.userId;
-    const limit = Number(input?.limit ?? 10);
-    const page = Number(input?.page ?? 1);
-    const sort = input?.sort ?? "desc";
-    const status = input?.status;
+    const { userId, limit, page, sort, status } = input;
 
     const orders = await this.orderRepository.findByUserId(
       userId,
