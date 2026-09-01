@@ -6,6 +6,7 @@ import { GetMyOrdersDto } from "./dto/getMyOrders.dto";
 import response from "../../common/utils/response";
 import { GetMyOrderByIdDto } from "./dto/getMyOrderById.dto";
 import { GetAllOrdersDto } from "./dto/GetAllOrders.dto";
+import { GetOrderByIdDto } from "./dto/getOrderById.dto";
 
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
@@ -91,7 +92,15 @@ export class OrderController {
 
   getOrderById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const { orderId } = req.params as { orderId: string };
+
+      const input = new GetOrderByIdDto({
+        orderId,
+      });
+
+      const result = await this.orderService.getOrderById(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }

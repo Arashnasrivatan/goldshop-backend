@@ -4,6 +4,7 @@ import { createPaginationData } from "../../common/utils";
 import { GetAllOrdersDto } from "./dto/GetAllOrders.dto";
 import { GetMyOrderByIdDto } from "./dto/getMyOrderById.dto";
 import { GetMyOrdersDto } from "./dto/getMyOrders.dto";
+import { GetOrderByIdDto } from "./dto/getOrderById.dto";
 import OrderRepository from "./order.repository";
 
 export class OrderService {
@@ -100,6 +101,21 @@ export class OrderService {
     return {
       message: "Orders retrieved successfully",
       data,
+    };
+  }
+
+  async getOrderById(input: GetOrderByIdDto) {
+    const { orderId } = input;
+
+    const order = await this.orderRepository.findById(orderId);
+
+    if (!order) {
+      throw new AppError("Order not found", 404);
+    }
+
+    return {
+      message: "Order retrieved successfully",
+      data: order,
     };
   }
 }
