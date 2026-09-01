@@ -7,6 +7,7 @@ import response from "../../common/utils/response";
 import { GetMyOrderByIdDto } from "./dto/getMyOrderById.dto";
 import { GetAllOrdersDto } from "./dto/GetAllOrders.dto";
 import { GetOrderByIdDto } from "./dto/getOrderById.dto";
+import { UpdateOrderDto } from "./dto/updateOrder.dto";
 
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
@@ -108,7 +109,24 @@ export class OrderController {
 
   updateOrder = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const { orderId } = req.params as { orderId: string };
+
+      const { status, adminNote, postTrackingCode } = req.body as {
+        status?: OrderStatus;
+        adminNote?: string | null;
+        postTrackingCode?: string | null;
+      };
+
+      const input = new UpdateOrderDto({
+        orderId,
+        status,
+        adminNote,
+        postTrackingCode,
+      });
+
+      const result = await this.orderService.updateOrder(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }

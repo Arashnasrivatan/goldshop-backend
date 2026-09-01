@@ -104,6 +104,7 @@ const updateOrderSchema = yup
           "PROCESSING",
           "SHIPPED",
           "DELIVERED",
+          "READY_FOR_PICKUP",
           "CANCELLED",
           "REFUNDED",
         ],
@@ -117,14 +118,6 @@ const updateOrderSchema = yup
       .nullable()
       .optional(),
     postTrackingCode: yup.string().trim().nullable().optional(),
-    isDeleted: yup.boolean().optional(),
-    payment: yup
-      .object({
-        authority: yup.string().trim().nullable().optional(),
-        paidAt: yup.date().nullable().optional(),
-      })
-      .optional()
-      .noUnknown("Only authority and paidAt are allowed in payment"),
   })
   .test(
     "not-empty",

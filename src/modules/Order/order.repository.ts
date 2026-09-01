@@ -249,8 +249,7 @@ export class OrderRepository {
     userId?: string,
   ): Promise<IOrderDocument | null> {
     const query: Record<string, any> = {
-      _id: new Types.ObjectId(orderId),
-      isDeleted: { $ne: true },
+      _id: orderId,
     };
 
     if (userId) {
@@ -265,10 +264,6 @@ export class OrderRepository {
       }
     });
 
-    if (Object.keys(safeUpdate).length === 0) {
-      return null;
-    }
-
     return OrderModel.findOneAndUpdate(
       query,
       {
@@ -279,6 +274,13 @@ export class OrderRepository {
         runValidators: true,
       },
     )
+      .populate("user", "fullname phone role")
+      .populate({
+        path: "items.product",
+        select:
+          "name slug type images category stock isActive isDeleted weight wage wageType profitMargin taxRate coinType coinProfit coinProfitType",
+      })
+      .populate("shipping.method", "name price isActive sortOrder")
       .lean()
       .exec() as Promise<IOrderDocument | null>;
   }
