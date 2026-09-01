@@ -5,6 +5,7 @@ import { IUserDocument } from "../User/user.model";
 import { GetMyOrdersDto } from "./dto/getMyOrders.dto";
 import response from "../../common/utils/response";
 import { GetMyOrderByIdDto } from "./dto/getMyOrderById.dto";
+import { GetAllOrdersDto } from "./dto/GetAllOrders.dto";
 
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
@@ -59,7 +60,30 @@ export class OrderController {
 
   getAllOrders = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const query = req.query;
+
+      const input = new GetAllOrdersDto({
+        search: query.search as string | undefined,
+        userId: query.userId as string | undefined,
+        status: query.status as OrderStatus | undefined,
+        paymentAuthority: query.paymentAuthority as string | undefined,
+        postTrackingCode: query.postTrackingCode as string | undefined,
+        from: query.from as string | undefined,
+        to: query.to as string | undefined,
+        includeDeleted:
+          query.includeDeleted === "true"
+            ? true
+            : query.includeDeleted === "false"
+              ? false
+              : undefined,
+        limit: query.limit ? Number(query.limit) : undefined,
+        page: query.page ? Number(query.page) : undefined,
+        sort: query.sort as "asc" | "desc" | undefined,
+      });
+
+      const result = await this.orderService.getAllOrders(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }

@@ -160,16 +160,16 @@ export class OrderRepository {
       query.status = filters.status;
     }
 
-    if (filters.paymentAuthority) {
+    if (filters.paymentAuthority?.trim()) {
       query["payment.authority"] = {
-        $regex: filters.paymentAuthority,
+        $regex: filters.paymentAuthority.trim(),
         $options: "i",
       };
     }
 
-    if (filters.postTrackingCode) {
+    if (filters.postTrackingCode?.trim()) {
       query.postTrackingCode = {
-        $regex: filters.postTrackingCode,
+        $regex: filters.postTrackingCode.trim(),
         $options: "i",
       };
     }
@@ -193,6 +193,7 @@ export class OrderRepository {
     const [data, total] = await Promise.all([
       OrderModel.find(query)
         .populate("user", "fullname phone role")
+        .populate("shipping.method", "name price isActive sortOrder")
         .sort({ createdAt: sortOrder })
         .skip(skip)
         .limit(limit)
