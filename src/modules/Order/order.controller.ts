@@ -8,6 +8,7 @@ import { GetMyOrderByIdDto } from "./dto/getMyOrderById.dto";
 import { GetAllOrdersDto } from "./dto/GetAllOrders.dto";
 import { GetOrderByIdDto } from "./dto/getOrderById.dto";
 import { UpdateOrderDto } from "./dto/updateOrder.dto";
+import { DeleteOrderDto } from "./dto/deleteOrder.dto";
 
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
@@ -134,7 +135,20 @@ export class OrderController {
 
   deleteOrder = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const { orderId } = req.params as { orderId: string };
+
+      const { confirmationPhrase } = req.body as {
+        confirmationPhrase: string;
+      };
+
+      const input = new DeleteOrderDto({
+        orderId,
+        confirmationPhrase,
+      });
+
+      const result = await this.orderService.deleteOrder(input);
+
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }

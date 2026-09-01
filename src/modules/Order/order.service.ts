@@ -1,6 +1,7 @@
 import { AppError } from "../../common/errors/AppError";
 import { IPaginationData } from "../../common/types/utils";
 import { createPaginationData } from "../../common/utils";
+import { DeleteOrderDto } from "./dto/deleteOrder.dto";
 import { GetAllOrdersDto } from "./dto/GetAllOrders.dto";
 import { GetMyOrderByIdDto } from "./dto/getMyOrderById.dto";
 import { GetMyOrdersDto } from "./dto/getMyOrders.dto";
@@ -189,6 +190,40 @@ export class OrderService {
     return {
       message: "Order updated successfully",
       data: updatedOrder,
+    };
+  }
+
+  async deleteOrder(input: DeleteOrderDto) {
+    const { orderId, confirmationPhrase } = input;
+
+    const order = await this.orderRepository.findById(orderId);
+
+    if (!order) {
+      throw new AppError("Order not found", 404);
+    }
+
+    if (order.isDeleted) {
+      throw new AppError("Order is already deleted", 400);
+    }
+
+    const phrase = `DELETE ORDER ${order._id.toString()}`;
+
+    if (confirmationPhrase !== phrase) {
+      throw new AppError(
+        `Confirmation phrase does not match. To delete this Order, please provide the following confirmation phrase: "${phrase}"`,
+        400,
+      );
+    }
+
+    const deletedOrder = await this.orderRepository.softDelete(orderId);
+
+    if (!deletedOrder) {
+      throw new AppError("Failed to delete order", 500);
+    }
+
+    return {
+      message: "Order deleted successfully",
+      data: deletedOrder,
     };
   }
 }

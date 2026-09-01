@@ -288,7 +288,7 @@ export class OrderRepository {
   async softDelete(orderId: string): Promise<IOrderDocument | null> {
     return OrderModel.findOneAndUpdate(
       {
-        _id: new Types.ObjectId(orderId),
+        _id: orderId,
         isDeleted: { $ne: true },
       },
       {
@@ -301,6 +301,13 @@ export class OrderRepository {
         runValidators: true,
       },
     )
+      .populate("user", "fullname phone role")
+      .populate({
+        path: "items.product",
+        select:
+          "name slug type images category stock isActive isDeleted weight wage wageType profitMargin taxRate coinType coinProfit coinProfitType",
+      })
+      .populate("shipping.method", "name price isActive sortOrder")
       .lean()
       .exec() as Promise<IOrderDocument | null>;
   }
