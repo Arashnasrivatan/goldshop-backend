@@ -43,6 +43,7 @@ export class ShippingService {
     }
 
     const name = input.name.trim();
+    const type = input.type?.trim();
 
     const isNameDuplicated = await this.shippingRepository.findByName(name);
 
@@ -76,6 +77,7 @@ export class ShippingService {
     const shipping = await this.shippingRepository.create({
       ...input,
       name,
+      type,
       image: shippingMethodImage,
     });
     return {
@@ -93,7 +95,8 @@ export class ShippingService {
   }
 
   async updateShipping(input: UpdateShippingDto, image?: UploadedFile) {
-    const { shippingId, name, description, price, isActive, sortOrder } = input;
+    const { shippingId, name, description, type, price, isActive, sortOrder } =
+      input;
 
     const shippingMethod = await this.shippingRepository.findById(shippingId);
 
@@ -117,6 +120,10 @@ export class ShippingService {
 
     if (description !== undefined) {
       updateData.description = description || null;
+    }
+
+    if (type !== undefined) {
+      updateData.type = type as IShippingMethod["type"];
     }
 
     if (price !== undefined) {

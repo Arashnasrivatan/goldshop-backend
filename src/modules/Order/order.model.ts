@@ -65,6 +65,11 @@ const ShippingSnapshotSchema = new Schema(
       ref: "ShippingMethod",
       required: true,
     },
+    type: {
+      type: String,
+      enum: ["PICKUP", "SHIPPING"],
+      required: true,
+    },
     name: { type: String, required: true },
     price: { type: Number, required: true },
   },
@@ -148,7 +153,7 @@ const OrderSchema = new Schema<IOrderDocument>(
     },
     shippingAddress: {
       type: OrderAddressSchema,
-      required: true,
+      default: null,
     },
     postTrackingCode: {
       type: String,

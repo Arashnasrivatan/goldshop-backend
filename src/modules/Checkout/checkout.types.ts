@@ -51,6 +51,7 @@ export interface ICheckoutItem {
 
 export interface IShippingSnapshot {
   method: Types.ObjectId;
+  type: "PICKUP" | "SHIPPING";
   name: string;
   price: number;
 }
@@ -73,7 +74,7 @@ export interface ICheckout {
   total: number;
   status: CheckoutStatus;
   payment: ICheckoutPayment;
-  shippingAddress: ICheckoutAddress;
+  shippingAddress?: ICheckoutAddress;
   expiresAt: Date;
   createdAt: Date;
   updatedAt: Date;

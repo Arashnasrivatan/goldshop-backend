@@ -60,11 +60,13 @@ export class ShippingRepository {
   }
 
   async create(input: CreateShippingDto) {
-    const { name, description, price, image, isActive, sortOrder } = input;
+    const { name, description, type, price, image, isActive, sortOrder } =
+      input;
 
     const shippingData: Partial<IShippingMethod> = {
       name,
       description: description || null,
+      type: type as IShippingMethod["type"],
       price: Number(price),
       image,
       sortOrder: sortOrder !== undefined ? Number(sortOrder) : 0,

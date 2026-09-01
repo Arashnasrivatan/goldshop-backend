@@ -19,6 +19,13 @@ const ShippingMethodSchema = new Schema<IShippingMethod>(
       trim: true,
       default: null,
     },
+    type: {
+      type: String,
+      enum: ["PICKUP", "DELIVERY"],
+      required: true,
+      default: "DELIVERY",
+      index: true,
+    },
     price: {
       type: Number,
       required: true,

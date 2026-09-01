@@ -73,6 +73,11 @@ const ShippingSnapshotSchema = new Schema(
       ref: "ShippingMethod",
       required: true,
     },
+    type: {
+      type: String,
+      enum: ["PICKUP", "SHIPPING"],
+      required: true,
+    },
     name: { type: String, required: true },
     price: { type: Number, required: true, min: 0 },
   },
@@ -178,7 +183,7 @@ const CheckoutSchema = new Schema<ICheckoutDocument>(
     },
     shippingAddress: {
       type: CheckoutAddressSchema,
-      required: true,
+      default: null,
     },
     expiresAt: {
       type: Date,

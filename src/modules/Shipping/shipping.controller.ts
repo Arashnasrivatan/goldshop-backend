@@ -76,17 +76,20 @@ export class ShippingController {
     next: NextFunction,
   ) => {
     try {
-      const { name, description, price, isActive, sortOrder } = req.body as {
-        name: string;
-        description: string;
-        price: string;
-        isActive: string;
-        sortOrder: string;
-      };
+      const { name, description, type, price, isActive, sortOrder } =
+        req.body as {
+          name: string;
+          description: string;
+          type: string;
+          price: string;
+          isActive: string;
+          sortOrder: string;
+        };
 
       const input: CreateShippingDto = new CreateShippingDto({
         name,
         description,
+        type,
         price,
         isActive,
         sortOrder,
@@ -130,18 +133,21 @@ export class ShippingController {
   ) => {
     try {
       const { shippingId } = req.params as { shippingId: string };
-      const { name, description, price, isActive, sortOrder } = req.body as {
-        name: string;
-        description: string;
-        price: string;
-        isActive: string;
-        sortOrder: string;
-      };
+      const { name, description, type, price, isActive, sortOrder } =
+        req.body as {
+          name: string;
+          description: string;
+          type: string;
+          price: string;
+          isActive: string;
+          sortOrder: string;
+        };
 
       const input: UpdateShippingDto = new UpdateShippingDto({
         shippingId,
         name,
         description,
+        type,
         price,
         isActive,
         sortOrder,

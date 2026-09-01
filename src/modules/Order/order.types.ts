@@ -59,6 +59,7 @@ export interface IOrderItem {
 
 export interface IShippingSnapshot {
   method: Types.ObjectId;
+  type: "PICKUP" | "SHIPPING";
   name: string;
   price: number;
 }

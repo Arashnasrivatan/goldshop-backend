@@ -2,6 +2,7 @@ import { ShippingMethodImage } from "./../shipping.types";
 export class CreateShippingDto {
   public name: string;
   public description?: string;
+  public type: string;
   public price: string;
   public image?: ShippingMethodImage;
   public isActive?: string;
@@ -10,6 +11,7 @@ export class CreateShippingDto {
   constructor(data: {
     name: string;
     description?: string;
+    type: string;
     price: string;
     image?: ShippingMethodImage;
     isActive?: string;
@@ -17,6 +19,7 @@ export class CreateShippingDto {
   }) {
     this.name = data.name;
     this.description = data.description;
+    this.type = data.type;
     this.price = data.price;
     this.image = data.image;
     this.isActive = data.isActive;
