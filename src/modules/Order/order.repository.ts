@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Types } from "mongoose";
+
 import OrderModel, { IOrderDocument } from "./order.model";
 import { IOrder, OrderStatus } from "./order.types";
 
@@ -17,30 +18,52 @@ export interface IOrderFilter {
 export class OrderRepository {
   async create(input: Partial<IOrder>): Promise<IOrderDocument> {
     const order = await OrderModel.create({
-      ...input,
       user: input.user,
+
       items: input.items,
+
       shipping: input.shipping,
+
       subtotal: Number(input.subtotal ?? 0),
+
       shippingCost: Number(input.shippingCost ?? 0),
+
       total: Number(input.total ?? 0),
+
       status: input.status ?? "PENDING_PAYMENT",
+
       payment: {
         authority: input.payment?.authority ?? null,
         paidAt: input.payment?.paidAt ?? null,
       },
+
       shippingAddress: input.shippingAddress,
+
       postTrackingCode: input.postTrackingCode ?? null,
+
       isDeleted: Boolean(input.isDeleted ?? false),
+
       adminNote: input.adminNote ?? null,
     });
 
     return order;
   }
 
-  async findById(orderId: string): Promise<IOrderDocument | null> {
-    return OrderModel.findById(orderId)
+  async findById(
+    orderId: string,
+    includeDeleted: boolean = false,
+  ): Promise<IOrderDocument | null> {
+    const query: Record<string, any> = {
+      _id: new Types.ObjectId(orderId),
+    };
+
+    if (!includeDeleted) {
+      query.isDeleted = { $ne: true };
+    }
+
+    return OrderModel.findOne(query)
       .populate("user", "fullname phone role")
+      .populate("shipping.method", "name price isActive sortOrder")
       .lean()
       .exec() as Promise<IOrderDocument | null>;
   }
@@ -51,10 +74,13 @@ export class OrderRepository {
   ): Promise<IOrderDocument | null> {
     return OrderModel.findOne({
       _id: new Types.ObjectId(orderId),
+
       user: new Types.ObjectId(userId),
+
       isDeleted: { $ne: true },
     })
       .populate("user", "fullname phone role")
+      .populate("shipping.method", "name price isActive sortOrder")
       .lean()
       .exec() as Promise<IOrderDocument | null>;
   }
@@ -63,28 +89,23 @@ export class OrderRepository {
     userId: string,
     limit: number = 10,
     page: number = 1,
-    sort: string = "desc",
+    sort: "asc" | "desc" = "desc",
     status?: OrderStatus | string,
-    includeDeleted: boolean = false,
   ) {
     const sortOrder = sort === "asc" ? 1 : -1;
     const skip = (page - 1) * limit;
 
     const query: Record<string, any> = {
       user: new Types.ObjectId(userId),
+      isDeleted: { $ne: true },
     };
 
     if (status) {
       query.status = status;
     }
 
-    if (!includeDeleted) {
-      query.isDeleted = { $ne: true };
-    }
-
     const [data, total] = await Promise.all([
       OrderModel.find(query)
-        .populate("user", "fullname phone role")
         .sort({ createdAt: sortOrder })
         .skip(skip)
         .limit(limit)
@@ -95,10 +116,14 @@ export class OrderRepository {
 
     return {
       data,
+
       meta: {
         page,
+
         limit,
+
         total,
+
         totalPages: Math.ceil(total / limit),
       },
     };
@@ -108,9 +133,10 @@ export class OrderRepository {
     filters: IOrderFilter = {},
     limit: number = 10,
     page: number = 1,
-    sort: string = "desc",
+    sort: "asc" | "desc" = "desc",
   ) {
     const sortOrder = sort === "asc" ? 1 : -1;
+
     const skip = (page - 1) * limit;
 
     const query: Record<string, any> = {};
@@ -125,24 +151,28 @@ export class OrderRepository {
             $options: "i",
           },
         },
+
         {
           "shippingAddress.title": {
             $regex: search,
             $options: "i",
           },
         },
+
         {
           adminNote: {
             $regex: search,
             $options: "i",
           },
         },
+
         {
           postTrackingCode: {
             $regex: search,
             $options: "i",
           },
         },
+
         {
           "payment.authority": {
             $regex: search,
@@ -204,10 +234,14 @@ export class OrderRepository {
 
     return {
       data,
+
       meta: {
         page,
+
         limit,
+
         total,
+
         totalPages: Math.ceil(total / limit),
       },
     };
@@ -216,29 +250,28 @@ export class OrderRepository {
   async updateStatus(
     orderId: string,
     status: OrderStatus,
-    userId?: string,
   ): Promise<IOrderDocument | null> {
-    const query: Record<string, any> = {
-      _id: new Types.ObjectId(orderId),
-      isDeleted: { $ne: true },
-    };
-
-    if (userId) {
-      query.user = new Types.ObjectId(userId);
-    }
-
     return OrderModel.findOneAndUpdate(
-      query,
+      {
+        _id: new Types.ObjectId(orderId),
+
+        isDeleted: { $ne: true },
+      },
+
       {
         $set: {
           status,
         },
       },
+
       {
         new: true,
+
         runValidators: true,
       },
     )
+      .populate("user", "fullname phone role")
+      .populate("shipping.method", "name price isActive sortOrder")
       .lean()
       .exec() as Promise<IOrderDocument | null>;
   }
@@ -246,16 +279,7 @@ export class OrderRepository {
   async update(
     orderId: string,
     updateData: Partial<IOrder>,
-    userId?: string,
   ): Promise<IOrderDocument | null> {
-    const query: Record<string, any> = {
-      _id: orderId,
-    };
-
-    if (userId) {
-      query.user = new Types.ObjectId(userId);
-    }
-
     const safeUpdate: Record<string, unknown> = {};
 
     Object.entries(updateData).forEach(([key, value]) => {
@@ -264,22 +288,28 @@ export class OrderRepository {
       }
     });
 
+    if (Object.keys(safeUpdate).length === 0) {
+      return null;
+    }
+
     return OrderModel.findOneAndUpdate(
-      query,
+      {
+        _id: new Types.ObjectId(orderId),
+
+        isDeleted: { $ne: true },
+      },
+
       {
         $set: safeUpdate,
       },
+
       {
         new: true,
+
         runValidators: true,
       },
     )
       .populate("user", "fullname phone role")
-      .populate({
-        path: "items.product",
-        select:
-          "name slug type images category stock isActive isDeleted weight wage wageType profitMargin taxRate coinType coinProfit coinProfitType",
-      })
       .populate("shipping.method", "name price isActive sortOrder")
       .lean()
       .exec() as Promise<IOrderDocument | null>;
@@ -288,25 +318,24 @@ export class OrderRepository {
   async softDelete(orderId: string): Promise<IOrderDocument | null> {
     return OrderModel.findOneAndUpdate(
       {
-        _id: orderId,
+        _id: new Types.ObjectId(orderId),
+
         isDeleted: { $ne: true },
       },
+
       {
         $set: {
           isDeleted: true,
         },
       },
+
       {
         new: true,
+
         runValidators: true,
       },
     )
       .populate("user", "fullname phone role")
-      .populate({
-        path: "items.product",
-        select:
-          "name slug type images category stock isActive isDeleted weight wage wageType profitMargin taxRate coinType coinProfit coinProfitType",
-      })
       .populate("shipping.method", "name price isActive sortOrder")
       .lean()
       .exec() as Promise<IOrderDocument | null>;
