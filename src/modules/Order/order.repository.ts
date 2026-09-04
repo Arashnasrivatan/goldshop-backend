@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Types } from "mongoose";
+import { ClientSession, Types } from "mongoose";
 
 import OrderModel, { IOrderDocument } from "./order.model";
 import { IOrder, OrderStatus } from "./order.types";
@@ -16,8 +16,11 @@ export interface IOrderFilter {
 }
 
 export class OrderRepository {
-  async create(input: Partial<IOrder>): Promise<IOrderDocument> {
-    const order = await OrderModel.create({
+  async create(
+    input: Partial<IOrder>,
+    session?: ClientSession,
+  ): Promise<IOrderDocument> {
+    const order = new OrderModel({
       user: input.user,
 
       items: input.items,
@@ -33,7 +36,7 @@ export class OrderRepository {
       status: input.status ?? "PENDING_PAYMENT",
 
       payment: {
-        authority: input.payment?.authority ?? null,
+        trackId: input.payment?.trackId ?? null,
         paidAt: input.payment?.paidAt ?? null,
       },
 
@@ -44,9 +47,22 @@ export class OrderRepository {
       isDeleted: Boolean(input.isDeleted ?? false),
 
       adminNote: input.adminNote ?? null,
+      checkoutId: input.checkoutId,
     });
 
+    await order.save({ session });
     return order;
+  }
+
+  async findByCheckoutId(
+    checkoutId: string,
+    session?: ClientSession,
+  ): Promise<IOrderDocument | null> {
+    return OrderModel.findOne({
+      checkoutId: new Types.ObjectId(checkoutId),
+    })
+      .session(session ?? null)
+      .exec();
   }
 
   async findById(
@@ -174,7 +190,7 @@ export class OrderRepository {
         },
 
         {
-          "payment.authority": {
+          "payment.trackId": {
             $regex: search,
             $options: "i",
           },
@@ -191,7 +207,7 @@ export class OrderRepository {
     }
 
     if (filters.paymentAuthority?.trim()) {
-      query["payment.authority"] = {
+      query["payment.trackId"] = {
         $regex: filters.paymentAuthority.trim(),
         $options: "i",
       };

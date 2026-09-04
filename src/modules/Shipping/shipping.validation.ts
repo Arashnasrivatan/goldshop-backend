@@ -11,7 +11,7 @@ const createShippingSchema = yup.object({
   description: yup.string().trim().min(5).max(100).nullable().optional(),
   type: yup
     .string()
-    .oneOf(["PICKUP", "DELIVERY"], "Shipping type must be PICKUP or DELIVERY")
+    .oneOf(["PICKUP", "SHIPPING"], "Shipping type must be PICKUP or SHIPPING")
     .required("Shipping type is required"),
   price: yup
     .number()
@@ -38,7 +38,7 @@ const updateShippingSchema = yup
     description: yup.string().trim().min(5).max(100).nullable().optional(),
     type: yup
       .string()
-      .oneOf(["PICKUP", "DELIVERY"], "Shipping type must be PICKUP or DELIVERY")
+      .oneOf(["PICKUP", "SHIPPING"], "Shipping type must be PICKUP or SHIPPING")
       .optional(),
     price: yup
       .number()

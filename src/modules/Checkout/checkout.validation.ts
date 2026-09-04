@@ -14,20 +14,22 @@ const createCheckoutSchema = yup
 
     addressId: yup
       .string()
-      .required("Address ID is required")
+      .optional()
       .test(
         "is-valid-object-id",
         "Address ID is invalid",
-        (value) => Boolean(value) && isValidObjectId(value),
+        (value) => !value || isValidObjectId(value),
       ),
   })
   .noUnknown();
 
 const verifyCheckoutSchema = yup
   .object({
-    Authority: yup.string().trim().required("Authority is required"),
-
-    Status: yup.string().trim().required("Status is required"),
+    trackId: yup
+      .string()
+      .trim()
+      .required("Track ID is required")
+      .matches(/^[a-zA-Z0-9_-]+$/, "Track ID has an invalid format"),
   })
   .noUnknown();
 

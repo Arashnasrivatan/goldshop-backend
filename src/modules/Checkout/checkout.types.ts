@@ -3,7 +3,7 @@ import { Types } from "mongoose";
 export type ProductType = "JEWELRY" | "COIN";
 export type WageType = "PERCENT" | "FIXED";
 export type CoinType = "EMAMI" | "BAHAR_AZADI" | "HALF" | "QUARTER" | "GRAM";
-export type CheckoutStatus = "PENDING" | "PAID";
+export type CheckoutStatus = "PENDING" | "PAID" | "EXPIRED";
 
 export interface Image {
   url: string;
@@ -57,7 +57,7 @@ export interface IShippingSnapshot {
 }
 
 export interface ICheckoutPayment {
-  authority: string;
+  trackId: string;
   amount: number;
   currency: "RIAL";
   createdAt: Date;
@@ -74,6 +74,7 @@ export interface ICheckout {
   total: number;
   status: CheckoutStatus;
   payment: ICheckoutPayment;
+  orderId?: Types.ObjectId | null;
   shippingAddress?: ICheckoutAddress | null;
   expiresAt: Date;
   createdAt: Date;

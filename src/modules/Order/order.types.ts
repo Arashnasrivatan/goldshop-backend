@@ -21,18 +21,18 @@ export interface Image {
 export interface IProductSnapshot {
   name: string;
   slug: string;
-  image?: Image;
+  image?: Image | null;
   type: ProductType;
 
-  weight?: number;
-  wage?: number;
-  wageType?: WageType;
-  profitMargin?: number;
-  taxRate?: number;
+  weight?: number | null;
+  wage?: number | null;
+  wageType?: WageType | null;
+  profitMargin?: number | null;
+  taxRate?: number | null;
 
-  coinType?: CoinType;
-  coinProfit?: number;
-  coinProfitType?: WageType;
+  coinType?: CoinType | null;
+  coinProfit?: number | null;
+  coinProfitType?: WageType | null;
 }
 
 export interface IOrderAddress {
@@ -48,7 +48,7 @@ export interface IOrderAddress {
 }
 
 export interface IOrderItem {
-  product: Types.ObjectId;
+  product: Types.ObjectId | null;
   productSnapshot: IProductSnapshot;
   priceUsed: number;
   priceSnapshotAt: Date;
@@ -65,7 +65,7 @@ export interface IShippingSnapshot {
 }
 
 export interface IOrderPayment {
-  authority?: string | null;
+  trackId?: string | null;
   paidAt?: Date | null;
 }
 
@@ -79,7 +79,8 @@ export interface IOrder {
   total: number;
   status: OrderStatus;
   payment: IOrderPayment;
-  shippingAddress: IOrderAddress;
+  shippingAddress: IOrderAddress | null;
+  checkoutId?: Types.ObjectId | null;
   postTrackingCode?: string | null;
   isDeleted: boolean;
   adminNote?: string | null;

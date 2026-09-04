@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
 
-export type ShippingMethodType = "PICKUP" | "DELIVERY";
+export type ShippingMethodType = "PICKUP" | "SHIPPING";
 
 export interface ShippingMethodImage {
   url: string;

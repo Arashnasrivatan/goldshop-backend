@@ -3,6 +3,7 @@ import { CheckoutService } from "./checkout.service";
 import { CreateCheckoutDto } from "./dto/createCheckout.dto";
 import response from "../../common/utils/response";
 import { IUserDocument } from "../User/user.model";
+import { VerifyCheckoutDto } from "./dto/verifyCheckout.dto";
 
 export class CheckoutController {
   constructor(private readonly checkoutService: CheckoutService) {}
@@ -34,7 +35,17 @@ export class CheckoutController {
 
   verifyCheckout = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO
+      const userData = req.user as IUserDocument;
+      const userId = userData._id.toString();
+
+      const trackId = (req.query as { trackId: string }).trackId;
+      const input = new VerifyCheckoutDto({
+        userId,
+        trackId,
+      });
+
+      const result = await this.checkoutService.verifyCheckout(input);
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }

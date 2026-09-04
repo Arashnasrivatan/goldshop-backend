@@ -105,7 +105,7 @@ const CheckoutAddressSchema = new Schema<ICheckoutAddress>(
 
 const PaymentSchema = new Schema(
   {
-    authority: {
+    trackId: {
       type: String,
       required: true,
       trim: true,
@@ -173,13 +173,19 @@ const CheckoutSchema = new Schema<ICheckoutDocument>(
     },
     status: {
       type: String,
-      enum: ["PENDING", "PAID"],
+      enum: ["PENDING", "PAID", "EXPIRED"],
       default: "PENDING",
       index: true,
     },
     payment: {
       type: PaymentSchema,
       required: true,
+    },
+    orderId: {
+      type: Schema.Types.ObjectId,
+      ref: "Order",
+      default: null,
+      index: true,
     },
     shippingAddress: {
       type: CheckoutAddressSchema,
@@ -188,7 +194,7 @@ const CheckoutSchema = new Schema<ICheckoutDocument>(
     expiresAt: {
       type: Date,
       required: true,
-      default: () => new Date(Date.now() + 10 * 60 * 1000),
+      default: () => new Date(Date.now() + 30 * 60 * 1000),
       index: true,
     },
   },

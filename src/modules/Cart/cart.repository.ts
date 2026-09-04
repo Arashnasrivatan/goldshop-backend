@@ -103,6 +103,17 @@ export class CartRepository {
     );
   }
 
+  async clearByUserId(
+    userId: string,
+    session: import("mongoose").ClientSession,
+  ): Promise<ICartDocument | null> {
+    return CartModel.findOneAndUpdate(
+      { userId: new Types.ObjectId(userId) },
+      { $set: { items: [] } },
+      { new: true, session },
+    ).exec();
+  }
+
   async updateItemQuantity(
     userId: string,
     productId: string,

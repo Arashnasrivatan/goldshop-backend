@@ -148,7 +148,7 @@ const OrderSchema = new Schema<IOrderDocument>(
       index: true,
     },
     payment: {
-      authority: { type: String, default: null },
+      trackId: { type: String, default: null },
       paidAt: { type: Date, default: null },
     },
     shippingAddress: {
@@ -166,6 +166,13 @@ const OrderSchema = new Schema<IOrderDocument>(
       index: true,
     },
     adminNote: { type: String, default: null },
+    checkoutId: {
+      type: Schema.Types.ObjectId,
+      ref: "Checkout",
+      required: true,
+      unique: true,
+      index: true,
+    },
   },
   { timestamps: true },
 );

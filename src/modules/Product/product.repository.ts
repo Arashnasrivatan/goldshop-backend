@@ -2,7 +2,7 @@
 import ProductModel, { IProductDocument } from "./product.model";
 import { CreateProductDto } from "./dto/createProduct.dto";
 import { GetAllProductsDto } from "./dto/getAllProducts.dto";
-import { PipelineStage, PopulateOptions, Types } from "mongoose";
+import { ClientSession, PipelineStage, PopulateOptions, Types } from "mongoose";
 
 export class ProductRepository {
   private getSortQuery(sortOption?: string): Record<string, 1 | -1> {
@@ -215,6 +215,23 @@ export class ProductRepository {
 
   async getImagesOnly(productId: string) {
     return await ProductModel.findById(productId).select("images").lean();
+  }
+
+  async decrementStockIfAvailable(
+    productId: string,
+    quantity: number,
+    session: ClientSession,
+  ): Promise<IProductDocument | null> {
+    return ProductModel.findOneAndUpdate(
+      {
+        _id: new Types.ObjectId(productId),
+        isDeleted: { $ne: true },
+        isActive: true,
+        stock: { $gte: quantity },
+      },
+      { $inc: { stock: -quantity } },
+      { new: true, session },
+    ).exec();
   }
   
   async countByCategoryIds(categoryIds: Types.ObjectId[]): Promise<number> {

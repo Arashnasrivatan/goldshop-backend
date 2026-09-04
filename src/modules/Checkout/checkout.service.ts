@@ -1,4 +1,7 @@
-import { createPayment } from "../../common/services/payment.service";
+import {
+  createPayment,
+  verifyPayment,
+} from "../../common/services/payment.service";
 import { AppError } from "../../common/errors/AppError";
 import { calculateProductPrice } from "../../common/utils";
 import { CartRepository } from "../Cart/cart.repository";
@@ -10,8 +13,9 @@ import { ShippingRepository } from "../Shipping/shipping.repository";
 import { UserRepository } from "../User/user.repository";
 import { CheckoutRepository } from "./checkout.repository";
 import { ICheckout, ICheckoutAddress, ICheckoutItem } from "./checkout.types";
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { CreateCheckoutDto } from "./dto/createCheckout.dto";
+import { VerifyCheckoutDto } from "./dto/verifyCheckout.dto";
 
 export class CheckoutService {
   constructor(
@@ -57,7 +61,7 @@ export class CheckoutService {
     }
     if (
       shippingMethod.type !== "PICKUP" &&
-      shippingMethod.type !== "DELIVERY"
+      shippingMethod.type !== "SHIPPING"
     ) {
       throw new AppError("Selected shipping method has an invalid type.", 400);
     }
@@ -214,7 +218,7 @@ export class CheckoutService {
       total,
       status: "PENDING",
       payment: {
-        authority: payment.trackId,
+        trackId: payment.trackId,
         amount: amountInRial,
         currency: "RIAL",
         createdAt: new Date(),
@@ -227,5 +231,156 @@ export class CheckoutService {
       message: "Checkout created successfully",
       data: { checkout, paymentUrl: payment.paymentUrl },
     };
+  }
+
+  async verifyCheckout(input: VerifyCheckoutDto) {
+    const checkout = await this.checkoutRepository.findByTrackIdForUser(
+      input.trackId,
+      input.userId,
+    );
+    if (!checkout) throw new AppError("Checkout not found.", 404);
+
+    if (checkout.status === "PAID") {
+      const order = checkout.orderId
+        ? await this.orderRepository.findById(checkout.orderId.toString())
+        : await this.orderRepository.findByCheckoutId(checkout._id.toString());
+      if (!order)
+        throw new AppError("Checkout has an invalid paid state.", 500);
+      return { message: "Checkout was already verified.", data: order };
+    }
+
+    if (new Date() > checkout.expiresAt) {
+      await this.checkoutRepository.markAsExpired(checkout._id.toString());
+      throw new AppError("Checkout has expired.", 409);
+    }
+
+    let verification;
+    try {
+      verification = await verifyPayment({ trackId: input.trackId });
+    } catch {
+      throw new AppError("Payment service is unavailable.", 502);
+    }
+
+    if (verification.result !== 100) {
+      throw new AppError("Payment was not successful.", 400);
+    }
+    if (!Number.isFinite(verification.amount)) {
+      throw new AppError(
+        "Payment verification returned an invalid amount.",
+        409,
+      );
+    }
+    if (verification.amount !== checkout.payment.amount) {
+      throw new AppError(
+        "Verified payment amount does not match checkout.",
+        409,
+      );
+    }
+
+    const paidAt = verification.paidAt
+      ? new Date(verification.paidAt)
+      : new Date();
+    if (!Number.isFinite(paidAt.getTime())) {
+      throw new AppError("Payment verification returned an invalid date.", 409);
+    }
+
+    const session = await mongoose.startSession();
+    try {
+      let createdOrder;
+      await session.withTransaction(async () => {
+        const currentCheckout =
+          await this.checkoutRepository.findByTrackIdForUser(
+            input.trackId,
+            input.userId,
+            session,
+          );
+        if (!currentCheckout) throw new AppError("Checkout not found.", 404);
+
+        if (currentCheckout.status === "PAID") {
+          createdOrder = currentCheckout.orderId
+            ? await this.orderRepository.findById(
+                currentCheckout.orderId.toString(),
+              )
+            : await this.orderRepository.findByCheckoutId(
+                currentCheckout._id.toString(),
+                session,
+              );
+          if (!createdOrder) {
+            throw new AppError("Checkout has an invalid paid state.", 500);
+          }
+          return;
+        }
+
+        if (new Date() > currentCheckout.expiresAt) {
+          throw new AppError("Checkout has expired.", 409);
+        }
+
+        for (const item of currentCheckout.items) {
+          if (
+            !item.product ||
+            !Number.isInteger(item.quantity) ||
+            item.quantity < 1
+          ) {
+            throw new AppError("Checkout contains an invalid item.", 500);
+          }
+
+          const product =
+            await this.productRepository.decrementStockIfAvailable(
+              item.product.toString(),
+              item.quantity,
+              session,
+            );
+          if (!product) {
+            throw new AppError(
+              "A product is unavailable or has insufficient stock.",
+              409,
+            );
+          }
+        }
+
+        createdOrder = await this.orderRepository.create(
+          {
+            checkoutId: currentCheckout._id,
+            user: currentCheckout.user,
+            items: currentCheckout.items,
+            shipping: currentCheckout.shipping,
+            shippingAddress: currentCheckout.shippingAddress ?? null,
+            subtotal: currentCheckout.subtotal,
+            shippingCost: currentCheckout.shippingCost,
+            total: currentCheckout.total,
+            status: "PAID",
+            payment: {
+              trackId: currentCheckout.payment.trackId,
+              paidAt,
+            },
+          },
+          session,
+        );
+
+        const clearedCart = await this.cartRepository.clearByUserId(
+          input.userId,
+          session,
+        );
+        if (!clearedCart) throw new AppError("Cart not found.", 404);
+
+        const markedCheckout = await this.checkoutRepository.markAsPaid(
+          currentCheckout._id.toString(),
+          createdOrder._id,
+          paidAt,
+          session,
+        );
+        if (!markedCheckout) {
+          throw new AppError("Checkout was already verified.", 409);
+        }
+      });
+
+      if (!createdOrder) throw new AppError("Order creation failed.", 500);
+      return {
+        message: "Checkout verified successfully.",
+        data: createdOrder,
+      };
+    } finally {
+      await session.endSession();
+    }
   }
 }
