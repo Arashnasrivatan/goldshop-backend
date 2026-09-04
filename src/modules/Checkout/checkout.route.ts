@@ -6,6 +6,10 @@ import validate from "../../common/middlewares/validate";
 import { CheckoutRepository } from "./checkout.repository";
 import { CartRepository } from "../Cart/cart.repository";
 import { OrderRepository } from "../Order/order.repository";
+import { ProductRepository } from "../Product/product.repository";
+import { ShippingRepository } from "../Shipping/shipping.repository";
+import { UserRepository } from "../User/user.repository";
+import { PriceRepository } from "../Price/price.repository";
 
 import { CheckoutService } from "./checkout.service";
 import { CheckoutController } from "./checkout.controller";
@@ -18,11 +22,19 @@ import {
 const checkoutRepository = new CheckoutRepository();
 const cartRepository = new CartRepository();
 const orderRepository = new OrderRepository();
+const productRepository = new ProductRepository();
+const shippingRepository = new ShippingRepository();
+const userRepository = new UserRepository();
+const priceRepository = new PriceRepository();
 
 const checkoutService = new CheckoutService(
   checkoutRepository,
   cartRepository,
   orderRepository,
+  productRepository,
+  shippingRepository,
+  userRepository,
+  priceRepository,
 );
 
 const checkoutController = new CheckoutController(checkoutService);
