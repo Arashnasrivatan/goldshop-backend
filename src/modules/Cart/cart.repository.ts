@@ -28,6 +28,12 @@ export class CartRepository {
     });
   }
 
+  async findRawByUserId(userId: string): Promise<ICartDocument | null> {
+    return CartModel.findOne({
+      userId: new Types.ObjectId(userId),
+    });
+  }
+
   async create(data: Pick<ICart, "userId">): Promise<ICartDocument> {
     return CartModel.create({
       userId: data.userId,

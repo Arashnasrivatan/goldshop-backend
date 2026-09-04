@@ -74,7 +74,7 @@ export interface ICheckout {
   total: number;
   status: CheckoutStatus;
   payment: ICheckoutPayment;
-  shippingAddress?: ICheckoutAddress;
+  shippingAddress?: ICheckoutAddress | null;
   expiresAt: Date;
   createdAt: Date;
   updatedAt: Date;
