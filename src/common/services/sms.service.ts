@@ -36,7 +36,7 @@ class SmsService {
       };
 
       const response = await axios.post<SmsResponse>(
-        this.baseUrl,
+        `${this.baseUrl}/send/verify`,
         requestData,
         {
           headers: {
@@ -61,6 +61,17 @@ class SmsService {
           err instanceof Error ? err.message : "An unknown error occurred",
       };
     }
+  }
+
+  async getCredit() {
+    const response = await axios.get<SmsResponse>(`${this.baseUrl}/credit`, {
+      headers: {
+        "x-api-key": this.apiKey,
+        "Content-Type": "application/json",
+      },
+    });
+
+    return response.data;
   }
 }
 

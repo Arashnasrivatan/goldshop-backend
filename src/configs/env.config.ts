@@ -55,6 +55,8 @@ const envConfigs = {
     apiKey: required("SMS_API_KEY"),
     pattern: required("SMS_PATERN"),
     patternForgot: required("SMS_PATERN_FORGOT"),
+    patternNewOrder: required("SMS_PATERN_NEW_ORDER"),
+    patternBuyerNewOrder: required("SMS_PATERN_BUYER_NEW_ORDER"),
   },
 
   storage: {

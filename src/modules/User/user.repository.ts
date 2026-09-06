@@ -4,7 +4,7 @@ import { AdminAddUserAddressDto } from "./dto/adminAddAddress.dto";
 import { AdminDeleteUserAddressDto } from "./dto/adminDeleteAddress.dto";
 import { AdminUpdateUserAddressDto } from "./dto/adminUpdateAddress.dto";
 import { CreateUserDto } from "./dto/createUser.dto";
-import { IUserFilter } from "./user.types";
+import { IUserFilter, UserRole } from "./user.types";
 import { UpdateResult } from "mongoose";
 
 export class UserRepository {
@@ -14,6 +14,12 @@ export class UserRepository {
 
   async findByPhone(phone: string): Promise<IUserDocument | null> {
     return await UserModel.findOne({ phone });
+  }
+
+  async findByRole(roles: UserRole[]): Promise<IUserDocument[]> {
+    return await UserModel.find({
+      role: { $in: roles },
+    });
   }
 
   async create(input: CreateUserDto): Promise<IUserDocument> {

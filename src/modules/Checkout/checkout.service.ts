@@ -16,6 +16,9 @@ import { ICheckout, ICheckoutAddress, ICheckoutItem } from "./checkout.types";
 import mongoose, { Types } from "mongoose";
 import { CreateCheckoutDto } from "./dto/createCheckout.dto";
 import { VerifyCheckoutDto } from "./dto/verifyCheckout.dto";
+import { smsService } from "../../common/services/sms.service";
+import configs from "../../configs/env.config";
+import logger from "../../common/utils/logger";
 
 export class CheckoutService {
   constructor(
@@ -286,95 +289,186 @@ export class CheckoutService {
 
     const session = await mongoose.startSession();
     try {
-      let createdOrder;
-      await session.withTransaction(async () => {
-        const currentCheckout =
-          await this.checkoutRepository.findByTrackIdForUser(
-            input.trackId,
+      const createdOrder = await session.withTransaction(
+        async (): Promise<Awaited<ReturnType<OrderRepository["create"]>>> => {
+          const currentCheckout =
+            await this.checkoutRepository.findByTrackIdForUser(
+              input.trackId,
+              input.userId,
+              session,
+            );
+          if (!currentCheckout) throw new AppError("Checkout not found.", 404);
+
+          if (currentCheckout.status === "PAID") {
+            const existingOrder = currentCheckout.orderId
+              ? await this.orderRepository.findById(
+                  currentCheckout.orderId.toString(),
+                )
+              : await this.orderRepository.findByCheckoutId(
+                  currentCheckout._id.toString(),
+                  session,
+                );
+            if (!existingOrder) {
+              throw new AppError("Checkout has an invalid paid state.", 500);
+            }
+            return existingOrder;
+          }
+
+          if (new Date() > currentCheckout.expiresAt) {
+            throw new AppError("Checkout has expired.", 409);
+          }
+
+          for (const item of currentCheckout.items) {
+            if (
+              !item.product ||
+              !Number.isInteger(item.quantity) ||
+              item.quantity < 1
+            ) {
+              throw new AppError("Checkout contains an invalid item.", 500);
+            }
+
+            const product =
+              await this.productRepository.decrementStockIfAvailable(
+                item.product.toString(),
+                item.quantity,
+                session,
+              );
+            if (!product) {
+              throw new AppError(
+                "A product is unavailable or has insufficient stock.",
+                409,
+              );
+            }
+          }
+
+          const transactionOrder = await this.orderRepository.create(
+            {
+              checkoutId: currentCheckout._id,
+              user: currentCheckout.user,
+              items: currentCheckout.items,
+              shipping: currentCheckout.shipping,
+              shippingAddress: currentCheckout.shippingAddress ?? null,
+              subtotal: currentCheckout.subtotal,
+              shippingCost: currentCheckout.shippingCost,
+              total: currentCheckout.total,
+              status: "PAID",
+              payment: {
+                trackId: currentCheckout.payment.trackId,
+                paidAt,
+              },
+            },
+            session,
+          );
+
+          const clearedCart = await this.cartRepository.clearByUserId(
             input.userId,
             session,
           );
-        if (!currentCheckout) throw new AppError("Checkout not found.", 404);
+          if (!clearedCart) throw new AppError("Cart not found.", 404);
 
-        if (currentCheckout.status === "PAID") {
-          createdOrder = currentCheckout.orderId
-            ? await this.orderRepository.findById(
-                currentCheckout.orderId.toString(),
-              )
-            : await this.orderRepository.findByCheckoutId(
-                currentCheckout._id.toString(),
-                session,
-              );
-          if (!createdOrder) {
-            throw new AppError("Checkout has an invalid paid state.", 500);
-          }
-          return;
-        }
-
-        if (new Date() > currentCheckout.expiresAt) {
-          throw new AppError("Checkout has expired.", 409);
-        }
-
-        for (const item of currentCheckout.items) {
-          if (
-            !item.product ||
-            !Number.isInteger(item.quantity) ||
-            item.quantity < 1
-          ) {
-            throw new AppError("Checkout contains an invalid item.", 500);
+          const markedCheckout = await this.checkoutRepository.markAsPaid(
+            currentCheckout._id.toString(),
+            transactionOrder._id,
+            paidAt,
+            session,
+          );
+          if (!markedCheckout) {
+            throw new AppError("Checkout was already verified.", 409);
           }
 
-          const product =
-            await this.productRepository.decrementStockIfAvailable(
-              item.product.toString(),
-              item.quantity,
-              session,
-            );
-          if (!product) {
-            throw new AppError(
-              "A product is unavailable or has insufficient stock.",
-              409,
-            );
-          }
-        }
-
-        createdOrder = await this.orderRepository.create(
-          {
-            checkoutId: currentCheckout._id,
-            user: currentCheckout.user,
-            items: currentCheckout.items,
-            shipping: currentCheckout.shipping,
-            shippingAddress: currentCheckout.shippingAddress ?? null,
-            subtotal: currentCheckout.subtotal,
-            shippingCost: currentCheckout.shippingCost,
-            total: currentCheckout.total,
-            status: "PAID",
-            payment: {
-              trackId: currentCheckout.payment.trackId,
-              paidAt,
-            },
-          },
-          session,
-        );
-
-        const clearedCart = await this.cartRepository.clearByUserId(
-          input.userId,
-          session,
-        );
-        if (!clearedCart) throw new AppError("Cart not found.", 404);
-
-        const markedCheckout = await this.checkoutRepository.markAsPaid(
-          currentCheckout._id.toString(),
-          createdOrder._id,
-          paidAt,
-          session,
-        );
-        if (!markedCheckout) {
-          throw new AppError("Checkout was already verified.", 409);
-        }
-      });
+          return transactionOrder;
+        },
+      );
 
       if (!createdOrder) throw new AppError("Order creation failed.", 500);
+
+      const order = await this.orderRepository.findById(
+        createdOrder._id.toString(),
+      );
+
+      if (!order) {
+        throw new AppError("Created order could not be retrieved.", 500);
+      }
+
+      const buyer = await this.userRepository.findById(
+        createdOrder.user.toString(),
+      );
+
+      if (!buyer) {
+        logger.error(
+          `Order ${createdOrder._id} was created but buyer could not be found.`,
+        );
+      }
+
+      // Send SMS to buyer
+      if (buyer) {
+        try {
+          const buyerSms = await smsService.send(
+            buyer.phone,
+            [
+              {
+                name: "ORDERID",
+                value: order._id.toString(),
+              },
+              {
+                name: "PRICE",
+                value: String(order.total),
+              },
+            ],
+            configs.sms.patternBuyerNewOrder,
+          );
+
+          if (buyerSms.status !== 1) {
+            logger.error(
+              `Failed to send order SMS to buyer ${buyer.phone}`,
+              buyerSms,
+            );
+          }
+        } catch (error) {
+          logger.error(
+            `Error sending order SMS to buyer ${buyer.phone}`,
+            error,
+          );
+        }
+      }
+
+      // Send SMS to admins
+
+      const admins = await this.userRepository.findByRole([
+        "ADMIN",
+        "SUPER_ADMIN",
+      ]);
+
+      for (const admin of admins) {
+        try {
+          const adminSms = await smsService.send(
+            admin.phone,
+            [
+              {
+                name: "ORDERID",
+                value: order._id.toString(),
+              },
+              {
+                name: "PRICE",
+                value: String(order.total),
+              },
+            ],
+            configs.sms.patternNewOrder,
+          );
+
+          if (adminSms.status !== 1) {
+            logger.error(
+              `Failed to send new order SMS to admin ${admin.phone}`,
+              adminSms,
+            );
+          }
+        } catch (error) {
+          logger.error(
+            `Error sending new order SMS to admin ${admin.phone}`,
+            error,
+          );
+        }
+      }
       return {
         message: "Checkout verified successfully.",
         data: createdOrder,
