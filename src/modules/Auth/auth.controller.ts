@@ -141,15 +141,12 @@ export class AuthController {
 
   logout = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const user = req.user as IUserDocument;
-      if (!user) {
-        return response(res, 401, "Unauthorized: Please login");
-      }
-      const userId = user._id.toString();
-
-      const input: LogOutDto = new LogOutDto({ userId });
-
-      const result = await this.authService.logout(input);
+      const user = req.user as IUserDocument | undefined;
+      const refreshToken = req.cookies.refresh_token;
+      const input: LogOutDto = new LogOutDto({
+        userId: user?._id.toString(),
+        refreshToken,
+      });
 
       res.clearCookie("refresh_token", {
         httpOnly: true,
@@ -157,6 +154,8 @@ export class AuthController {
         sameSite: "lax",
         path: "/",
       });
+
+      const result = await this.authService.logout(input);
 
       return response(res, 200, result.message);
     } catch (err) {

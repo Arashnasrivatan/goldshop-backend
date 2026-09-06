@@ -321,14 +321,24 @@ export class AuthService {
   }
 
   async logout(input: LogOutDto) {
-    const { userId } = input;
-    const deletedRefreshToken = await this.redisService.del(
-      `refreshToken:${userId}`,
-    );
+    let userId = input.userId;
 
-    if (deletedRefreshToken === 0) {
-      throw new AppError("User is already logged out", 400);
+    if (!userId && input.refreshToken) {
+      try {
+        const decoded = jwt.verify(
+          input.refreshToken,
+          configs.auth.refreshToken.secret,
+        ) as jwt.JwtPayload;
+        userId = typeof decoded.id === "string" ? decoded.id : undefined;
+      } catch {
+        // The cookie is still cleared by the controller below.
+      }
     }
+
+    if (userId) {
+      await this.redisService.del(`refreshToken:${userId}`);
+    }
+
     return { message: "User logged out successfully" };
   }
 }

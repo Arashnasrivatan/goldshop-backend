@@ -110,6 +110,6 @@ router
     authController.refreshToken,
   );
 
-router.route("/logout").get(authGuard, authController.logout);
+router.route("/logout").post(authController.logout);
 
 export default router;
