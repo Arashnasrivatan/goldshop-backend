@@ -41,6 +41,10 @@ export class CartRepository {
     });
   }
 
+  async deleteByUserId(userId: string): Promise<void> {
+    await CartModel.deleteOne({ userId: new Types.ObjectId(userId) });
+  }
+
   async addItemIfNotExists(
     userId: string,
     productId: string,

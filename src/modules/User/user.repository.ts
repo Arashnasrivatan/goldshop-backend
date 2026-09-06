@@ -6,8 +6,15 @@ import { AdminUpdateUserAddressDto } from "./dto/adminUpdateAddress.dto";
 import { CreateUserDto } from "./dto/createUser.dto";
 import { IUserFilter, UserRole } from "./user.types";
 import { UpdateResult } from "mongoose";
+import { CartRepository } from "../Cart/cart.repository";
+import { CheckoutRepository } from "../Checkout/checkout.repository";
 
 export class UserRepository {
+  constructor(
+    private readonly cartRepository = new CartRepository(),
+    private readonly checkoutRepository = new CheckoutRepository(),
+  ) {}
+
   async findById(userId: string): Promise<IUserDocument | null> {
     return await UserModel.findOne({ _id: userId });
   }
@@ -116,9 +123,11 @@ export class UserRepository {
   }
 
   async deleteUserRelatedData(userId: string): Promise<void> {
-    void userId;
-    // Add related data cleanup here when additional collections are implemented. // TODO
-    return;
+    await Promise.all([
+      this.cartRepository.deleteByUserId(userId),
+
+      this.checkoutRepository.deleteUnpaidByUserId(userId),
+    ]);
   }
 
   async createAddress(

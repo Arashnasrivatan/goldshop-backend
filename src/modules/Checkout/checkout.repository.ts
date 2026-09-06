@@ -9,6 +9,13 @@ export class CheckoutRepository {
     return CheckoutModel.create(data);
   }
 
+  async deleteUnpaidByUserId(userId: string): Promise<void> {
+    await CheckoutModel.deleteMany({
+      user: new Types.ObjectId(userId),
+      status: { $in: ["PENDING", "EXPIRED"] },
+    });
+  }
+
   async findByTrackIdForUser(
     trackId: string,
     userId: string,
