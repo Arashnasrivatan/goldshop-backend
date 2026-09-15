@@ -8,13 +8,13 @@ import configs from "../../configs/env.config";
 const priceRepository = new PriceRepository();
 
 let currentPrices = {
-  gold18k: 18450000,
-  goldBuy: 18200000,
-  goldExchange: 18300000,
-  coinQuarter: 51000000,
-  coinHalf: 92500000,
-  coinFull: 175000000,
-  coinEmami: 179000000,
+  gold18k: 23500000,
+  goldBuy: 23100000,
+  goldExchange: 23300000,
+  coinQuarter: 63200000,
+  coinHalf: 101000000,
+  coinFull: 209300000,
+  coinEmami: 230000000,
 };
 
 const fluctuatePrice = (currentPrice: number, maxChange: number) => {

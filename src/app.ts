@@ -34,7 +34,7 @@ app.use(helmet());
 //* Rate Limiter
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 35,
+  max: 100,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   handler: (_req: Request, _res: Response) => {
     throw new Error("Too many requests from this IP, please try again later.");

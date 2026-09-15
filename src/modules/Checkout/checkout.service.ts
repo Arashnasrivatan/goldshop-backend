@@ -198,6 +198,13 @@ export class CheckoutService {
       throw new AppError("Checkout total is invalid.", 400);
     }
 
+    if (total > 400000000) {
+      throw new AppError(
+        "Checkout total exceeds 400 million Toman you can contact support",
+        400,
+      );
+    } // 400 million Toman
+
     const amountInRial = Math.round(total * 10);
     let payment;
     try {
