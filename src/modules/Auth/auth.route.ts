@@ -34,32 +34,32 @@ const router: Router = express.Router();
 
 const sendOtpLimiter = createRateLimiter({
   windowMs: 10 * 60 * 1000, // 10 min
-  max: 5,
+  max: 15,
   message: "Too many OTP requests. Please try again after 10 minutes.",
 });
 
 const verifyOtpLimiter = createRateLimiter({
   windowMs: 5 * 60 * 1000, // 5 min
-  max: 10,
+  max: 20,
   message: "Too many verification attempts. Please try again later.",
 });
 
 const loginLimiter = createRateLimiter({
   windowMs: 5 * 60 * 1000, // 5 min
-  max: 10,
+  max: 15,
   message: "Too many login attempts. Please try again later.",
 });
 
 const forgotPasswordLimiter = createRateLimiter({
   windowMs: 30 * 60 * 1000, // 30 min
-  max: 5,
+  max: 15,
   message:
     "Too many password reset requests. Please try again after 30 minutes.",
 });
 
 const resetPasswordLimiter = createRateLimiter({
   windowMs: 30 * 60 * 1000, // 30 min
-  max: 10,
+  max: 20,
   message:
     "Too many password reset attempts. Please try again after 30 minutes.",
 });

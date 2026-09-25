@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "goldshop",
   "version": "1.0.0",
   "private": true,
@@ -7,7 +7,11 @@
     "dev": "dotenv -e development.env -- ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "rimraf dist && tsc",
     "start": "dotenv -e production.env -- node dist/server.js",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint . --ext .ts",
+    "docker:up": "docker compose --env-file production.env -f docker-compose.production.yml up -d --build",
+    "docker:down": "docker compose --env-file production.env -f docker-compose.production.yml down",
+    "docker:status": "docker compose --env-file production.env -f docker-compose.production.yml ps",
+    "docker:logs": "docker compose --env-file production.env -f docker-compose.production.yml logs -f app web"
   },
   "author": "Arashnasrivatan",
   "license": "ISC",
@@ -76,3 +80,4 @@
     "yup": "^1.7.1"
   }
 }
+

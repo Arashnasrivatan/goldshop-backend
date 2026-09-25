@@ -1,0 +1,16 @@
+**
+!public/
+!public/goldshop-frontend/
+!public/goldshop-frontend/package.json
+!public/goldshop-frontend/package-lock.json
+!public/goldshop-frontend/src/
+!public/goldshop-frontend/src/**
+!public/goldshop-frontend/scripts/
+!public/goldshop-frontend/scripts/**
+!public/goldshop-frontend/public/
+!public/goldshop-frontend/public/**
+!docker/
+!docker/nginx.conf
+public/goldshop-frontend/node_modules
+public/goldshop-frontend/public/panel/node_modules
+public/goldshop-frontend/public/panel/build
