@@ -14,20 +14,43 @@ export class CheckoutController {
 
       const userId = userData._id.toString();
 
-      const { shippingMethodId, addressId } = req.body as {
+      const { shippingMethodId, addressId, couponCode } = req.body as {
         shippingMethodId: string;
-        addressId: string;
+        addressId?: string;
+        couponCode?: string;
       };
 
       const input: CreateCheckoutDto = new CreateCheckoutDto({
         userId,
         shippingMethodId,
         addressId,
+        couponCode,
       });
 
       const result = await this.checkoutService.createCheckout(input);
 
       return response(res, 201, result.message, result.data);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  previewCheckout = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userData = req.user as IUserDocument;
+      const { shippingMethodId, addressId, couponCode } = req.body as {
+        shippingMethodId: string;
+        addressId?: string;
+        couponCode?: string;
+      };
+      const input = new CreateCheckoutDto({
+        userId: userData._id.toString(),
+        shippingMethodId,
+        addressId,
+        couponCode,
+      });
+      const result = await this.checkoutService.previewCheckout(input);
+      return response(res, 200, result.message, result.data);
     } catch (err) {
       next(err);
     }

@@ -31,6 +31,10 @@ export class OrderRepository {
 
       shippingCost: Number(input.shippingCost ?? 0),
 
+      discountAmount: Number(input.discountAmount ?? 0),
+
+      coupon: input.coupon ?? null,
+
       total: Number(input.total ?? 0),
 
       status: input.status ?? "PENDING_PAYMENT",
@@ -63,6 +67,17 @@ export class OrderRepository {
     })
       .session(session ?? null)
       .exec();
+  }
+
+  async countByCouponForUser(
+    couponId: string,
+    userId: string,
+    session?: ClientSession,
+  ): Promise<number> {
+    return OrderModel.countDocuments({
+      "coupon.id": new Types.ObjectId(couponId),
+      user: new Types.ObjectId(userId),
+    }).session(session ?? null);
   }
 
   async findById(

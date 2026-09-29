@@ -67,6 +67,7 @@ const CouponSchema = new Schema<ICoupon>(
     usageLimit: { type: Number, min: 1, default: null },
     perUserLimit: { type: Number, min: 1, default: null },
     usedCount: { type: Number, required: true, min: 0, default: 0 },
+    reservationVersion: { type: Number, default: 0, select: false },
     isActive: { type: Boolean, required: true, default: true, index: true },
   },
   { timestamps: true },

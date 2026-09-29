@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
-import { ICheckout, ICheckoutAddress } from "./checkout.types";
+import { ICheckout, ICheckoutAddress, ICheckoutCoupon } from "./checkout.types";
 
 export interface ICheckoutDocument extends ICheckout, Document {
   createdAt: Date;
@@ -134,6 +134,15 @@ const PaymentSchema = new Schema(
   { _id: false },
 );
 
+const CheckoutCouponSchema = new Schema<ICheckoutCoupon>(
+  {
+    id: { type: Schema.Types.ObjectId, ref: "Coupon", required: true },
+    code: { type: String, required: true },
+    discountAmount: { type: Number, required: true, min: 0 },
+  },
+  { _id: false },
+);
+
 const CheckoutSchema = new Schema<ICheckoutDocument>(
   {
     user: {
@@ -166,6 +175,8 @@ const CheckoutSchema = new Schema<ICheckoutDocument>(
       min: 0,
       default: 0,
     },
+    discountAmount: { type: Number, required: true, min: 0, default: 0 },
+    coupon: { type: CheckoutCouponSchema, default: null },
     total: {
       type: Number,
       required: true,
@@ -204,6 +215,7 @@ const CheckoutSchema = new Schema<ICheckoutDocument>(
 );
 
 CheckoutSchema.index({ user: 1, status: 1, createdAt: -1 });
+CheckoutSchema.index({ "coupon.id": 1, status: 1, expiresAt: 1 });
 CheckoutSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 const CheckoutModel: Model<ICheckoutDocument> =

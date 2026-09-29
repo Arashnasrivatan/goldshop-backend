@@ -69,6 +69,12 @@ export interface IOrderPayment {
   paidAt?: Date | null;
 }
 
+export interface IOrderCoupon {
+  id: Types.ObjectId;
+  code: string;
+  discountAmount: number;
+}
+
 export interface IOrder {
   _id: Types.ObjectId;
   user: Types.ObjectId;
@@ -76,6 +82,8 @@ export interface IOrder {
   shipping: IShippingSnapshot;
   subtotal: number;
   shippingCost: number;
+  discountAmount: number;
+  coupon?: IOrderCoupon | null;
   total: number;
   status: OrderStatus;
   payment: IOrderPayment;

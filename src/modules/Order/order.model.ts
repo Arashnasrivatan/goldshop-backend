@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
-import { IOrder, IOrderAddress } from "./order.types";
+import { IOrder, IOrderAddress, IOrderCoupon } from "./order.types";
 
 export interface IOrderDocument extends IOrder, Document {
   createdAt: Date;
@@ -95,6 +95,15 @@ const OrderAddressSchema = new Schema<IOrderAddress>(
   { _id: false },
 );
 
+const OrderCouponSchema = new Schema<IOrderCoupon>(
+  {
+    id: { type: Schema.Types.ObjectId, ref: "Coupon", required: true },
+    code: { type: String, required: true },
+    discountAmount: { type: Number, required: true, min: 0 },
+  },
+  { _id: false },
+);
+
 const OrderSchema = new Schema<IOrderDocument>(
   {
     user: {
@@ -127,6 +136,8 @@ const OrderSchema = new Schema<IOrderDocument>(
       min: 0,
       default: 0,
     },
+    discountAmount: { type: Number, required: true, min: 0, default: 0 },
+    coupon: { type: OrderCouponSchema, default: null },
     total: {
       type: Number,
       required: true,
@@ -178,6 +189,7 @@ const OrderSchema = new Schema<IOrderDocument>(
 );
 
 OrderSchema.index({ user: 1, createdAt: -1 });
+OrderSchema.index({ "coupon.id": 1, user: 1 });
 
 const OrderModel: Model<IOrderDocument> = mongoose.model<IOrderDocument>(
   "Order",

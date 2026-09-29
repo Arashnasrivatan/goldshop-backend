@@ -5,8 +5,24 @@ import { ClientSession, Types } from "mongoose";
 export class CheckoutRepository {
   async create(
     data: Omit<ICheckout, "_id" | "createdAt" | "updatedAt">,
+    session?: ClientSession,
   ): Promise<ICheckoutDocument> {
-    return CheckoutModel.create(data);
+    const checkout = new CheckoutModel(data);
+    await checkout.save({ session });
+    return checkout;
+  }
+
+  async countPendingByCoupon(
+    couponId: string,
+    userId?: string,
+    session?: ClientSession,
+  ): Promise<number> {
+    return CheckoutModel.countDocuments({
+      "coupon.id": new Types.ObjectId(couponId),
+      status: "PENDING",
+      expiresAt: { $gt: new Date() },
+      ...(userId ? { user: new Types.ObjectId(userId) } : {}),
+    }).session(session ?? null);
   }
 
   async deleteUnpaidByUserId(userId: string): Promise<void> {

@@ -20,6 +20,12 @@ const createCheckoutSchema = yup
         "Address ID is invalid",
         (value) => !value || isValidObjectId(value),
       ),
+    couponCode: yup
+      .string()
+      .trim()
+      .uppercase()
+      .matches(/^[A-Z0-9_-]{3,40}$/, "Coupon code is invalid")
+      .optional(),
   })
   .noUnknown();
 

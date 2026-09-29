@@ -1,4 +1,4 @@
-import { HydratedDocument, Types } from "mongoose";
+import { ClientSession, HydratedDocument, Types } from "mongoose";
 import CouponModel from "./coupon.model";
 import { ICoupon, ICouponFilter } from "./coupon.types";
 import { CreateCouponDto } from "./dto/createCoupon.dto";
@@ -6,6 +6,22 @@ import { CreateCouponDto } from "./dto/createCoupon.dto";
 export class CouponRepository {
   findByCode(code: string) {
     return CouponModel.findOne({ code });
+  }
+
+  lockForCheckout(code: string, session: ClientSession) {
+    return CouponModel.findOneAndUpdate(
+      { code, isActive: true },
+      { $inc: { reservationVersion: 1 } },
+      { new: true, session, timestamps: false },
+    );
+  }
+
+  recordUsage(couponId: string, session: ClientSession) {
+    return CouponModel.findByIdAndUpdate(
+      couponId,
+      { $inc: { usedCount: 1 } },
+      { new: true, session },
+    );
   }
 
   findById(couponId: string) {

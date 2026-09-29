@@ -64,6 +64,12 @@ export interface ICheckoutPayment {
   paidAt?: Date | null;
 }
 
+export interface ICheckoutCoupon {
+  id: Types.ObjectId;
+  code: string;
+  discountAmount: number;
+}
+
 export interface ICheckout {
   _id: Types.ObjectId;
   user: Types.ObjectId;
@@ -71,6 +77,8 @@ export interface ICheckout {
   shipping: IShippingSnapshot;
   subtotal: number;
   shippingCost: number;
+  discountAmount: number;
+  coupon?: ICheckoutCoupon | null;
   total: number;
   status: CheckoutStatus;
   payment: ICheckoutPayment;

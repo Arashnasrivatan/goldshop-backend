@@ -12,13 +12,40 @@ import { ProductRepository } from "../Product/product.repository";
 import { ShippingRepository } from "../Shipping/shipping.repository";
 import { UserRepository } from "../User/user.repository";
 import { CheckoutRepository } from "./checkout.repository";
-import { ICheckout, ICheckoutAddress, ICheckoutItem } from "./checkout.types";
+import { ICheckout, ICheckoutAddress, ICheckoutCoupon, ICheckoutItem } from "./checkout.types";
 import mongoose, { Types } from "mongoose";
 import { CreateCheckoutDto } from "./dto/createCheckout.dto";
 import { VerifyCheckoutDto } from "./dto/verifyCheckout.dto";
 import { smsService } from "../../common/services/sms.service";
 import configs from "../../configs/env.config";
 import logger from "../../common/utils/logger";
+import { CouponRepository } from "../Coupon/coupon.repository";
+import { ICouponDocument } from "../Coupon/coupon.model";
+import { CategoryRepository } from "../Category/category.repository";
+
+type CheckoutQuote = Pick<
+  ICheckout,
+  | "items"
+  | "shipping"
+  | "shippingAddress"
+  | "subtotal"
+  | "shippingCost"
+  | "discountAmount"
+  | "coupon"
+  | "total"
+>;
+
+type PreparedCheckout = {
+  quote: CheckoutQuote;
+  couponUpdatedAt?: Date;
+};
+
+type CouponItem = {
+  productId: string;
+  categoryId: string;
+  type: "JEWELRY" | "COIN";
+  totalPrice: number;
+};
 
 export class CheckoutService {
   constructor(
@@ -29,12 +56,92 @@ export class CheckoutService {
     private readonly shippingRepository: ShippingRepository,
     private readonly userRepository: UserRepository,
     private readonly priceRepository: PriceRepository,
+    private readonly couponRepository: CouponRepository,
+    private readonly categoryRepository: CategoryRepository,
   ) {}
 
-  async createCheckout(input: CreateCheckoutDto): Promise<{
-    message: string;
-    data: { checkout: ICheckout; paymentUrl: string };
-  }> {
+  private async checkCouponAvailability(
+    coupon: ICouponDocument,
+    userId: string,
+    session?: mongoose.ClientSession,
+  ): Promise<void> {
+    const couponId = coupon._id.toString();
+    const pending = await this.checkoutRepository.countPendingByCoupon(
+      couponId,
+      undefined,
+      session,
+    );
+    if (
+      coupon.usageLimit !== null &&
+      coupon.usedCount + pending >= coupon.usageLimit
+    ) {
+      throw new AppError("Coupon usage limit has been reached.", 409);
+    }
+    if (coupon.perUserLimit !== null) {
+      const usedByUser = await this.orderRepository.countByCouponForUser(
+        couponId,
+        userId,
+        session,
+      );
+      const pendingByUser = await this.checkoutRepository.countPendingByCoupon(
+        couponId,
+        userId,
+        session,
+      );
+      if (usedByUser + pendingByUser >= coupon.perUserLimit) {
+        throw new AppError(
+          "Coupon usage limit for this user has been reached.",
+          409,
+        );
+      }
+    }
+  }
+
+  private async calculateCouponDiscount(
+    coupon: ICouponDocument,
+    items: CouponItem[],
+  ): Promise<number> {
+    const selectedProducts = new Set(coupon.productIds.map(String));
+    const selectedCategories = new Set<string>();
+    for (const categoryId of coupon.categoryIds) {
+      const descendants =
+        await this.categoryRepository.getCategoryAndDescendantIds(categoryId);
+      descendants.forEach((id) => selectedCategories.add(id.toString()));
+    }
+    const hasSelection =
+      selectedProducts.size > 0 || coupon.categoryIds.length > 0;
+    const eligibleSubtotal = items.reduce((sum, item) => {
+      if (coupon.scope !== "ALL" && coupon.scope !== item.type) return sum;
+      if (
+        hasSelection &&
+        !selectedProducts.has(item.productId) &&
+        !selectedCategories.has(item.categoryId)
+      ) return sum;
+      return sum + item.totalPrice;
+    }, 0);
+
+    if (eligibleSubtotal <= 0) {
+      throw new AppError("Coupon does not apply to cart items.", 400);
+    }
+    if (eligibleSubtotal < coupon.minOrderAmount) {
+      throw new AppError("Eligible cart amount is below coupon minimum.", 400);
+    }
+    let discount = coupon.type === "PERCENT"
+      ? Math.round((eligibleSubtotal * coupon.value) / 100)
+      : coupon.value;
+    if (coupon.maxDiscountAmount !== null) {
+      discount = Math.min(discount, coupon.maxDiscountAmount);
+    }
+    discount = Math.min(discount, eligibleSubtotal);
+    if (!Number.isFinite(discount) || discount <= 0) {
+      throw new AppError("Coupon discount is invalid.", 400);
+    }
+    return discount;
+  }
+
+  private async prepareCheckout(
+    input: CreateCheckoutDto,
+  ): Promise<PreparedCheckout> {
     const priceStatus = PriceStatusService.isPriceDisplayAllowed();
     if (!priceStatus.allowed) {
       throw new AppError(
@@ -99,6 +206,7 @@ export class CheckoutService {
 
     const priceSnapshotAt = prices.createdAt;
     const items: ICheckoutItem[] = [];
+    const couponItems: CouponItem[] = [];
     for (const cartItem of cart.items) {
       if (!Number.isInteger(cartItem.quantity) || cartItem.quantity < 1) {
         throw new AppError("Cart item quantity must be at least 1.", 400);
@@ -182,11 +290,38 @@ export class CheckoutService {
         unitPrice,
         totalPrice,
       });
+      couponItems.push({
+        productId: product._id.toString(),
+        categoryId: product.category.toString(),
+        type: product.type,
+        totalPrice,
+      });
     }
 
     const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
     const shippingCost = shippingMethod.price;
-    const total = subtotal + shippingCost;
+    let discountAmount = 0;
+    let couponSnapshot: ICheckoutCoupon | null = null;
+    let couponUpdatedAt: Date | undefined;
+    if (input.couponCode?.trim()) {
+      const code = input.couponCode.trim().toUpperCase();
+      const coupon = await this.couponRepository.findByCode(code);
+      if (!coupon || !coupon.isActive) {
+        throw new AppError("Coupon is invalid or inactive.", 400);
+      }
+      const now = new Date();
+      if (
+        (coupon.startsAt && coupon.startsAt > now) ||
+        (coupon.expiresAt && coupon.expiresAt <= now)
+      ) {
+        throw new AppError("Coupon is not valid at this time.", 400);
+      }
+      await this.checkCouponAvailability(coupon, input.userId);
+      discountAmount = await this.calculateCouponDiscount(coupon, couponItems);
+      couponSnapshot = { id: coupon._id, code: coupon.code, discountAmount };
+      couponUpdatedAt = coupon.updatedAt;
+    }
+    const total = subtotal + shippingCost - discountAmount;
     if (
       !Number.isFinite(subtotal) ||
       subtotal < 0 ||
@@ -205,37 +340,95 @@ export class CheckoutService {
       );
     } // 400 million Toman
 
-    const amountInRial = Math.round(total * 10);
+    return {
+      couponUpdatedAt,
+      quote: {
+        items,
+        shipping: {
+          method: shippingMethod._id,
+          type: isPickup ? "PICKUP" : "SHIPPING",
+          name: shippingMethod.name,
+          price: shippingCost,
+        },
+        shippingAddress,
+        subtotal,
+        shippingCost,
+        discountAmount,
+        coupon: couponSnapshot,
+        total,
+      },
+    };
+  }
+
+  async previewCheckout(input: CreateCheckoutDto) {
+    const { quote } = await this.prepareCheckout(input);
+    return {
+      message: "Checkout preview calculated successfully",
+      data: {
+        subtotal: quote.subtotal,
+        shippingCost: quote.shippingCost,
+        discountAmount: quote.discountAmount,
+        coupon: quote.coupon,
+        total: quote.total,
+      },
+    };
+  }
+
+  async createCheckout(input: CreateCheckoutDto): Promise<{
+    message: string;
+    data: { checkout: ICheckout; paymentUrl: string };
+  }> {
+    const { quote, couponUpdatedAt } = await this.prepareCheckout(input);
+
+    const amountInRial = Math.round(quote.total * 10);
     let payment;
     try {
-      payment = await createPayment({ amountInToman: total });
+      payment = await createPayment({ amountInToman: quote.total });
     } catch {
       throw new AppError("Payment service is unavailable.", 502);
     }
 
-    const checkout = await this.checkoutRepository.create({
-      user: user._id,
-      items,
-      shipping: {
-        method: shippingMethod._id,
-        type: isPickup ? "PICKUP" : "SHIPPING",
-        name: shippingMethod.name,
-        price: shippingCost,
-      },
-      shippingAddress,
-      subtotal,
-      shippingCost,
-      total,
-      status: "PENDING",
-      payment: {
-        trackId: payment.trackId,
-        amount: amountInRial,
-        currency: "RIAL",
-        createdAt: new Date(),
-        paidAt: null,
-      },
-      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
-    });
+    const session = await mongoose.startSession();
+    let checkout;
+    try {
+      checkout = await session.withTransaction(async () => {
+        if (quote.coupon) {
+          const coupon = await this.couponRepository.lockForCheckout(
+            quote.coupon.code, session,
+          );
+          if (!coupon) {
+            throw new AppError("Coupon is invalid or inactive.", 409);
+          }
+          if (coupon.updatedAt.getTime() !== couponUpdatedAt?.getTime()) {
+            throw new AppError("Coupon changed. Please retry checkout.", 409);
+          }
+          const now = new Date();
+          if (
+            (coupon.startsAt && coupon.startsAt > now) ||
+            (coupon.expiresAt && coupon.expiresAt <= now)
+          ) {
+            throw new AppError("Coupon is not valid at this time.", 409);
+          }
+          await this.checkCouponAvailability(coupon, input.userId, session);
+        }
+        return this.checkoutRepository.create({
+          user: new Types.ObjectId(input.userId),
+          ...quote,
+          status: "PENDING",
+          payment: {
+            trackId: payment.trackId,
+            amount: amountInRial,
+            currency: "RIAL",
+            createdAt: new Date(),
+            paidAt: null,
+          },
+          expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+        }, session);
+      });
+    } finally {
+      await session.endSession();
+    }
+    if (!checkout) throw new AppError("Checkout creation failed.", 500);
 
     return {
       message: "Checkout created successfully",
@@ -348,6 +541,15 @@ export class CheckoutService {
             }
           }
 
+          if (currentCheckout.coupon) {
+            const coupon = await this.couponRepository.recordUsage(
+              currentCheckout.coupon.id.toString(), session,
+            );
+            if (!coupon) {
+              throw new AppError("Coupon for checkout no longer exists.", 409);
+            }
+          }
+
           const transactionOrder = await this.orderRepository.create(
             {
               checkoutId: currentCheckout._id,
@@ -357,6 +559,8 @@ export class CheckoutService {
               shippingAddress: currentCheckout.shippingAddress ?? null,
               subtotal: currentCheckout.subtotal,
               shippingCost: currentCheckout.shippingCost,
+              discountAmount: currentCheckout.discountAmount,
+              coupon: currentCheckout.coupon ?? null,
               total: currentCheckout.total,
               status: "PAID",
               payment: {

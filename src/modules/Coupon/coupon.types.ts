@@ -23,6 +23,9 @@ export interface ICoupon {
   perUserLimit: number | null;
   usedCount: number;
   isActive: boolean;
+  reservationVersion?: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export type CouponBody = {

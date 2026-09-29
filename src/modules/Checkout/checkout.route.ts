@@ -10,6 +10,8 @@ import { ProductRepository } from "../Product/product.repository";
 import { ShippingRepository } from "../Shipping/shipping.repository";
 import { UserRepository } from "../User/user.repository";
 import { PriceRepository } from "../Price/price.repository";
+import { CouponRepository } from "../Coupon/coupon.repository";
+import { CategoryRepository } from "../Category/category.repository";
 
 import { CheckoutService } from "./checkout.service";
 import { CheckoutController } from "./checkout.controller";
@@ -26,6 +28,8 @@ const productRepository = new ProductRepository();
 const shippingRepository = new ShippingRepository();
 const userRepository = new UserRepository();
 const priceRepository = new PriceRepository();
+const couponRepository = new CouponRepository();
+const categoryRepository = new CategoryRepository();
 
 const checkoutService = new CheckoutService(
   checkoutRepository,
@@ -35,6 +39,8 @@ const checkoutService = new CheckoutService(
   shippingRepository,
   userRepository,
   priceRepository,
+  couponRepository,
+  categoryRepository,
 );
 
 const checkoutController = new CheckoutController(checkoutService);
@@ -49,6 +55,14 @@ router
     authGuard,
     validate(createCheckoutSchema),
     checkoutController.createCheckout,
+  );
+
+router
+  .route("/preview")
+  .post(
+    authGuard,
+    validate(createCheckoutSchema),
+    checkoutController.previewCheckout,
   );
 
 router
