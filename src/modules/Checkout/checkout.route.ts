@@ -12,6 +12,8 @@ import { UserRepository } from "../User/user.repository";
 import { PriceRepository } from "../Price/price.repository";
 import { CouponRepository } from "../Coupon/coupon.repository";
 import { CategoryRepository } from "../Category/category.repository";
+import { StoreSettingsRepository } from "../StoreSettings/storeSettings.repository";
+import { StoreSettingsService } from "../StoreSettings/storeSettings.service";
 
 import { CheckoutService } from "./checkout.service";
 import { CheckoutController } from "./checkout.controller";
@@ -30,6 +32,7 @@ const userRepository = new UserRepository();
 const priceRepository = new PriceRepository();
 const couponRepository = new CouponRepository();
 const categoryRepository = new CategoryRepository();
+const storeSettingsService = new StoreSettingsService(new StoreSettingsRepository());
 
 const checkoutService = new CheckoutService(
   checkoutRepository,
@@ -41,6 +44,7 @@ const checkoutService = new CheckoutService(
   priceRepository,
   couponRepository,
   categoryRepository,
+  storeSettingsService,
 );
 
 const checkoutController = new CheckoutController(checkoutService);

@@ -114,6 +114,8 @@ const calculateProductPrice = (
 ): IPriceCalculationResult => {
 
   let rawPrice = 0;
+  let profitAmount = 0;
+  let nonProfitAmount = 0;
   let details: IPriceCalculationResult["details"] = { basePrice: 0, profit: 0 };
 
   switch (product.type) {
@@ -137,6 +139,8 @@ const calculateProductPrice = (
 
       const pricePerGram = rawGold + wagePerGram + profitPerGram + taxPerGram;
       rawPrice = pricePerGram * weight;
+      profitAmount = profitPerGram * weight;
+      nonProfitAmount = (rawGold + wagePerGram + taxPerGram) * weight;
 
       details = {
         basePrice: rawGold * weight,
@@ -180,6 +184,8 @@ const calculateProductPrice = (
       }
 
       rawPrice = baseCoinPrice + coinProfit;
+      profitAmount = coinProfit;
+      nonProfitAmount = baseCoinPrice;
 
       details = {
         basePrice: baseCoinPrice,
@@ -192,10 +198,15 @@ const calculateProductPrice = (
   const exactRawPrice = Math.round(rawPrice);
 
   const roundedMarketPrice = Math.round(exactRawPrice / 1000) * 1000;
+  const discountableProfit = Math.max(
+    0,
+    Math.min(Math.floor(profitAmount), Math.floor(roundedMarketPrice - nonProfitAmount)),
+  );
 
   return {
     rawPrice: exactRawPrice,
     roundedPrice: roundedMarketPrice,
+    discountableProfit,
     details: details,
   };
 };

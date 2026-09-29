@@ -14,6 +14,7 @@ import OrderRouter from "./Order/order.route";
 import CheckOutRouter from "./Checkout/checkout.route";
 import DashboardRouter from "./Dashboard/dashboard.route";
 import CouponRouter from "./Coupon/coupon.route";
+import StoreSettingsRouter from "./StoreSettings/storeSettings.route";
 
 const apiRouter: Router = Router();
 
@@ -63,5 +64,6 @@ apiRouter.use("/api/orders", OrderRouter);
 apiRouter.use("/api/checkouts", CheckOutRouter);
 apiRouter.use("/api/dashboard", DashboardRouter);
 apiRouter.use("/api/coupons", CouponRouter);
+apiRouter.use("/api/store-settings", StoreSettingsRouter);
 
 export default apiRouter;

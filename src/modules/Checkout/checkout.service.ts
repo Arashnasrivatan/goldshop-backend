@@ -21,6 +21,7 @@ import configs from "../../configs/env.config";
 import logger from "../../common/utils/logger";
 import { CouponRepository } from "../Coupon/coupon.repository";
 import { ICouponDocument } from "../Coupon/coupon.model";
+import { StoreSettingsService } from "../StoreSettings/storeSettings.service";
 import { CategoryRepository } from "../Category/category.repository";
 
 type CheckoutQuote = Pick<
@@ -45,6 +46,7 @@ type CouponItem = {
   categoryId: string;
   type: "JEWELRY" | "COIN";
   totalPrice: number;
+  discountableProfit: number;
 };
 
 export class CheckoutService {
@@ -58,6 +60,7 @@ export class CheckoutService {
     private readonly priceRepository: PriceRepository,
     private readonly couponRepository: CouponRepository,
     private readonly categoryRepository: CategoryRepository,
+    private readonly storeSettingsService: StoreSettingsService,
   ) {}
 
   private async checkCouponAvailability(
@@ -110,29 +113,35 @@ export class CheckoutService {
     }
     const hasSelection =
       selectedProducts.size > 0 || coupon.categoryIds.length > 0;
-    const eligibleSubtotal = items.reduce((sum, item) => {
+    const eligible = items.reduce((sum, item) => {
       if (coupon.scope !== "ALL" && coupon.scope !== item.type) return sum;
       if (
         hasSelection &&
         !selectedProducts.has(item.productId) &&
         !selectedCategories.has(item.categoryId)
       ) return sum;
-      return sum + item.totalPrice;
-    }, 0);
+      return {
+        subtotal: sum.subtotal + item.totalPrice,
+        profit: sum.profit + item.discountableProfit,
+      };
+    }, { subtotal: 0, profit: 0 });
 
-    if (eligibleSubtotal <= 0) {
+    if (eligible.subtotal <= 0) {
       throw new AppError("Coupon does not apply to cart items.", 400);
     }
-    if (eligibleSubtotal < coupon.minOrderAmount) {
+    if (eligible.subtotal < coupon.minOrderAmount) {
       throw new AppError("Eligible cart amount is below coupon minimum.", 400);
     }
+    if (eligible.profit <= 0) {
+      throw new AppError("Eligible products have no discountable profit.", 400);
+    }
     let discount = coupon.type === "PERCENT"
-      ? Math.round((eligibleSubtotal * coupon.value) / 100)
+      ? Math.round((eligible.profit * coupon.value) / 100)
       : coupon.value;
     if (coupon.maxDiscountAmount !== null) {
       discount = Math.min(discount, coupon.maxDiscountAmount);
     }
-    discount = Math.min(discount, eligibleSubtotal);
+    discount = Math.min(discount, eligible.profit);
     if (!Number.isFinite(discount) || discount <= 0) {
       throw new AppError("Coupon discount is invalid.", 400);
     }
@@ -295,6 +304,7 @@ export class CheckoutService {
         categoryId: product.category.toString(),
         type: product.type,
         totalPrice,
+        discountableProfit: calculation.discountableProfit * cartItem.quantity,
       });
     }
 
@@ -378,6 +388,7 @@ export class CheckoutService {
     message: string;
     data: { checkout: ICheckout; paymentUrl: string };
   }> {
+    await this.storeSettingsService.ensureCheckoutOpen();
     const { quote, couponUpdatedAt } = await this.prepareCheckout(input);
 
     const amountInRial = Math.round(quote.total * 10);
@@ -392,6 +403,7 @@ export class CheckoutService {
     let checkout;
     try {
       checkout = await session.withTransaction(async () => {
+        await this.storeSettingsService.ensureCheckoutOpen(session);
         if (quote.coupon) {
           const coupon = await this.couponRepository.lockForCheckout(
             quote.coupon.code, session,

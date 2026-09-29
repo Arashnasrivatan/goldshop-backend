@@ -8,6 +8,7 @@ export interface IPaginationData {
 export interface IPriceCalculationResult {
   rawPrice: number;
   roundedPrice: number;
+  discountableProfit: number;
   details: {
     basePrice: number;
     wage?: number;
