@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "goldshop",
   "version": "1.0.0",
   "private": true,
@@ -80,4 +80,3 @@
     "yup": "^1.7.1"
   }
 }
-
