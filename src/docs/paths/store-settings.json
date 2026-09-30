@@ -1,0 +1,11 @@
+{
+  "/store-settings/checkout": {
+    "get": { "tags": ["⚙️ Store Settings"], "summary": "Get order registration status", "description": "Public endpoint. When false, checkout creation returns 503; checkout preview remains available.",
+      "responses": { "200": { "$ref": "#/components/responses/CheckoutSettingsOk" } }
+    },
+    "patch": { "tags": ["⚙️ Store Settings"], "summary": "Enable or disable order registration", "description": "ADMIN or SUPER_ADMIN. Requires a JSON boolean, not the string 'true' or 'false'.", "security": [{ "bearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CheckoutSettings" } } } },
+      "responses": { "200": { "$ref": "#/components/responses/CheckoutSettingsOk" }, "401": { "$ref": "#/components/responses/PassportUnauthorized" }, "403": { "$ref": "#/components/responses/UserForbidden" }, "422": { "$ref": "#/components/responses/ValidationError" } }
+    }
+  }
+}

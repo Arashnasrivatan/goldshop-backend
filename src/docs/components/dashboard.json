@@ -1,0 +1,35 @@
+{
+  "schemas": {
+    "DashboardPeriod": { "type": "string", "enum": ["TODAY", "THIS_WEEK", "THIS_MONTH", "THIS_YEAR", "ALL_TIME"], "default": "THIS_MONTH" },
+    "Dashboard": { "type": "object", "required": ["period", "sales", "orders", "users", "inventory", "marketPrice", "sms", "monthly"], "properties": {
+      "period": { "$ref": "#/components/schemas/DashboardPeriod" },
+      "sales": { "type": "object", "required": ["sales", "profit", "orders"], "properties": { "sales": { "type": "number" }, "profit": { "type": "number" }, "orders": { "type": "integer" } } },
+      "orders": { "type": "object", "required": ["total", "paid", "processing", "shipped", "readyForPickup", "delivered", "cancelled", "refunded"], "properties": {
+        "total": { "type": "integer" }, "paid": { "type": "integer" }, "processing": { "type": "integer" },
+        "shipped": { "type": "integer" }, "readyForPickup": { "type": "integer" },
+        "delivered": { "type": "integer" }, "cancelled": { "type": "integer" }, "refunded": { "type": "integer" }
+      } },
+      "users": { "type": "object", "required": ["total", "newToday", "newThisMonth"], "properties": {
+        "total": { "type": "integer" }, "newToday": { "type": "integer" }, "newThisMonth": { "type": "integer" }
+      } },
+      "inventory": { "type": "object", "required": ["totalProducts", "activeProducts", "inactiveProducts", "outOfStockProducts", "totalQuantity"], "properties": {
+        "totalProducts": { "type": "integer" }, "activeProducts": { "type": "integer" },
+        "inactiveProducts": { "type": "integer" }, "outOfStockProducts": { "type": "integer" },
+        "totalQuantity": { "type": "integer" }
+      } },
+      "marketPrice": { "type": "object", "nullable": true, "description": "Latest price snapshot, or null if no record exists.", "properties": {
+        "gold18k": { "type": "number" }, "goldBuy": { "type": "number" }, "goldExchange": { "type": "number" },
+        "coinQuarter": { "type": "number" }, "coinHalf": { "type": "number" }, "coinFull": { "type": "number" },
+        "coinEmami": { "type": "number" }, "createdAt": { "type": "string", "format": "date-time" }
+      } },
+      "sms": { "type": "object", "required": ["credit", "available"], "properties": {
+        "credit": { "type": "number", "nullable": true }, "available": { "type": "boolean" }
+      } },
+      "monthly": { "type": "array", "items": { "type": "object", "required": ["month", "sales", "profit"], "properties": {
+        "month": { "type": "string" }, "sales": { "type": "number" }, "profit": { "type": "number" }
+      } } }
+    } },
+    "DashboardResponse": { "allOf": [{ "$ref": "#/components/schemas/ApiSuccess" }, { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Dashboard" } } }] }
+  },
+  "responses": { "DashboardOk": { "description": "Dashboard statistics", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DashboardResponse" } } } } }
+}

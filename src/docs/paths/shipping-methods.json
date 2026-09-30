@@ -1,0 +1,34 @@
+{
+  "/shipping-methods": {
+    "get": { "tags": ["🚚 Shipping Methods"], "summary": "List active shipping methods", "description": "Public; sorted by sortOrder ascending.",
+      "responses": { "200": { "$ref": "#/components/responses/ShippingMethodsOk" } }
+    }
+  },
+  "/shipping-methods/manage": {
+    "get": { "tags": ["🚚 Shipping Methods"], "summary": "List all shipping methods", "description": "ADMIN or SUPER_ADMIN; sorted by sortOrder then createdAt.", "security": [{ "bearerAuth": [] }],
+      "parameters": [
+        { "name": "search", "in": "query", "schema": { "type": "string" }, "description": "Name or description search." },
+        { "name": "isActive", "in": "query", "schema": { "type": "boolean" } }
+      ],
+      "responses": { "200": { "$ref": "#/components/responses/ShippingMethodsOk" }, "401": { "$ref": "#/components/responses/PassportUnauthorized" }, "403": { "$ref": "#/components/responses/UserForbidden" }, "422": { "$ref": "#/components/responses/ValidationError" } }
+    },
+    "post": { "tags": ["🚚 Shipping Methods"], "summary": "Create shipping method", "description": "ADMIN or SUPER_ADMIN. Image required and at most 10 methods in total.", "security": [{ "bearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "multipart/form-data": { "schema": { "$ref": "#/components/schemas/ShippingCreateRequest" } } } },
+      "responses": { "201": { "$ref": "#/components/responses/ShippingMethodOk" }, "400": { "$ref": "#/components/responses/ApiError" }, "401": { "$ref": "#/components/responses/PassportUnauthorized" }, "403": { "$ref": "#/components/responses/UserForbidden" }, "409": { "$ref": "#/components/responses/ApiError" }, "422": { "$ref": "#/components/responses/ValidationError" } }
+    }
+  },
+  "/shipping-methods/{shippingId}": {
+    "parameters": [{ "$ref": "#/components/parameters/ShippingIdPath" }],
+    "get": { "tags": ["🚚 Shipping Methods"], "summary": "Get shipping method by ID", "description": "ADMIN or SUPER_ADMIN.", "security": [{ "bearerAuth": [] }],
+      "responses": { "200": { "$ref": "#/components/responses/ShippingMethodOk" }, "401": { "$ref": "#/components/responses/PassportUnauthorized" }, "403": { "$ref": "#/components/responses/UserForbidden" }, "404": { "$ref": "#/components/responses/ApiError" }, "422": { "$ref": "#/components/responses/ValidationError" } }
+    },
+    "patch": { "tags": ["🚚 Shipping Methods"], "summary": "Update shipping method", "description": "ADMIN or SUPER_ADMIN. Replace image by uploading a new file.", "security": [{ "bearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "multipart/form-data": { "schema": { "$ref": "#/components/schemas/ShippingUpdateRequest" } } } },
+      "responses": { "200": { "$ref": "#/components/responses/ShippingMethodOk" }, "400": { "$ref": "#/components/responses/ApiError" }, "401": { "$ref": "#/components/responses/PassportUnauthorized" }, "403": { "$ref": "#/components/responses/UserForbidden" }, "404": { "$ref": "#/components/responses/ApiError" }, "409": { "$ref": "#/components/responses/ApiError" }, "422": { "$ref": "#/components/responses/ValidationError" }, "500": { "$ref": "#/components/responses/ServerError" } }
+    },
+    "delete": { "tags": ["🚚 Shipping Methods"], "summary": "Delete shipping method", "description": "ADMIN or SUPER_ADMIN. Requires exact confirmation phrase and deletes image from storage after DB deletion.", "security": [{ "bearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ShippingDeleteRequest" } } } },
+      "responses": { "200": { "$ref": "#/components/responses/ShippingMethodOk" }, "400": { "$ref": "#/components/responses/ApiError" }, "401": { "$ref": "#/components/responses/PassportUnauthorized" }, "403": { "$ref": "#/components/responses/UserForbidden" }, "404": { "$ref": "#/components/responses/ApiError" }, "422": { "$ref": "#/components/responses/ValidationError" }, "500": { "$ref": "#/components/responses/ServerError" } }
+    }
+  }
+}

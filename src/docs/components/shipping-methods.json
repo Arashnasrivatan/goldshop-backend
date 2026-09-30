@@ -1,0 +1,42 @@
+{
+  "schemas": {
+    "ShippingMethod": { "type": "object", "required": ["_id", "name", "type", "price", "isActive", "sortOrder"], "properties": {
+      "_id": { "$ref": "#/components/schemas/UserId" },
+      "name": { "type": "string" }, "description": { "type": "string", "nullable": true },
+      "type": { "type": "string", "enum": ["PICKUP", "SHIPPING"] },
+      "price": { "type": "number", "minimum": 0, "description": "Toman; zero means free." },
+      "image": { "type": "object", "properties": { "url": { "type": "string", "format": "uri" }, "key": { "type": "string" } } },
+      "isActive": { "type": "boolean" }, "sortOrder": { "type": "number", "minimum": 0 },
+      "createdAt": { "type": "string", "format": "date-time" }, "updatedAt": { "type": "string", "format": "date-time" }
+    } },
+    "ShippingCreateRequest": { "type": "object", "required": ["name", "type", "price", "image"], "properties": {
+      "name": { "type": "string", "minLength": 3, "maxLength": 20 },
+      "description": { "type": "string", "minLength": 5, "maxLength": 100 },
+      "type": { "type": "string", "enum": ["PICKUP", "SHIPPING"] },
+      "price": { "type": "number", "minimum": 0 },
+      "isActive": { "type": "boolean", "default": true },
+      "sortOrder": { "type": "number", "minimum": 0 },
+      "image": { "type": "string", "format": "binary", "description": "One JPEG, PNG, WebP or AVIF file; max 5 MB." }
+    }, "description": "Multipart form. Maximum 10 shipping methods. Due to current create code, multipart isActive=false may still create an active method; PATCH afterward to deactivate reliably." },
+    "ShippingUpdateRequest": { "type": "object", "properties": {
+      "name": { "type": "string", "minLength": 3, "maxLength": 20 },
+      "description": { "type": "string", "nullable": true, "minLength": 5, "maxLength": 100 },
+      "type": { "type": "string", "enum": ["PICKUP", "SHIPPING"] },
+      "price": { "type": "number", "minimum": 0 },
+      "isActive": { "type": "boolean" }, "sortOrder": { "type": "number", "minimum": 0 },
+      "image": { "type": "string", "format": "binary", "description": "Optional replacement; JPEG, PNG, WebP or AVIF, max 5 MB." }
+    }, "description": "At least one field or image is required. Send multipart/form-data." },
+    "ShippingDeleteRequest": { "type": "object", "required": ["confirmationPhrase"], "properties": {
+      "confirmationPhrase": { "type": "string", "pattern": "^DELETE SHIPPING [a-fA-F0-9]{24}$", "example": "DELETE SHIPPING 507f1f77bcf86cd799439011", "description": "Exact phrase with shippingId." }
+    } },
+    "ShippingMethodResponse": { "allOf": [{ "$ref": "#/components/schemas/ApiSuccess" }, { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/ShippingMethod" } } }] },
+    "ShippingMethodsResponse": { "allOf": [{ "$ref": "#/components/schemas/ApiSuccess" }, { "type": "object", "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/ShippingMethod" } } } }] }
+  },
+  "responses": {
+    "ShippingMethodOk": { "description": "Shipping method", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ShippingMethodResponse" } } } },
+    "ShippingMethodsOk": { "description": "Shipping methods", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ShippingMethodsResponse" } } } }
+  },
+  "parameters": {
+    "ShippingIdPath": { "name": "shippingId", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/UserId" } }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "schemas": {
+    "CheckoutSettings": { "type": "object", "required": ["orderRegistrationEnabled"], "properties": { "orderRegistrationEnabled": { "type": "boolean" } } },
+    "CheckoutSettingsResponse": { "allOf": [{ "$ref": "#/components/schemas/ApiSuccess" }, { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/CheckoutSettings" } } }] }
+  },
+  "responses": { "CheckoutSettingsOk": { "description": "Order registration setting", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CheckoutSettingsResponse" } } } } }
+}

@@ -1,0 +1,51 @@
+{
+  "/orders/me": {
+    "get": { "tags": ["📋 Orders"], "summary": "List my orders", "description": "Authenticated. Soft-deleted orders are excluded. The current route applies its Yup schema to the body rather than the query; the query filters are used but are not validated here.", "security": [{ "bearerAuth": [] }],
+      "parameters": [
+        { "name": "status", "in": "query", "schema": { "$ref": "#/components/schemas/OrderStatus" } },
+        { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"], "default": "desc" } },
+        { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 10 } },
+        { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1, "default": 1 } }
+      ],
+      "responses": { "200": { "$ref": "#/components/responses/OrdersPageOk" }, "401": { "$ref": "#/components/responses/PassportUnauthorized" } }
+    }
+  },
+  "/orders/me/{orderId}": {
+    "parameters": [{ "$ref": "#/components/parameters/OrderIdPath" }],
+    "get": { "tags": ["📋 Orders"], "summary": "Get my order by ID", "description": "Only an order owned by the authenticated user and not soft-deleted is returned.", "security": [{ "bearerAuth": [] }],
+      "responses": { "200": { "$ref": "#/components/responses/OrderOk" }, "401": { "$ref": "#/components/responses/PassportUnauthorized" }, "404": { "$ref": "#/components/responses/ApiError" }, "422": { "$ref": "#/components/responses/ValidationError" } }
+    }
+  },
+  "/orders": {
+    "get": { "tags": ["📋 Orders"], "summary": "List all orders", "description": "ADMIN or SUPER_ADMIN. By default soft-deleted orders are excluded; sorted by createdAt.", "security": [{ "bearerAuth": [] }],
+      "parameters": [
+        { "name": "search", "in": "query", "schema": { "type": "string" }, "description": "Address, title, admin note, postal tracking code or payment trackId." },
+        { "name": "userId", "in": "query", "schema": { "$ref": "#/components/schemas/UserId" } },
+        { "name": "status", "in": "query", "schema": { "$ref": "#/components/schemas/OrderStatus" } },
+        { "name": "paymentAuthority", "in": "query", "schema": { "type": "string" }, "description": "Filters payment.trackId." },
+        { "name": "postTrackingCode", "in": "query", "schema": { "type": "string" } },
+        { "name": "from", "in": "query", "schema": { "type": "string", "format": "date-time" } },
+        { "name": "to", "in": "query", "schema": { "type": "string", "format": "date-time" } },
+        { "name": "includeDeleted", "in": "query", "schema": { "type": "boolean", "default": false } },
+        { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"], "default": "desc" } },
+        { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 10 } },
+        { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1, "default": 1 } }
+      ],
+      "responses": { "200": { "$ref": "#/components/responses/OrdersPageOk" }, "401": { "$ref": "#/components/responses/PassportUnauthorized" }, "403": { "$ref": "#/components/responses/UserForbidden" }, "422": { "$ref": "#/components/responses/ValidationError" } }
+    }
+  },
+  "/orders/{orderId}": {
+    "parameters": [{ "$ref": "#/components/parameters/OrderIdPath" }],
+    "get": { "tags": ["📋 Orders"], "summary": "Get order by ID", "description": "ADMIN or SUPER_ADMIN. Soft-deleted orders are not returned.", "security": [{ "bearerAuth": [] }],
+      "responses": { "200": { "$ref": "#/components/responses/OrderOk" }, "401": { "$ref": "#/components/responses/PassportUnauthorized" }, "403": { "$ref": "#/components/responses/UserForbidden" }, "404": { "$ref": "#/components/responses/ApiError" }, "422": { "$ref": "#/components/responses/ValidationError" } }
+    },
+    "patch": { "tags": ["📋 Orders"], "summary": "Update order status, note or postal tracking code", "description": "ADMIN or SUPER_ADMIN. Allowed status transitions: PENDING_PAYMENT to PAID/CANCELLED; PAID to PROCESSING/CANCELLED/REFUNDED; PROCESSING to SHIPPED/READY_FOR_PICKUP/CANCELLED/REFUNDED; SHIPPED to DELIVERED/REFUNDED; READY_FOR_PICKUP to DELIVERED/CANCELLED/REFUNDED; DELIVERED to REFUNDED. CANCELLED and REFUNDED are terminal.", "security": [{ "bearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OrderUpdateRequest" } } } },
+      "responses": { "200": { "$ref": "#/components/responses/OrderOk" }, "400": { "$ref": "#/components/responses/ApiError" }, "401": { "$ref": "#/components/responses/PassportUnauthorized" }, "403": { "$ref": "#/components/responses/UserForbidden" }, "404": { "$ref": "#/components/responses/ApiError" }, "422": { "$ref": "#/components/responses/ValidationError" }, "500": { "$ref": "#/components/responses/ServerError" } }
+    },
+    "delete": { "tags": ["📋 Orders"], "summary": "Soft-delete order", "description": "ADMIN or SUPER_ADMIN. Requires exact confirmation phrase and sets isDeleted=true. Already deleted orders are rejected.", "security": [{ "bearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OrderDeleteRequest" } } } },
+      "responses": { "200": { "$ref": "#/components/responses/OrderOk" }, "400": { "$ref": "#/components/responses/ApiError" }, "401": { "$ref": "#/components/responses/PassportUnauthorized" }, "403": { "$ref": "#/components/responses/UserForbidden" }, "404": { "$ref": "#/components/responses/ApiError" }, "422": { "$ref": "#/components/responses/ValidationError" }, "500": { "$ref": "#/components/responses/ServerError" } }
+    }
+  }
+}

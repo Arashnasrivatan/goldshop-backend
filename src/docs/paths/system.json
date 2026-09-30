@@ -1,7 +1,7 @@
 {
   "/status": {
     "get": {
-      "tags": ["System"],
+      "tags": ["🩺 System"],
       "summary": "Get service status",
       "responses": {
         "200": {

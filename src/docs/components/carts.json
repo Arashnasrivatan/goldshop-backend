@@ -1,0 +1,36 @@
+{
+  "schemas": {
+    "CartProduct": { "type": "object", "required": ["_id", "name", "slug", "type", "stock", "images"], "properties": {
+      "_id": { "$ref": "#/components/schemas/UserId" },
+      "name": { "type": "string" }, "slug": { "type": "string" },
+      "type": { "type": "string", "enum": ["JEWELRY", "COIN"] },
+      "stock": { "type": "integer" },
+      "images": { "type": "array", "items": { "$ref": "#/components/schemas/ProductImage" } },
+      "weight": { "type": "number" }, "wage": { "type": "number" },
+      "wageType": { "type": "string", "enum": ["PERCENT", "FIXED"] },
+      "profitMargin": { "type": "number" }, "taxRate": { "type": "number" },
+      "coinType": { "type": "string", "enum": ["EMAMI", "BAHAR_AZADI", "HALF", "QUARTER", "GRAM"] },
+      "coinProfit": { "type": "number" }, "coinProfitType": { "type": "string", "enum": ["PERCENT", "FIXED"] },
+      "isActive": { "type": "boolean" }, "isDeleted": { "type": "boolean" },
+      "inStock": { "type": "boolean", "description": "Product virtual, present when populated document is serialized." }
+    }, "description": "Fields selected by the cart repository; category and customFilters are not populated here." },
+    "CartItem": { "type": "object", "required": ["productId", "quantity"], "properties": {
+      "productId": { "oneOf": [{ "$ref": "#/components/schemas/UserId" }, { "$ref": "#/components/schemas/CartProduct" }], "description": "Populated product on GET/add/update; raw ID on clear/remove." },
+      "quantity": { "type": "integer", "minimum": 1 },
+      "addedAt": { "type": "string", "format": "date-time" }
+    } },
+    "Cart": { "type": "object", "required": ["userId", "items"], "properties": {
+      "_id": { "$ref": "#/components/schemas/UserId" },
+      "userId": { "$ref": "#/components/schemas/UserId" },
+      "items": { "type": "array", "items": { "$ref": "#/components/schemas/CartItem" } },
+      "createdAt": { "type": "string", "format": "date-time" },
+      "updatedAt": { "type": "string", "format": "date-time" }
+    }, "description": "_id and timestamps are absent when no cart document has been created yet." },
+    "CartAddRequest": { "type": "object", "required": ["productId"], "properties": { "productId": { "$ref": "#/components/schemas/UserId" } } },
+    "CartUpdateRequest": { "type": "object", "required": ["quantity"], "properties": { "quantity": { "type": "integer", "minimum": 1 } }, "description": "Sets the absolute quantity, not an increment. Quantity cannot exceed available stock." },
+    "CartResponse": { "allOf": [{ "$ref": "#/components/schemas/ApiSuccess" }, { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Cart" } } }] }
+  },
+  "responses": {
+    "CartOk": { "description": "Cart snapshot", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CartResponse" } } } }
+  }
+}

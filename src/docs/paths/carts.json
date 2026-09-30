@@ -1,0 +1,26 @@
+{
+  "/carts": {
+    "get": { "tags": ["🛒 Carts"], "summary": "Get my cart", "security": [{ "bearerAuth": [] }],
+      "responses": { "200": { "$ref": "#/components/responses/CartOk" }, "401": { "$ref": "#/components/responses/PassportUnauthorized" } }
+    },
+    "delete": { "tags": ["🛒 Carts"], "summary": "Clear my cart", "description": "Returns 404 if no cart document exists.", "security": [{ "bearerAuth": [] }],
+      "responses": { "200": { "$ref": "#/components/responses/CartOk" }, "401": { "$ref": "#/components/responses/PassportUnauthorized" }, "404": { "$ref": "#/components/responses/ApiError" } }
+    }
+  },
+  "/carts/items": {
+    "post": { "tags": ["🛒 Carts"], "summary": "Add product to my cart", "description": "Adds one unit. A product already in the cart returns 409; use PATCH to change its quantity.", "security": [{ "bearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CartAddRequest" } } } },
+      "responses": { "201": { "$ref": "#/components/responses/CartOk" }, "400": { "$ref": "#/components/responses/ApiError" }, "401": { "$ref": "#/components/responses/PassportUnauthorized" }, "404": { "$ref": "#/components/responses/ApiError" }, "409": { "$ref": "#/components/responses/ApiError" }, "422": { "$ref": "#/components/responses/ValidationError" } }
+    }
+  },
+  "/carts/items/{productId}": {
+    "parameters": [{ "$ref": "#/components/parameters/ProductIdPath" }],
+    "patch": { "tags": ["🛒 Carts"], "summary": "Set cart item quantity", "description": "Sets total quantity and checks current product availability and stock.", "security": [{ "bearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CartUpdateRequest" } } } },
+      "responses": { "200": { "$ref": "#/components/responses/CartOk" }, "400": { "$ref": "#/components/responses/ApiError" }, "401": { "$ref": "#/components/responses/PassportUnauthorized" }, "404": { "$ref": "#/components/responses/ApiError" }, "422": { "$ref": "#/components/responses/ValidationError" }, "500": { "$ref": "#/components/responses/ServerError" } }
+    },
+    "delete": { "tags": ["🛒 Carts"], "summary": "Remove product from my cart", "security": [{ "bearerAuth": [] }],
+      "responses": { "200": { "$ref": "#/components/responses/CartOk" }, "401": { "$ref": "#/components/responses/PassportUnauthorized" }, "404": { "$ref": "#/components/responses/ApiError" }, "422": { "$ref": "#/components/responses/ValidationError" } }
+    }
+  }
+}

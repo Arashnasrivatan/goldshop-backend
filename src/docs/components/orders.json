@@ -1,0 +1,58 @@
+{
+  "schemas": {
+    "OrderStatus": { "type": "string", "enum": ["PENDING_PAYMENT", "PAID", "PROCESSING", "SHIPPED", "READY_FOR_PICKUP", "DELIVERED", "CANCELLED", "REFUNDED"] },
+    "OrderShippingMethodSummary": { "type": "object", "properties": {
+      "_id": { "$ref": "#/components/schemas/UserId" },
+      "name": { "type": "string" }, "price": { "type": "number" },
+      "isActive": { "type": "boolean" }, "sortOrder": { "type": "number" }
+    }, "description": "Selected fields when shipping.method is populated." },
+    "OrderPayment": { "type": "object", "properties": { "trackId": { "type": "string", "nullable": true }, "paidAt": { "type": "string", "format": "date-time", "nullable": true } } },
+    "Order": { "type": "object", "required": ["_id", "user", "items", "shipping", "subtotal", "shippingCost", "discountAmount", "total", "status", "payment", "isDeleted"], "properties": {
+      "_id": { "$ref": "#/components/schemas/UserId" },
+      "user": { "oneOf": [{ "$ref": "#/components/schemas/UserId" }, { "$ref": "#/components/schemas/BanActor" }], "description": "Populated summary for detail/admin list; raw ID in my list and initial verification." },
+      "items": { "type": "array", "items": { "$ref": "#/components/schemas/CheckoutLine" } },
+      "shipping": { "type": "object", "properties": {
+        "method": { "oneOf": [{ "$ref": "#/components/schemas/UserId" }, { "$ref": "#/components/schemas/OrderShippingMethodSummary" }] },
+        "type": { "type": "string", "enum": ["PICKUP", "SHIPPING"] },
+        "name": { "type": "string" }, "price": { "type": "number" }
+      } },
+      "shippingAddress": { "type": "object", "nullable": true, "description": "Snapshot of chosen address, or null for pickup.", "properties": {
+        "addressId": { "$ref": "#/components/schemas/UserId" }, "title": { "type": "string" },
+        "postalCode": { "type": "string" }, "location": { "$ref": "#/components/schemas/IranLocation" },
+        "address": { "type": "string" }
+      } },
+      "subtotal": { "type": "number" }, "shippingCost": { "type": "number" },
+      "discountAmount": { "type": "number" },
+      "coupon": { "type": "object", "nullable": true, "description": "Applied coupon snapshot with id, code and discountAmount." },
+      "total": { "type": "number" }, "status": { "$ref": "#/components/schemas/OrderStatus" },
+      "payment": { "$ref": "#/components/schemas/OrderPayment" },
+      "postTrackingCode": { "type": "string", "nullable": true },
+      "adminNote": { "type": "string", "nullable": true },
+      "checkoutId": { "$ref": "#/components/schemas/UserId" },
+      "isDeleted": { "type": "boolean" },
+      "createdAt": { "type": "string", "format": "date-time" }, "updatedAt": { "type": "string", "format": "date-time" }
+    } },
+    "OrderUpdateRequest": { "type": "object", "minProperties": 1, "properties": {
+      "status": { "$ref": "#/components/schemas/OrderStatus" },
+      "adminNote": { "type": "string", "nullable": true, "maxLength": 500 },
+      "postTrackingCode": { "type": "string", "nullable": true }
+    } },
+    "OrderDeleteRequest": { "type": "object", "required": ["confirmationPhrase"], "properties": {
+      "confirmationPhrase": { "type": "string", "pattern": "^DELETE ORDER [a-fA-F0-9]{24}$", "example": "DELETE ORDER 507f1f77bcf86cd799439011", "description": "Must exactly match DELETE ORDER followed by orderId." }
+    } },
+    "OrderPagination": { "type": "object", "required": ["page", "limit", "totalPage", "totalOrder"], "properties": {
+      "page": { "type": "integer", "minimum": 1 }, "limit": { "type": "integer", "minimum": 1 },
+      "totalPage": { "type": "integer", "minimum": 0 }, "totalOrder": { "type": "integer", "minimum": 0 }
+    } },
+    "OrderResponse": { "allOf": [{ "$ref": "#/components/schemas/ApiSuccess" }, { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Order" } } }] },
+    "OrdersPageResponse": { "allOf": [{ "$ref": "#/components/schemas/ApiSuccess" }, { "type": "object", "properties": { "data": {
+      "type": "object", "required": ["pagination", "orders"],
+      "properties": { "pagination": { "$ref": "#/components/schemas/OrderPagination" }, "orders": { "type": "array", "items": { "$ref": "#/components/schemas/Order" } } }
+    } } }] }
+  },
+  "responses": {
+    "OrderOk": { "description": "Order document", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OrderResponse" } } } },
+    "OrdersPageOk": { "description": "Paginated orders", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OrdersPageResponse" } } } }
+  },
+  "parameters": { "OrderIdPath": { "name": "orderId", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/UserId" } } }
+}

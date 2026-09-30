@@ -7,14 +7,20 @@
   },
   "servers": [{ "url": "/api" }],
   "tags": [
-    { "name": "System", "description": "Service health" },
+    { "name": "🩺 System", "description": "Service health" },
     { "name": "🔐 Auth", "description": "Authentication and account access" },
     { "name": "👤 Users", "description": "Own profile, password and addresses" },
     { "name": "🛡️ User Admin", "description": "Administrative user, address and role management" },
     { "name": "🚫 Bans", "description": "Administrative ban management" },
     { "name": "📚 Categories", "description": "Public category browsing and administrative category management" },
     { "name": "🪙 Prices", "description": "Market prices and price history" },
-    { "name": "📦 Products", "description": "Public catalog and administrative product management" }
+    { "name": "📦 Products", "description": "Public catalog and administrative product management" },
+    { "name": "🛒 Carts", "description": "Authenticated shopping cart" },
+    { "name": "🚚 Shipping Methods", "description": "Available delivery and pickup methods" },
+    { "name": "💳 Checkouts", "description": "Checkout preview, payment creation and verification" },
+    { "name": "📋 Orders", "description": "Customer orders and administrative order management" },
+    { "name": "📊 Dashboard", "description": "Administrative store statistics" },
+    { "name": "⚙️ Store Settings", "description": "Store checkout availability" }
   ],
   "components": {
     "securitySchemes": {

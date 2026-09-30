@@ -1,0 +1,86 @@
+{
+  "schemas": {
+    "CheckoutRequest": { "type": "object", "required": ["shippingMethodId"], "properties": {
+      "shippingMethodId": { "$ref": "#/components/schemas/UserId" },
+      "addressId": { "$ref": "#/components/schemas/UserId" },
+      "couponCode": { "type": "string", "pattern": "^[A-Z0-9_-]{3,40}$", "minLength": 3, "maxLength": 40, "description": "Converted to uppercase by validation, but the controller currently reads the original body; the service normalizes before lookup." }
+    }, "description": "Address is required for SHIPPING and forbidden for PICKUP. Cart must contain available products. Order total must be positive and at most 400,000,000 Toman." },
+    "CheckoutProductSnapshot": { "type": "object", "required": ["name", "slug", "type"], "properties": {
+      "name": { "type": "string" }, "slug": { "type": "string" },
+      "image": { "type": "object", "nullable": true, "properties": { "url": { "type": "string", "format": "uri" }, "key": { "type": "string" } } },
+      "type": { "type": "string", "enum": ["JEWELRY", "COIN"] },
+      "weight": { "type": "number", "nullable": true }, "wage": { "type": "number", "nullable": true },
+      "wageType": { "type": "string", "nullable": true, "enum": ["PERCENT", "FIXED"] },
+      "profitMargin": { "type": "number", "nullable": true }, "taxRate": { "type": "number", "nullable": true },
+      "coinType": { "type": "string", "nullable": true, "enum": ["EMAMI", "BAHAR_AZADI", "HALF", "QUARTER", "GRAM"] },
+      "coinProfit": { "type": "number", "nullable": true }, "coinProfitType": { "type": "string", "nullable": true, "enum": ["PERCENT", "FIXED"] }
+    } },
+    "CheckoutLine": { "type": "object", "required": ["productSnapshot", "priceUsed", "priceSnapshotAt", "quantity", "unitPrice", "totalPrice"], "properties": {
+      "product": { "type": "string", "nullable": true },
+      "productSnapshot": { "$ref": "#/components/schemas/CheckoutProductSnapshot" },
+      "priceUsed": { "type": "number" }, "priceSnapshotAt": { "type": "string", "format": "date-time" },
+      "quantity": { "type": "integer", "minimum": 1 }, "unitPrice": { "type": "number" }, "totalPrice": { "type": "number" }
+    } },
+    "ShippingSnapshot": { "type": "object", "required": ["method", "type", "name", "price"], "properties": {
+      "method": { "$ref": "#/components/schemas/UserId" },
+      "type": { "type": "string", "enum": ["PICKUP", "SHIPPING"] },
+      "name": { "type": "string" }, "price": { "type": "number", "minimum": 0 }
+    } },
+    "CheckoutAddress": { "type": "object", "required": ["addressId", "title", "postalCode", "location", "address"], "properties": {
+      "addressId": { "$ref": "#/components/schemas/UserId" },
+      "title": { "type": "string" }, "postalCode": { "type": "string" },
+      "location": { "$ref": "#/components/schemas/IranLocation" },
+      "address": { "type": "string" }
+    } },
+    "CheckoutCoupon": { "type": "object", "required": ["id", "code", "discountAmount"], "properties": {
+      "id": { "$ref": "#/components/schemas/UserId" }, "code": { "type": "string" },
+      "discountAmount": { "type": "number", "minimum": 0 }
+    } },
+    "CheckoutPayment": { "type": "object", "required": ["trackId", "amount", "currency", "createdAt"], "properties": {
+      "trackId": { "type": "string" }, "amount": { "type": "number", "description": "Payment amount in RIAL." },
+      "currency": { "type": "string", "enum": ["RIAL"] },
+      "createdAt": { "type": "string", "format": "date-time" },
+      "paidAt": { "type": "string", "format": "date-time", "nullable": true }
+    } },
+    "Checkout": { "type": "object", "required": ["_id", "user", "items", "shipping", "subtotal", "shippingCost", "discountAmount", "total", "status", "payment", "expiresAt"], "properties": {
+      "_id": { "$ref": "#/components/schemas/UserId" }, "user": { "$ref": "#/components/schemas/UserId" },
+      "items": { "type": "array", "items": { "$ref": "#/components/schemas/CheckoutLine" } },
+      "shipping": { "$ref": "#/components/schemas/ShippingSnapshot" },
+      "shippingAddress": { "type": "object", "nullable": true, "description": "Address snapshot for SHIPPING; null for PICKUP.", "properties": {
+        "addressId": { "$ref": "#/components/schemas/UserId" }, "title": { "type": "string" },
+        "postalCode": { "type": "string" }, "location": { "$ref": "#/components/schemas/IranLocation" },
+        "address": { "type": "string" }
+      } },
+      "subtotal": { "type": "number" }, "shippingCost": { "type": "number" },
+      "discountAmount": { "type": "number" },
+      "coupon": { "type": "object", "nullable": true, "description": "Coupon snapshot when applied.", "properties": {
+        "id": { "$ref": "#/components/schemas/UserId" }, "code": { "type": "string" },
+        "discountAmount": { "type": "number" }
+      } },
+      "total": { "type": "number" }, "status": { "type": "string", "enum": ["PENDING", "PAID", "EXPIRED"] },
+      "payment": { "$ref": "#/components/schemas/CheckoutPayment" },
+      "orderId": { "type": "string", "nullable": true },
+      "expiresAt": { "type": "string", "format": "date-time", "description": "Normally 10 minutes after creation." },
+      "createdAt": { "type": "string", "format": "date-time" }, "updatedAt": { "type": "string", "format": "date-time" }
+    } },
+    "CheckoutPreviewResponse": { "allOf": [{ "$ref": "#/components/schemas/ApiSuccess" }, { "type": "object", "properties": { "data": {
+      "type": "object", "required": ["subtotal", "shippingCost", "discountAmount", "coupon", "total"],
+      "properties": {
+        "subtotal": { "type": "number" }, "shippingCost": { "type": "number" },
+        "discountAmount": { "type": "number" },
+        "coupon": { "type": "object", "nullable": true, "properties": {
+          "id": { "$ref": "#/components/schemas/UserId" }, "code": { "type": "string" },
+          "discountAmount": { "type": "number" }
+        } }, "total": { "type": "number" }
+      }
+    } } }] },
+    "CheckoutCreatedResponse": { "allOf": [{ "$ref": "#/components/schemas/ApiSuccess" }, { "type": "object", "properties": { "data": {
+      "type": "object", "required": ["checkout", "paymentUrl"],
+      "properties": { "checkout": { "$ref": "#/components/schemas/Checkout" }, "paymentUrl": { "type": "string", "format": "uri" } }
+    } } }] }
+  },
+  "responses": {
+    "CheckoutPreviewOk": { "description": "Calculated quote; no payment created", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CheckoutPreviewResponse" } } } },
+    "CheckoutCreated": { "description": "Pending checkout and payment URL", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CheckoutCreatedResponse" } } } }
+  }
+}

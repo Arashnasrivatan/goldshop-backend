@@ -1,0 +1,20 @@
+{
+  "/checkouts/preview": {
+    "post": { "tags": ["💳 Checkouts"], "summary": "Preview checkout total", "description": "Authenticated. Recalculates cart items, market prices, shipping, and optional coupon without creating a payment. PICKUP forbids addressId; SHIPPING requires it.", "security": [{ "bearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CheckoutRequest" } } } },
+      "responses": { "200": { "$ref": "#/components/responses/CheckoutPreviewOk" }, "400": { "$ref": "#/components/responses/ApiError" }, "401": { "$ref": "#/components/responses/PassportUnauthorized" }, "403": { "$ref": "#/components/responses/ApiError" }, "404": { "$ref": "#/components/responses/ApiError" }, "409": { "$ref": "#/components/responses/ApiError" }, "422": { "$ref": "#/components/responses/ValidationError" }, "503": { "$ref": "#/components/responses/ApiError" } }
+    }
+  },
+  "/checkouts": {
+    "post": { "tags": ["💳 Checkouts"], "summary": "Create checkout and payment request", "description": "Authenticated. Requires order registration to be enabled; recalculates the quote, creates a payment and PENDING checkout. Total cannot exceed 400,000,000 Toman. The payment amount stored in the checkout is in RIAL.", "security": [{ "bearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CheckoutRequest" } } } },
+      "responses": { "201": { "$ref": "#/components/responses/CheckoutCreated" }, "400": { "$ref": "#/components/responses/ApiError" }, "401": { "$ref": "#/components/responses/PassportUnauthorized" }, "403": { "$ref": "#/components/responses/ApiError" }, "404": { "$ref": "#/components/responses/ApiError" }, "409": { "$ref": "#/components/responses/ApiError" }, "422": { "$ref": "#/components/responses/ValidationError" }, "502": { "$ref": "#/components/responses/ApiError" }, "503": { "$ref": "#/components/responses/ApiError" } }
+    }
+  },
+  "/checkouts/verify": {
+    "get": { "tags": ["💳 Checkouts"], "summary": "Verify checkout payment", "description": "Authenticated, user-owned trackId. Backend verifies with the payment provider, atomically decrements stock, records coupon use, creates a PAID order, marks checkout paid, and clears the cart. Repeated verification of an already paid checkout returns the existing order. This operation has side effects; it is not a status-only lookup.", "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "trackId", "in": "query", "required": true, "schema": { "type": "string", "pattern": "^[a-zA-Z0-9_-]+$" } }],
+      "responses": { "200": { "$ref": "#/components/responses/OrderOk" }, "400": { "$ref": "#/components/responses/ApiError" }, "401": { "$ref": "#/components/responses/PassportUnauthorized" }, "404": { "$ref": "#/components/responses/ApiError" }, "409": { "$ref": "#/components/responses/ApiError" }, "422": { "$ref": "#/components/responses/ValidationError" }, "502": { "$ref": "#/components/responses/ApiError" }, "500": { "$ref": "#/components/responses/ServerError" } }
+    }
+  }
+}

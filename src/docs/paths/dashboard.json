@@ -1,0 +1,8 @@
+{
+  "/dashboard": {
+    "get": { "tags": ["📊 Dashboard"], "summary": "Get store dashboard", "description": "ADMIN or SUPER_ADMIN. Sales and order metrics follow period; user and inventory metrics reflect current totals. Market price can be null and SMS credit can be unavailable.", "security": [{ "bearerAuth": [] }],
+      "parameters": [{ "name": "period", "in": "query", "schema": { "$ref": "#/components/schemas/DashboardPeriod" } }],
+      "responses": { "200": { "$ref": "#/components/responses/DashboardOk" }, "401": { "$ref": "#/components/responses/PassportUnauthorized" }, "403": { "$ref": "#/components/responses/UserForbidden" }, "422": { "$ref": "#/components/responses/ValidationError" } }
+    }
+  }
+}

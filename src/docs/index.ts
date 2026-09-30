@@ -15,6 +15,18 @@ import pricePaths from "./paths/prices.json";
 import priceComponents from "./components/prices.json";
 import productPaths from "./paths/products.json";
 import productComponents from "./components/products.json";
+import cartPaths from "./paths/carts.json";
+import cartComponents from "./components/carts.json";
+import shippingPaths from "./paths/shipping-methods.json";
+import shippingComponents from "./components/shipping-methods.json";
+import checkoutPaths from "./paths/checkouts.json";
+import checkoutComponents from "./components/checkouts.json";
+import orderPaths from "./paths/orders.json";
+import orderComponents from "./components/orders.json";
+import dashboardPaths from "./paths/dashboard.json";
+import dashboardComponents from "./components/dashboard.json";
+import storeSettingsPaths from "./paths/store-settings.json";
+import storeSettingsComponents from "./components/store-settings.json";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const swaggerUi = require("swagger-ui-express") as {
@@ -34,6 +46,12 @@ const document = {
     ...categoryPaths,
     ...pricePaths,
     ...productPaths,
+    ...cartPaths,
+    ...shippingPaths,
+    ...checkoutPaths,
+    ...orderPaths,
+    ...dashboardPaths,
+    ...storeSettingsPaths,
   },
   components: {
     ...base.components,
@@ -45,6 +63,12 @@ const document = {
       ...categoryComponents.schemas,
       ...priceComponents.schemas,
       ...productComponents.schemas,
+      ...cartComponents.schemas,
+      ...shippingComponents.schemas,
+      ...checkoutComponents.schemas,
+      ...orderComponents.schemas,
+      ...dashboardComponents.schemas,
+      ...storeSettingsComponents.schemas,
     },
     responses: {
       ...authComponents.responses,
@@ -53,12 +77,20 @@ const document = {
       ...categoryComponents.responses,
       ...priceComponents.responses,
       ...productComponents.responses,
+      ...cartComponents.responses,
+      ...shippingComponents.responses,
+      ...checkoutComponents.responses,
+      ...orderComponents.responses,
+      ...dashboardComponents.responses,
+      ...storeSettingsComponents.responses,
     },
     parameters: {
       ...userComponents.parameters,
       ...banComponents.parameters,
       ...categoryComponents.parameters,
       ...productComponents.parameters,
+      ...shippingComponents.parameters,
+      ...orderComponents.parameters,
     },
   },
 };
