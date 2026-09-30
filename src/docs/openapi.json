@@ -12,8 +12,9 @@
     { "name": "👤 Users", "description": "Own profile, password and addresses" },
     { "name": "🛡️ User Admin", "description": "Administrative user, address and role management" },
     { "name": "🚫 Bans", "description": "Administrative ban management" },
-    { "name": "Categories", "description": "Public category browsing and administrative category management" },
-    { "name": "Prices", "description": "Market prices and price history" }
+    { "name": "📚 Categories", "description": "Public category browsing and administrative category management" },
+    { "name": "🪙 Prices", "description": "Market prices and price history" },
+    { "name": "📦 Products", "description": "Public catalog and administrative product management" }
   ],
   "components": {
     "securitySchemes": {

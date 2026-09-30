@@ -13,6 +13,8 @@ import categoryPaths from "./paths/categories.json";
 import categoryComponents from "./components/categories.json";
 import pricePaths from "./paths/prices.json";
 import priceComponents from "./components/prices.json";
+import productPaths from "./paths/products.json";
+import productComponents from "./components/products.json";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const swaggerUi = require("swagger-ui-express") as {
@@ -31,6 +33,7 @@ const document = {
     ...banPaths,
     ...categoryPaths,
     ...pricePaths,
+    ...productPaths,
   },
   components: {
     ...base.components,
@@ -41,6 +44,7 @@ const document = {
       ...banComponents.schemas,
       ...categoryComponents.schemas,
       ...priceComponents.schemas,
+      ...productComponents.schemas,
     },
     responses: {
       ...authComponents.responses,
@@ -48,11 +52,13 @@ const document = {
       ...banComponents.responses,
       ...categoryComponents.responses,
       ...priceComponents.responses,
+      ...productComponents.responses,
     },
     parameters: {
       ...userComponents.parameters,
       ...banComponents.parameters,
       ...categoryComponents.parameters,
+      ...productComponents.parameters,
     },
   },
 };

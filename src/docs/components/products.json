@@ -1,0 +1,127 @@
+{
+  "schemas": {
+    "ProductImage": {
+      "type": "object", "required": ["url", "key"],
+      "properties": {
+        "_id": { "$ref": "#/components/schemas/UserId" },
+        "url": { "type": "string", "format": "uri" },
+        "key": { "type": "string", "description": "Storage key used when deleting images." }
+      }
+    },
+    "ProductCategorySummary": {
+      "type": "object", "properties": {
+        "_id": { "$ref": "#/components/schemas/UserId" },
+        "name": { "type": "string" }, "slug": { "$ref": "#/components/schemas/CategorySlug" }
+      }
+    },
+    "Product": {
+      "type": "object", "required": ["_id", "name", "slug", "type", "stock", "category", "images"],
+      "properties": {
+        "_id": { "$ref": "#/components/schemas/UserId" },
+        "name": { "type": "string" }, "slug": { "$ref": "#/components/schemas/CategorySlug" },
+        "description": { "type": "string", "nullable": true },
+        "type": { "type": "string", "enum": ["JEWELRY", "COIN"] },
+        "stock": { "type": "integer", "minimum": 0 },
+        "category": { "oneOf": [{ "$ref": "#/components/schemas/UserId" }, { "$ref": "#/components/schemas/ProductCategorySummary" }], "description": "ID in list/write responses; populated name and slug in detail responses." },
+        "images": { "type": "array", "items": { "$ref": "#/components/schemas/ProductImage" } },
+        "weight": { "type": "number", "exclusiveMinimum": 0, "description": "JEWELRY only." },
+        "wage": { "type": "number", "minimum": 0, "description": "JEWELRY only." },
+        "wageType": { "type": "string", "enum": ["PERCENT", "FIXED"], "description": "JEWELRY only." },
+        "profitMargin": { "type": "number", "minimum": 0, "description": "JEWELRY only." },
+        "taxRate": { "type": "number", "minimum": 0, "description": "JEWELRY only." },
+        "coinType": { "type": "string", "enum": ["EMAMI", "BAHAR_AZADI", "HALF", "QUARTER", "GRAM"], "description": "COIN only." },
+        "coinProfit": { "type": "number", "minimum": 0, "description": "COIN only." },
+        "coinProfitType": { "type": "string", "enum": ["PERCENT", "FIXED"], "description": "COIN only." },
+        "isActive": { "type": "boolean" }, "isDeleted": { "type": "boolean" },
+        "customFilters": { "type": "object", "additionalProperties": {}, "description": "Arbitrary custom key/value pairs." },
+        "inStock": { "type": "boolean", "description": "Computed on list and document JSON; may be absent on lean update responses." },
+        "isOutOfStock": { "type": "integer", "enum": [0, 1], "description": "Computed on list results only." },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "__v": { "type": "integer", "description": "Mongoose version key; may be present." }
+      }
+    },
+    "ProductCreateRequest": {
+      "type": "object", "required": ["name", "slug", "type", "stock", "category", "images"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "example": "Gold ring" },
+        "slug": { "$ref": "#/components/schemas/CategorySlug" },
+        "description": { "type": "string" },
+        "type": { "type": "string", "enum": ["JEWELRY", "COIN"] },
+        "stock": { "type": "integer", "minimum": 0 },
+        "category": { "$ref": "#/components/schemas/UserId" },
+        "images": { "type": "array", "minItems": 1, "maxItems": 10, "items": { "type": "string", "format": "binary" }, "description": "Repeat images form field for each JPEG, PNG, WebP or AVIF file; max 5 MB per file." },
+        "weight": { "type": "number", "exclusiveMinimum": 0, "description": "Required for JEWELRY; forbidden for COIN." },
+        "wage": { "type": "number", "minimum": 0, "description": "Required for JEWELRY; forbidden for COIN." },
+        "wageType": { "type": "string", "enum": ["PERCENT", "FIXED"], "description": "Required for JEWELRY; forbidden for COIN." },
+        "profitMargin": { "type": "number", "minimum": 0, "description": "Required for JEWELRY; forbidden for COIN." },
+        "taxRate": { "type": "number", "minimum": 0, "description": "Required for JEWELRY; forbidden for COIN." },
+        "coinType": { "type": "string", "enum": ["EMAMI", "BAHAR_AZADI", "HALF", "QUARTER", "GRAM"], "description": "Required for COIN; forbidden for JEWELRY." },
+        "coinProfit": { "type": "number", "minimum": 0, "description": "Required for COIN; forbidden for JEWELRY." },
+        "coinProfitType": { "type": "string", "enum": ["PERCENT", "FIXED"], "description": "Required for COIN; forbidden for JEWELRY." },
+        "isActive": { "type": "boolean", "default": true }
+      },
+      "description": "Send multipart/form-data. For customFilters, create first and then PATCH with JSON; create does not parse a multipart JSON text field into an object."
+    },
+    "ProductUpdateRequest": {
+      "type": "object", "minProperties": 1,
+      "properties": {
+        "name": { "type": "string" }, "slug": { "$ref": "#/components/schemas/CategorySlug" },
+        "description": { "type": "string", "nullable": true },
+        "stock": { "type": "integer", "minimum": 0 },
+        "category": { "$ref": "#/components/schemas/UserId" },
+        "weight": { "type": "number", "exclusiveMinimum": 0 },
+        "wage": { "type": "number", "minimum": 0 },
+        "wageType": { "type": "string", "enum": ["PERCENT", "FIXED"] },
+        "profitMargin": { "type": "number", "minimum": 0 },
+        "taxRate": { "type": "number", "minimum": 0 },
+        "coinType": { "type": "string", "enum": ["EMAMI", "BAHAR_AZADI", "HALF", "QUARTER", "GRAM"] },
+        "coinProfit": { "type": "number", "minimum": 0 },
+        "coinProfitType": { "type": "string", "enum": ["PERCENT", "FIXED"] },
+        "isActive": { "type": "boolean" },
+        "customFilters": { "type": "object", "additionalProperties": {} }
+      },
+      "description": "Product type cannot change. Jewelry and coin fields cannot be mixed or used on the wrong type. Images have a separate endpoint."
+    },
+    "ProductDeleteRequest": {
+      "type": "object", "required": ["confirmationPhrase"],
+      "properties": { "confirmationPhrase": { "type": "string", "pattern": "^DELETE PRODUCT [a-fA-F0-9]{24}$", "example": "DELETE PRODUCT 507f1f77bcf86cd799439011", "description": "Must exactly match DELETE PRODUCT followed by productId." } }
+    },
+    "ProductImagesUploadRequest": {
+      "type": "object", "required": ["images"],
+      "properties": { "images": { "type": "array", "minItems": 1, "maxItems": 10, "items": { "type": "string", "format": "binary" }, "description": "Repeat images field; total stored images cannot exceed 10. JPEG, PNG, WebP or AVIF; max 5 MB per file." } }
+    },
+    "ProductImagesDeleteRequest": {
+      "type": "object", "required": ["imageKeys"],
+      "properties": { "imageKeys": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 }, "description": "Storage keys from product images array." } }
+    },
+    "ProductPagination": {
+      "type": "object", "required": ["page", "limit", "totalPage", "totalProduct"],
+      "properties": { "page": { "type": "integer", "minimum": 1 }, "limit": { "type": "integer", "minimum": 1 }, "totalPage": { "type": "integer", "minimum": 0 }, "totalProduct": { "type": "integer", "minimum": 0 } }
+    },
+    "ProductResponse": {
+      "allOf": [{ "$ref": "#/components/schemas/ApiSuccess" }, { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Product" } } }]
+    },
+    "ProductsPageResponse": {
+      "allOf": [{ "$ref": "#/components/schemas/ApiSuccess" }, { "type": "object", "properties": { "data": {
+        "type": "object", "required": ["pagination", "products"],
+        "properties": { "pagination": { "$ref": "#/components/schemas/ProductPagination" }, "products": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } } }
+      } } }]
+    },
+    "ProductImagesResponse": {
+      "allOf": [{ "$ref": "#/components/schemas/ApiSuccess" }, { "type": "object", "properties": { "data": {
+        "type": "object", "required": ["_id", "images"],
+        "properties": { "_id": { "$ref": "#/components/schemas/UserId" }, "images": { "type": "array", "items": { "$ref": "#/components/schemas/ProductImage" } } }
+      } } }]
+    }
+  },
+  "responses": {
+    "ProductOk": { "description": "Product document", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProductResponse" } } } },
+    "ProductsPageOk": { "description": "Paginated products", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProductsPageResponse" } } } },
+    "ProductImagesOk": { "description": "Product ID and images", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProductImagesResponse" } } } }
+  },
+  "parameters": {
+    "ProductIdPath": { "name": "productId", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/UserId" } },
+    "ProductSlugPath": { "name": "slug", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/CategorySlug" } }
+  }
+}

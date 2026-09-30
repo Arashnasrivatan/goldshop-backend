@@ -2,7 +2,9 @@
   "/categories/slug/{slug}": {
     "parameters": [{ "$ref": "#/components/parameters/CategorySlugPath" }],
     "get": {
-      "tags": ["Categories"], "summary": "Get category by slug", "description": "Public endpoint. A matching inactive category is not filtered out.",
+      "tags": ["📚 Categories"],
+      "summary": "Get category by slug",
+      "description": "Public endpoint. A matching inactive category is not filtered out.",
       "responses": {
         "200": { "$ref": "#/components/responses/CategoryOk" },
         "404": { "$ref": "#/components/responses/ApiError" },
@@ -12,7 +14,9 @@
   },
   "/categories/tree": {
     "get": {
-      "tags": ["Categories"], "summary": "Get active category tree", "description": "Public endpoint. Returns only active categories, nested by parent and sorted by order then creation date. A child whose parent is inactive is not included in the returned roots.",
+      "tags": ["📚 Categories"],
+      "summary": "Get active category tree",
+      "description": "Public endpoint. Returns only active categories, nested by parent and sorted by order then creation date. A child whose parent is inactive is not included in the returned roots.",
       "responses": {
         "200": { "$ref": "#/components/responses/CategoryTreeOk" }
       }
@@ -20,17 +24,68 @@
   },
   "/categories": {
     "get": {
-      "tags": ["Categories"], "summary": "List categories", "description": "ADMIN or SUPER_ADMIN. Includes inactive categories unless isActive is specified. Sorted by createdAt.", "security": [{ "bearerAuth": [] }],
+      "tags": ["📚 Categories"],
+      "summary": "List categories",
+      "description": "ADMIN or SUPER_ADMIN. Includes inactive categories unless isActive is specified. Sorted by createdAt.",
+      "security": [{ "bearerAuth": [] }],
       "parameters": [
-        { "name": "search", "in": "query", "schema": { "type": "string" }, "description": "Case-insensitive name, slug or description search." },
-        { "name": "catId", "in": "query", "schema": { "$ref": "#/components/schemas/UserId" } },
-        { "name": "slug", "in": "query", "schema": { "$ref": "#/components/schemas/CategorySlug" } },
-        { "name": "parent", "in": "query", "schema": { "$ref": "#/components/schemas/UserId" }, "description": "Direct parent category ID." },
-        { "name": "level", "in": "query", "schema": { "type": "string", "enum": ["0", "1", "2"] }, "description": "0=root, 1=child, 2=grandchild." },
-        { "name": "isActive", "in": "query", "schema": { "type": "string", "enum": ["true", "false"] } },
-        { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"], "default": "asc" } },
-        { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 10 } },
-        { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1, "default": 1 } }
+        {
+          "name": "search",
+          "in": "query",
+          "schema": { "type": "string" },
+          "description": "Case-insensitive name, slug or description search."
+        },
+        {
+          "name": "catId",
+          "in": "query",
+          "schema": { "$ref": "#/components/schemas/UserId" }
+        },
+        {
+          "name": "slug",
+          "in": "query",
+          "schema": { "$ref": "#/components/schemas/CategorySlug" }
+        },
+        {
+          "name": "parent",
+          "in": "query",
+          "schema": { "$ref": "#/components/schemas/UserId" },
+          "description": "Direct parent category ID."
+        },
+        {
+          "name": "level",
+          "in": "query",
+          "schema": { "type": "string", "enum": ["0", "1", "2"] },
+          "description": "0=root, 1=child, 2=grandchild."
+        },
+        {
+          "name": "isActive",
+          "in": "query",
+          "schema": { "type": "string", "enum": ["true", "false"] }
+        },
+        {
+          "name": "sort",
+          "in": "query",
+          "schema": {
+            "type": "string",
+            "enum": ["asc", "desc"],
+            "default": "asc"
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 10
+          }
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "schema": { "type": "integer", "minimum": 1, "default": 1 }
+        }
       ],
       "responses": {
         "200": { "$ref": "#/components/responses/CategoriesPageOk" },
@@ -40,8 +95,18 @@
       }
     },
     "post": {
-      "tags": ["Categories"], "summary": "Create category", "description": "ADMIN or SUPER_ADMIN. Uses multipart/form-data; image is optional. The slug must be unique. A parent at maximum depth cannot receive a child.", "security": [{ "bearerAuth": [] }],
-      "requestBody": { "required": true, "content": { "multipart/form-data": { "schema": { "$ref": "#/components/schemas/CategoryCreateRequest" } } } },
+      "tags": ["📚 Categories"],
+      "summary": "Create category",
+      "description": "ADMIN or SUPER_ADMIN. Uses multipart/form-data; image is optional. The slug must be unique. A parent at maximum depth cannot receive a child.",
+      "security": [{ "bearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "multipart/form-data": {
+            "schema": { "$ref": "#/components/schemas/CategoryCreateRequest" }
+          }
+        }
+      },
       "responses": {
         "201": { "$ref": "#/components/responses/CategoryOk" },
         "400": { "$ref": "#/components/responses/ApiError" },
@@ -56,7 +121,10 @@
   "/categories/{categoryId}": {
     "parameters": [{ "$ref": "#/components/parameters/CategoryIdPath" }],
     "get": {
-      "tags": ["Categories"], "summary": "Get category by ID", "description": "ADMIN or SUPER_ADMIN.", "security": [{ "bearerAuth": [] }],
+      "tags": ["📚 Categories"],
+      "summary": "Get category by ID",
+      "description": "ADMIN or SUPER_ADMIN.",
+      "security": [{ "bearerAuth": [] }],
       "responses": {
         "200": { "$ref": "#/components/responses/CategoryOk" },
         "401": { "$ref": "#/components/responses/PassportUnauthorized" },
@@ -66,8 +134,18 @@
       }
     },
     "patch": {
-      "tags": ["Categories"], "summary": "Update category", "description": "ADMIN or SUPER_ADMIN. Uses multipart/form-data; supply at least one field or a new image. Literal 'null' in parent moves it to root. Returns HTTP 201 in the current controller.", "security": [{ "bearerAuth": [] }],
-      "requestBody": { "required": true, "content": { "multipart/form-data": { "schema": { "$ref": "#/components/schemas/CategoryUpdateRequest" } } } },
+      "tags": ["📚 Categories"],
+      "summary": "Update category",
+      "description": "ADMIN or SUPER_ADMIN. Uses multipart/form-data; supply at least one field or a new image. Literal 'null' in parent moves it to root. Returns HTTP 201 in the current controller.",
+      "security": [{ "bearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "multipart/form-data": {
+            "schema": { "$ref": "#/components/schemas/CategoryUpdateRequest" }
+          }
+        }
+      },
       "responses": {
         "201": { "$ref": "#/components/responses/CategoryOk" },
         "400": { "$ref": "#/components/responses/ApiError" },
@@ -79,8 +157,18 @@
       }
     },
     "delete": {
-      "tags": ["Categories"], "summary": "Delete category", "description": "ADMIN or SUPER_ADMIN. Requires exact confirmation phrase. Deletion is rejected if this category or any descendant contains products. The current backend deletes only the target record, not its descendants.", "security": [{ "bearerAuth": [] }],
-      "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CategoryDeleteRequest" } } } },
+      "tags": ["📚 Categories"],
+      "summary": "Delete category",
+      "description": "ADMIN or SUPER_ADMIN. Requires exact confirmation phrase. Deletion is rejected if this category or any descendant contains products. The current backend deletes only the target record, not its descendants.",
+      "security": [{ "bearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/CategoryDeleteRequest" }
+          }
+        }
+      },
       "responses": {
         "200": { "$ref": "#/components/responses/CategoryOk" },
         "400": { "$ref": "#/components/responses/ApiError" },

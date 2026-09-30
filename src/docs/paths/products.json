@@ -1,0 +1,275 @@
+{
+  "/products": {
+    "get": {
+      "tags": ["📦 Products"],
+      "summary": "List products",
+      "description": "Public endpoint. Defaults to active, non-deleted products; out-of-stock products sort last. Category filter includes descendants. Status flags are accepted by the current backend without authentication; includeDeleted and isDeleted are not validated by its query schema.",
+      "parameters": [
+        {
+          "name": "search",
+          "in": "query",
+          "schema": { "type": "string" },
+          "description": "Case-insensitive name or description search."
+        },
+        {
+          "name": "type",
+          "in": "query",
+          "schema": { "type": "string", "enum": ["JEWELRY", "COIN"] }
+        },
+        {
+          "name": "category",
+          "in": "query",
+          "schema": { "type": "string" },
+          "description": "Category ObjectId. Invalid IDs are ignored by the current service."
+        },
+        {
+          "name": "minStock",
+          "in": "query",
+          "schema": { "type": "integer", "minimum": 0 }
+        },
+        {
+          "name": "maxStock",
+          "in": "query",
+          "schema": { "type": "integer", "minimum": 0 }
+        },
+        {
+          "name": "minWeight",
+          "in": "query",
+          "schema": { "type": "number", "exclusiveMinimum": 0 }
+        },
+        {
+          "name": "maxWeight",
+          "in": "query",
+          "schema": { "type": "number", "exclusiveMinimum": 0 }
+        },
+        {
+          "name": "inStockOnly",
+          "in": "query",
+          "schema": { "type": "boolean", "default": false },
+          "description": "When true, stock must be > 0; minStock/maxStock are ignored."
+        },
+        {
+          "name": "includeInactive",
+          "in": "query",
+          "schema": { "type": "boolean", "default": false }
+        },
+        {
+          "name": "includeDeleted",
+          "in": "query",
+          "schema": { "type": "boolean", "default": false }
+        },
+        {
+          "name": "isActive",
+          "in": "query",
+          "schema": { "type": "boolean" },
+          "description": "Explicit active-state filter."
+        },
+        {
+          "name": "isDeleted",
+          "in": "query",
+          "schema": { "type": "boolean" },
+          "description": "When true, returns deleted products. Not validated by the current query schema."
+        },
+        {
+          "name": "sort",
+          "in": "query",
+          "schema": {
+            "type": "string",
+            "enum": [
+              "newest",
+              "oldest",
+              "min_weight",
+              "max_weight",
+              "min_wage",
+              "max_wage"
+            ],
+            "default": "newest"
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 20
+          }
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "schema": { "type": "integer", "minimum": 1, "default": 1 }
+        }
+      ],
+      "responses": {
+        "200": { "$ref": "#/components/responses/ProductsPageOk" },
+        "422": { "$ref": "#/components/responses/ValidationError" },
+        "500": { "$ref": "#/components/responses/ServerError" }
+      }
+    },
+    "post": {
+      "tags": ["📦 Products"],
+      "summary": "Create product",
+      "description": "ADMIN or SUPER_ADMIN. Send multipart/form-data with at least one image; jewelry and coin have different required fields. Product slug must be unique.",
+      "security": [{ "bearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "multipart/form-data": {
+            "schema": { "$ref": "#/components/schemas/ProductCreateRequest" }
+          }
+        }
+      },
+      "responses": {
+        "201": { "$ref": "#/components/responses/ProductOk" },
+        "400": { "$ref": "#/components/responses/ApiError" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/UserForbidden" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "409": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" },
+        "500": { "$ref": "#/components/responses/ServerError" }
+      }
+    }
+  },
+  "/products/slug/{slug}": {
+    "parameters": [{ "$ref": "#/components/parameters/ProductSlugPath" }],
+    "get": {
+      "tags": ["📦 Products"],
+      "summary": "Get product by slug",
+      "description": "Public endpoint. Category is populated with name and slug. The current route does not filter inactive or soft-deleted products.",
+      "responses": {
+        "200": { "$ref": "#/components/responses/ProductOk" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" }
+      }
+    }
+  },
+  "/products/{productId}": {
+    "parameters": [{ "$ref": "#/components/parameters/ProductIdPath" }],
+    "get": {
+      "tags": ["📦 Products"],
+      "summary": "Get product by ID",
+      "description": "ADMIN or SUPER_ADMIN. Category is populated with name and slug.",
+      "security": [{ "bearerAuth": [] }],
+      "responses": {
+        "200": { "$ref": "#/components/responses/ProductOk" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/UserForbidden" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" }
+      }
+    },
+    "patch": {
+      "tags": ["📦 Products"],
+      "summary": "Update product",
+      "description": "ADMIN or SUPER_ADMIN. Send JSON; type cannot change. The current service removes the product from every cart unless isActive is explicitly true in this request, even when updating an unrelated field.",
+      "security": [{ "bearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ProductUpdateRequest" }
+          }
+        }
+      },
+      "responses": {
+        "200": { "$ref": "#/components/responses/ProductOk" },
+        "400": { "$ref": "#/components/responses/ApiError" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/UserForbidden" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "409": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" }
+      }
+    },
+    "delete": {
+      "tags": ["📦 Products"],
+      "summary": "Soft-delete product",
+      "description": "ADMIN or SUPER_ADMIN. Requires exact confirmation phrase. Sets isDeleted=true and isActive=false, then removes the product from all carts. Does not physically remove product or image records.",
+      "security": [{ "bearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ProductDeleteRequest" }
+          }
+        }
+      },
+      "responses": {
+        "200": { "$ref": "#/components/responses/EmptySuccess" },
+        "400": { "$ref": "#/components/responses/ApiError" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/UserForbidden" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" }
+      }
+    }
+  },
+  "/products/{productId}/images": {
+    "parameters": [{ "$ref": "#/components/parameters/ProductIdPath" }],
+    "get": {
+      "tags": ["📦 Products"],
+      "summary": "Get product images",
+      "description": "ADMIN or SUPER_ADMIN. Returns only product ID and images.",
+      "security": [{ "bearerAuth": [] }],
+      "responses": {
+        "200": { "$ref": "#/components/responses/ProductImagesOk" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/UserForbidden" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" }
+      }
+    },
+    "post": {
+      "tags": ["📦 Products"],
+      "summary": "Add product images",
+      "description": "ADMIN or SUPER_ADMIN. Upload at least one image; no more than 10 total images after adding.",
+      "security": [{ "bearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "multipart/form-data": {
+            "schema": {
+              "$ref": "#/components/schemas/ProductImagesUploadRequest"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": { "$ref": "#/components/responses/ProductOk" },
+        "400": { "$ref": "#/components/responses/ApiError" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/UserForbidden" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" },
+        "500": { "$ref": "#/components/responses/ServerError" }
+      }
+    },
+    "delete": {
+      "tags": ["📦 Products"],
+      "summary": "Delete selected product images",
+      "description": "ADMIN or SUPER_ADMIN. At least one supplied key must belong to the product. Unknown keys are ignored if any known key matches. Database images are updated before storage deletion.",
+      "security": [{ "bearerAuth": [] }],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ProductImagesDeleteRequest"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": { "$ref": "#/components/responses/ProductOk" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/UserForbidden" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" },
+        "500": { "$ref": "#/components/responses/ServerError" }
+      }
+    }
+  }
+}
