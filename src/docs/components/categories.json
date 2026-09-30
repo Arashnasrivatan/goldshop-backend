@@ -1,0 +1,97 @@
+{
+  "schemas": {
+    "CategorySlug": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "example": "gold-rings" },
+    "CategoryImage": {
+      "type": "object", "required": ["url", "key"],
+      "properties": { "url": { "type": "string", "format": "uri" }, "key": { "type": "string" } }
+    },
+    "Category": {
+      "type": "object", "required": ["_id", "name", "slug", "path", "level", "isActive", "order"],
+      "properties": {
+        "_id": { "$ref": "#/components/schemas/UserId" },
+        "name": { "type": "string" },
+        "slug": { "$ref": "#/components/schemas/CategorySlug" },
+        "description": { "type": "string", "nullable": true },
+        "parent": { "type": "string", "nullable": true, "description": "Parent category ObjectId or null for a root category." },
+        "path": { "type": "array", "items": { "$ref": "#/components/schemas/UserId" }, "description": "Ancestor IDs from root to direct parent." },
+        "image": { "type": "object", "nullable": true, "properties": { "url": { "type": "string", "format": "uri" }, "key": { "type": "string" } } },
+        "level": { "type": "integer", "minimum": 0, "description": "0=root, 1=child, 2=grandchild with default configuration." },
+        "isActive": { "type": "boolean" },
+        "order": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "__v": { "type": "integer", "description": "May be present in create, detail, update, or delete responses." }
+      }
+    },
+    "CategoryTreeNode": {
+      "allOf": [
+        { "$ref": "#/components/schemas/Category" },
+        { "type": "object", "required": ["children"], "properties": { "children": { "type": "array", "items": { "$ref": "#/components/schemas/CategoryTreeNode" } } } }
+      ]
+    },
+    "CategoryCreateRequest": {
+      "type": "object", "required": ["name", "slug"],
+      "properties": {
+        "name": { "type": "string", "minLength": 2, "maxLength": 100, "example": "Gold rings" },
+        "slug": { "$ref": "#/components/schemas/CategorySlug" },
+        "description": { "type": "string", "maxLength": 500 },
+        "parent": { "$ref": "#/components/schemas/UserId" },
+        "isActive": { "type": "boolean", "default": true },
+        "order": { "type": "integer", "minimum": 0, "default": 0 },
+        "image": { "type": "string", "format": "binary", "description": "Optional image up to 5 MB; JPEG, PNG, WebP or AVIF." }
+      },
+      "description": "Send multipart/form-data. Omit parent for root. Default maximum depth is level 2, configurable on the server."
+    },
+    "CategoryUpdateRequest": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "slug": { "$ref": "#/components/schemas/CategorySlug" },
+        "description": { "type": "string", "maxLength": 500 },
+        "parent": { "type": "string", "description": "Parent ObjectId or literal 'null' to move to root." },
+        "isActive": { "type": "boolean" },
+        "order": { "type": "integer", "minimum": 0 },
+        "image": { "type": "string", "format": "binary", "description": "Optional replacement image up to 5 MB; JPEG, PNG, WebP or AVIF." }
+      },
+      "description": "Send at least one field or image as multipart/form-data. Moving below itself, a descendant, or beyond maximum depth is rejected."
+    },
+    "CategoryDeleteRequest": {
+      "type": "object", "required": ["confirmationPhrase"],
+      "properties": { "confirmationPhrase": { "type": "string", "pattern": "^DELETE CATEGORY [a-fA-F0-9]{24}$", "example": "DELETE CATEGORY 507f1f77bcf86cd799439011", "description": "Must exactly match DELETE CATEGORY followed by the categoryId path parameter." } }
+    },
+    "CategoriesPagination": {
+      "type": "object", "required": ["page", "limit", "totalPage", "totalCategories"],
+      "properties": {
+        "page": { "type": "integer", "minimum": 1 }, "limit": { "type": "integer", "minimum": 1 },
+        "totalPage": { "type": "integer", "minimum": 0 }, "totalCategories": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "CategoryResponse": {
+      "allOf": [{ "$ref": "#/components/schemas/ApiSuccess" }, { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/Category" } } }]
+    },
+    "CategoriesPageResponse": {
+      "allOf": [{ "$ref": "#/components/schemas/ApiSuccess" }, { "type": "object", "properties": { "data": {
+        "type": "object", "required": ["paginationData", "categories"],
+        "properties": {
+          "paginationData": { "$ref": "#/components/schemas/CategoriesPagination" },
+          "categories": { "type": "array", "items": { "$ref": "#/components/schemas/Category" } }
+        }
+      } } }]
+    },
+    "CategoryTreeResponse": {
+      "allOf": [{ "$ref": "#/components/schemas/ApiSuccess" }, { "type": "object", "properties": { "data": {
+        "type": "object", "required": ["categories"],
+        "properties": { "categories": { "type": "array", "items": { "$ref": "#/components/schemas/CategoryTreeNode" } } }
+      } } }]
+    }
+  },
+  "responses": {
+    "CategoryOk": { "description": "Category document", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CategoryResponse" } } } },
+    "CategoriesPageOk": { "description": "Paginated categories", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CategoriesPageResponse" } } } },
+    "CategoryTreeOk": { "description": "Active category tree", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CategoryTreeResponse" } } } }
+  },
+  "parameters": {
+    "CategoryIdPath": { "name": "categoryId", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/UserId" } },
+    "CategorySlugPath": { "name": "slug", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/CategorySlug" } }
+  }
+}

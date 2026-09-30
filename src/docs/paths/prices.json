@@ -1,0 +1,26 @@
+{
+  "/prices/latest": {
+    "get": {
+      "tags": ["Prices"], "summary": "Get latest available market prices",
+      "description": "Public endpoint. Returns prices only while market display is allowed and a price record exists. Market hours use Asia/Tehran and are configurable on the server.",
+      "responses": {
+        "200": { "$ref": "#/components/responses/LatestPriceOk" },
+        "503": { "$ref": "#/components/responses/PriceUnavailable" }
+      }
+    }
+  },
+  "/prices/history": {
+    "get": {
+      "tags": ["Prices"], "summary": "Get market price history",
+      "description": "Public endpoint. Newest first; independent of market-open status. Stored price records expire after 24 hours.",
+      "parameters": [
+        { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 10 } },
+        { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1, "default": 1 } }
+      ],
+      "responses": {
+        "200": { "$ref": "#/components/responses/PriceHistoryOk" },
+        "422": { "$ref": "#/components/responses/ValidationError" }
+      }
+    }
+  }
+}

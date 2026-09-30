@@ -1,0 +1,66 @@
+{
+  "schemas": {
+    "MarketPrice": {
+      "type": "object",
+      "required": ["_id", "gold18k", "goldBuy", "goldExchange", "coinQuarter", "coinHalf", "coinFull", "coinEmami", "createdAt", "updatedAt", "timeAgo"],
+      "properties": {
+        "_id": { "$ref": "#/components/schemas/UserId" },
+        "gold18k": { "type": "number" },
+        "goldBuy": { "type": "number" },
+        "goldExchange": { "type": "number" },
+        "coinQuarter": { "type": "number" },
+        "coinHalf": { "type": "number" },
+        "coinFull": { "type": "number" },
+        "coinEmami": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "timeAgo": { "type": "string", "description": "Human-readable age, such as 2m 5sec ago." },
+        "__v": { "type": "integer", "description": "Mongoose version key; may be present." }
+      }
+    },
+    "PricePagination": {
+      "type": "object", "required": ["page", "limit", "totalPage", "totalPrice"],
+      "properties": {
+        "page": { "type": "integer", "minimum": 1 },
+        "limit": { "type": "integer", "minimum": 1 },
+        "totalPage": { "type": "integer", "minimum": 0 },
+        "totalPrice": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "LatestPriceResponse": {
+      "allOf": [{ "$ref": "#/components/schemas/ApiSuccess" }, { "type": "object", "properties": { "data": {
+        "type": "object", "required": ["isAvailable", "prices"],
+        "properties": {
+          "isAvailable": { "type": "boolean", "enum": [true] },
+          "prices": { "$ref": "#/components/schemas/MarketPrice" }
+        }
+      } } }]
+    },
+    "PriceUnavailableResponse": {
+      "type": "object", "required": ["success", "statusCode", "message", "data"],
+      "properties": {
+        "success": { "type": "boolean", "enum": [false] },
+        "statusCode": { "type": "integer", "enum": [503] },
+        "message": { "type": "string" },
+        "data": {
+          "type": "object", "required": ["isAvailable"],
+          "properties": { "isAvailable": { "type": "boolean", "enum": [false] } }
+        }
+      }
+    },
+    "PriceHistoryResponse": {
+      "allOf": [{ "$ref": "#/components/schemas/ApiSuccess" }, { "type": "object", "properties": { "data": {
+        "type": "object", "required": ["pagination", "prices"],
+        "properties": {
+          "pagination": { "$ref": "#/components/schemas/PricePagination" },
+          "prices": { "type": "array", "items": { "$ref": "#/components/schemas/MarketPrice" } }
+        }
+      } } }]
+    }
+  },
+  "responses": {
+    "LatestPriceOk": { "description": "Current market prices are available", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LatestPriceResponse" } } } },
+    "PriceUnavailable": { "description": "Market is closed, price service is unavailable, or no price record exists", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PriceUnavailableResponse" } } } },
+    "PriceHistoryOk": { "description": "Paginated market price history", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PriceHistoryResponse" } } } }
+  }
+}
