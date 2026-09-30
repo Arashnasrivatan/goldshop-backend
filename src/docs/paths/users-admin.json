@@ -1,0 +1,137 @@
+{
+  "/users": {
+    "get": {
+      "tags": ["🛡️ User Admin"], "summary": "List users", "description": "ADMIN or SUPER_ADMIN. By default banned users are excluded. Warning: the current backend list response contains user password hashes; handle it as sensitive data.",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [
+        { "name": "search", "in": "query", "schema": { "type": "string" }, "description": "Searches phone. The backend also queries a userId field, but that field is not defined in the current user model." },
+        { "name": "userId", "in": "query", "schema": { "$ref": "#/components/schemas/UserId" } },
+        { "name": "phone", "in": "query", "schema": { "type": "string", "pattern": "^09[0-9]*$", "maxLength": 11 } },
+        { "name": "from", "in": "query", "schema": { "type": "string", "format": "date-time" }, "description": "createdAt at or after this date." },
+        { "name": "to", "in": "query", "schema": { "type": "string", "format": "date-time" }, "description": "createdAt at or before this date; must be >= from." },
+        { "name": "role", "in": "query", "schema": { "type": "string", "enum": ["SUPER_ADMIN", "ADMIN", "USER"] } },
+        { "name": "includeBanned", "in": "query", "schema": { "type": "boolean", "default": false } },
+        { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"], "default": "desc" }, "description": "Sort by createdAt." },
+        { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 10 } },
+        { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1, "default": 1 } }
+      ],
+      "responses": {
+        "200": { "$ref": "#/components/responses/UsersPageOk" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/UserForbidden" },
+        "422": { "$ref": "#/components/responses/ValidationError" }
+      }
+    }
+  },
+  "/users/{userId}": {
+    "parameters": [{ "$ref": "#/components/parameters/UserIdPath" }],
+    "get": {
+      "tags": ["🛡️ User Admin"], "summary": "Get user by ID", "description": "ADMIN or SUPER_ADMIN.", "security": [{ "bearerAuth": [] }],
+      "responses": {
+        "200": { "$ref": "#/components/responses/UserDocumentOk" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/UserForbidden" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" }
+      }
+    },
+    "patch": {
+      "tags": ["🛡️ User Admin"], "summary": "Update user full name", "description": "ADMIN or SUPER_ADMIN. SUPER_ADMIN accounts cannot be edited; ADMIN cannot edit another ADMIN.", "security": [{ "bearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FullnameUpdate" } } } },
+      "responses": {
+        "200": { "$ref": "#/components/responses/UserDocumentOk" },
+        "400": { "$ref": "#/components/responses/ApiError" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/UserForbidden" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" },
+        "500": { "$ref": "#/components/responses/ServerError" }
+      }
+    },
+    "delete": {
+      "tags": ["🛡️ User Admin"], "summary": "Delete user", "description": "SUPER_ADMIN only. A SUPER_ADMIN account cannot be deleted. confirmationPhrase must exactly match DELETE USER followed by the userId.", "security": [{ "bearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DeleteUserRequest" } } } },
+      "responses": {
+        "200": { "$ref": "#/components/responses/EmptySuccess" },
+        "400": { "$ref": "#/components/responses/ApiError" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/UserForbidden" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" }
+      }
+    }
+  },
+  "/users/{userId}/addresses": {
+    "parameters": [{ "$ref": "#/components/parameters/UserIdPath" }],
+    "post": {
+      "tags": ["🛡️ User Admin"], "summary": "Add address for user", "description": "ADMIN or SUPER_ADMIN. Addresses cannot be added to ADMIN or SUPER_ADMIN accounts. Title and postal code must be unique for the target user.", "security": [{ "bearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AddressCreateRequest" } } } },
+      "responses": {
+        "201": { "$ref": "#/components/responses/AddressListOk" },
+        "400": { "$ref": "#/components/responses/ApiError" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/UserForbidden" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" }
+      }
+    }
+  },
+  "/users/{userId}/addresses/{addressId}": {
+    "parameters": [{ "$ref": "#/components/parameters/UserIdPath" }, { "$ref": "#/components/parameters/AddressIdPath" }],
+    "patch": {
+      "tags": ["🛡️ User Admin"], "summary": "Update user's address", "description": "ADMIN or SUPER_ADMIN. ADMIN/SUPER_ADMIN account addresses cannot be updated. At least one changed field is required; location needs both coordinates.", "security": [{ "bearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AddressUpdateRequest" } } } },
+      "responses": {
+        "200": { "$ref": "#/components/responses/UserDocumentOk" },
+        "400": { "$ref": "#/components/responses/ApiError" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/UserForbidden" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" }
+      }
+    },
+    "delete": {
+      "tags": ["🛡️ User Admin"], "summary": "Delete user's address", "description": "ADMIN or SUPER_ADMIN. ADMIN/SUPER_ADMIN account addresses cannot be deleted. confirmationPhrase must exactly match DELETE ADDRESS followed by the addressId.", "security": [{ "bearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DeleteAddressRequest" } } } },
+      "responses": {
+        "200": { "$ref": "#/components/responses/EmptySuccess" },
+        "400": { "$ref": "#/components/responses/ApiError" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/UserForbidden" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" },
+        "500": { "$ref": "#/components/responses/ServerError" }
+      }
+    }
+  },
+  "/users/{userId}/promote": {
+    "parameters": [{ "$ref": "#/components/parameters/UserIdPath" }],
+    "patch": {
+      "tags": ["🛡️ User Admin"], "summary": "Promote user to ADMIN", "description": "SUPER_ADMIN only. Only USER accounts can be promoted.", "security": [{ "bearerAuth": [] }],
+      "responses": {
+        "200": { "$ref": "#/components/responses/UserDocumentOk" },
+        "400": { "$ref": "#/components/responses/ApiError" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/UserForbidden" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" },
+        "500": { "$ref": "#/components/responses/ServerError" }
+      }
+    }
+  },
+  "/users/{userId}/demote": {
+    "parameters": [{ "$ref": "#/components/parameters/UserIdPath" }],
+    "patch": {
+      "tags": ["🛡️ User Admin"], "summary": "Demote ADMIN to USER", "description": "SUPER_ADMIN only. SUPER_ADMIN cannot be demoted; USER is already the lowest role.", "security": [{ "bearerAuth": [] }],
+      "responses": {
+        "200": { "$ref": "#/components/responses/UserDocumentOk" },
+        "400": { "$ref": "#/components/responses/ApiError" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/UserForbidden" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" },
+        "500": { "$ref": "#/components/responses/ServerError" }
+      }
+    }
+  }
+}

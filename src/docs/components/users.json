@@ -1,0 +1,123 @@
+{
+  "schemas": {
+    "RoleGuardError": {
+      "type": "object", "required": ["success", "statusCode", "message", "data"],
+      "properties": {
+        "success": { "type": "boolean", "enum": [false] },
+        "statusCode": { "type": "integer", "example": 403 },
+        "message": { "type": "string", "example": "Forbidden" },
+        "data": { "nullable": true, "example": null }
+      }
+    },
+    "UserId": { "type": "string", "pattern": "^[a-fA-F0-9]{24}$", "example": "507f1f77bcf86cd799439011" },
+    "FullnameUpdate": {
+      "type": "object", "required": ["fullname"],
+      "properties": { "fullname": { "type": "string", "minLength": 1, "description": "Nonempty after trimming; unchanged values are rejected." } }
+    },
+    "ChangePasswordRequest": {
+      "type": "object", "required": ["currentPassword", "newPassword", "confirmNewPassword"],
+      "properties": {
+        "currentPassword": { "$ref": "#/components/schemas/Password" },
+        "newPassword": { "$ref": "#/components/schemas/Password" },
+        "confirmNewPassword": { "type": "string", "format": "password", "writeOnly": true, "description": "Must equal newPassword." }
+      }
+    },
+    "DeleteMyAccountRequest": {
+      "type": "object", "required": ["confirmationPhrase"],
+      "properties": { "confirmationPhrase": { "type": "string", "pattern": "^DELETE MY ACCOUNT 09[0-9]{9}$", "example": "DELETE MY ACCOUNT 09123456789" } }
+    },
+    "DeleteUserRequest": {
+      "type": "object", "required": ["confirmationPhrase"],
+      "properties": { "confirmationPhrase": { "type": "string", "pattern": "^DELETE USER [a-zA-Z0-9_-]+$", "description": "Exactly DELETE USER followed by a space and the userId path parameter.", "example": "DELETE USER 507f1f77bcf86cd799439011" } }
+    },
+    "DeleteAddressRequest": {
+      "type": "object", "required": ["confirmationPhrase"],
+      "properties": { "confirmationPhrase": { "type": "string", "pattern": "^DELETE ADDRESS [a-zA-Z0-9_-]+$", "description": "Exactly DELETE ADDRESS followed by a space and the addressId path parameter.", "example": "DELETE ADDRESS 507f1f77bcf86cd799439011" } }
+    },
+    "IranLocation": {
+      "type": "object", "required": ["lat", "lng"],
+      "properties": {
+        "lat": { "type": "number", "minimum": 25, "maximum": 39.5, "example": 35.6892 },
+        "lng": { "type": "number", "minimum": 44, "maximum": 63.5, "example": 51.389 }
+      },
+      "description": "Coordinates must also pass the server's Iran boundary check."
+    },
+    "AddressCreateRequest": {
+      "type": "object", "required": ["title", "postalCode", "location", "address"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1, "example": "Home" },
+        "postalCode": { "type": "string", "minLength": 10, "maxLength": 10, "pattern": "^(?!(\\d)\\1{3})[13-9]{4}[1346-9][013-9]{5}$", "example": "1234567890" },
+        "location": { "$ref": "#/components/schemas/IranLocation" },
+        "address": { "type": "string", "minLength": 1, "example": "Tehran, Valiasr Street" }
+      },
+      "description": "Title and postal code must be unique among this user's addresses."
+    },
+    "AddressUpdateRequest": {
+      "type": "object", "minProperties": 1,
+      "properties": {
+        "title": { "type": "string" },
+        "postalCode": { "type": "string", "minLength": 10, "maxLength": 10, "pattern": "^(?!(\\d)\\1{3})[13-9]{4}[1346-9][013-9]{5}$" },
+        "location": { "$ref": "#/components/schemas/IranLocation" },
+        "address": { "type": "string" }
+      },
+      "description": "At least one address field is required. If location is supplied, both lat and lng are required. Unchanged values are rejected."
+    },
+    "UserListItem": {
+      "allOf": [
+        { "$ref": "#/components/schemas/AuthUser" },
+        { "type": "object", "properties": { "password": { "type": "string", "description": "Current list endpoint also returns the password hash. Treat as sensitive; do not expose to non-admin clients." } } }
+      ]
+    },
+    "UsersPagination": {
+      "type": "object", "required": ["page", "limit", "totalPage", "totalUsers"],
+      "properties": {
+        "page": { "type": "integer", "minimum": 1 },
+        "limit": { "type": "integer", "minimum": 1 },
+        "totalPage": { "type": "integer", "minimum": 0 },
+        "totalUsers": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "UsersPageResponse": {
+      "allOf": [
+        { "$ref": "#/components/schemas/ApiSuccess" },
+        { "type": "object", "properties": { "data": {
+          "type": "object", "required": ["paginationData", "users"],
+          "properties": {
+            "paginationData": { "$ref": "#/components/schemas/UsersPagination" },
+            "users": { "type": "array", "items": { "$ref": "#/components/schemas/UserListItem" } }
+          }
+        } } }
+      ]
+    },
+    "UserDocumentResponse": {
+      "allOf": [
+        { "$ref": "#/components/schemas/ApiSuccess" },
+        { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/AuthUser" } } }
+      ]
+    },
+    "AddressListResponse": {
+      "allOf": [
+        { "$ref": "#/components/schemas/ApiSuccess" },
+        { "type": "object", "properties": { "data": {
+          "type": "object", "required": ["addresses"],
+          "properties": { "addresses": { "type": "array", "items": { "$ref": "#/components/schemas/Address" } } }
+        } } }
+      ]
+    }
+  },
+  "responses": {
+    "UserProfileOk": { "description": "Current user profile", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProfileResponse" } } } },
+    "UserDocumentOk": { "description": "User document without password", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserDocumentResponse" } } } },
+    "AddressListOk": { "description": "User addresses", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AddressListResponse" } } } },
+    "UsersPageOk": { "description": "Paginated users", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UsersPageResponse" } } } },
+    "EmptySuccess": { "description": "Operation completed; data is null", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ApiSuccess" } } } },
+    "UserForbidden": {
+      "description": "Role guard denial uses data: null; service-level authorization errors use errors: null.",
+      "content": { "application/json": { "schema": { "oneOf": [{ "$ref": "#/components/schemas/RoleGuardError" }, { "$ref": "#/components/schemas/ApiError" }] } } }
+    }
+  },
+  "parameters": {
+    "UserIdPath": { "name": "userId", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/UserId" } },
+    "AddressIdPath": { "name": "addressId", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/UserId" } }
+  }
+}

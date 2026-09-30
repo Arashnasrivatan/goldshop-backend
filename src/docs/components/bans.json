@@ -1,0 +1,101 @@
+{
+  "schemas": {
+    "BanCreateRequest": {
+      "type": "object",
+      "required": ["userId", "banReason"],
+      "properties": {
+        "userId": { "$ref": "#/components/schemas/UserId" },
+        "banReason": { "type": "string", "minLength": 5, "maxLength": 100, "example": "Repeated abuse of store policies" }
+      }
+    },
+    "BanUpdateRequest": {
+      "type": "object",
+      "required": ["banReason"],
+      "properties": {
+        "banReason": { "type": "string", "minLength": 5, "maxLength": 100, "example": "Updated reason for this ban" }
+      },
+      "description": "The new reason must differ from the current reason."
+    },
+    "BanActor": {
+      "type": "object",
+      "properties": {
+        "_id": { "$ref": "#/components/schemas/UserId" },
+        "fullname": { "type": "string" },
+        "phone": { "$ref": "#/components/schemas/Phone" },
+        "role": { "type": "string", "enum": ["SUPER_ADMIN", "ADMIN", "USER"] }
+      },
+      "description": "Populated User reference with selected fields only."
+    },
+    "BanRecord": {
+      "type": "object",
+      "required": ["_id", "phone", "banReason", "user", "bannedBy", "createdAt", "updatedAt"],
+      "properties": {
+        "_id": { "$ref": "#/components/schemas/UserId" },
+        "phone": { "$ref": "#/components/schemas/Phone" },
+        "banReason": { "type": "string" },
+        "user": { "$ref": "#/components/schemas/BanActor" },
+        "bannedBy": { "$ref": "#/components/schemas/BanActor" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "description": "Populated ban record returned by list, detail, and unban operations."
+    },
+    "BanUpdatedRecord": {
+      "type": "object",
+      "required": ["_id", "phone", "banReason", "user", "bannedBy", "createdAt", "updatedAt"],
+      "properties": {
+        "_id": { "$ref": "#/components/schemas/UserId" },
+        "phone": { "$ref": "#/components/schemas/Phone" },
+        "banReason": { "type": "string" },
+        "user": { "$ref": "#/components/schemas/UserId" },
+        "bannedBy": { "$ref": "#/components/schemas/UserId" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "__v": { "type": "integer", "description": "Mongoose version key; may be present in update response." }
+      },
+      "description": "Updated ban record with unpopulated user and bannedBy IDs."
+    },
+    "BansPagination": {
+      "type": "object",
+      "required": ["page", "limit", "totalPage", "totalBannedUsers"],
+      "properties": {
+        "page": { "type": "integer", "minimum": 1 },
+        "limit": { "type": "integer", "minimum": 1 },
+        "totalPage": { "type": "integer", "minimum": 0 },
+        "totalBannedUsers": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "BansPageResponse": {
+      "allOf": [
+        { "$ref": "#/components/schemas/ApiSuccess" },
+        { "type": "object", "properties": { "data": {
+          "type": "object", "required": ["paginationData", "bannedUsers"],
+          "properties": {
+            "paginationData": { "$ref": "#/components/schemas/BansPagination" },
+            "bannedUsers": { "type": "array", "items": { "$ref": "#/components/schemas/BanRecord" } }
+          }
+        } } }
+      ]
+    },
+    "BanRecordResponse": {
+      "allOf": [
+        { "$ref": "#/components/schemas/ApiSuccess" },
+        { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/BanRecord" } } }
+      ]
+    },
+    "BanUpdatedResponse": {
+      "allOf": [
+        { "$ref": "#/components/schemas/ApiSuccess" },
+        { "type": "object", "properties": { "data": { "$ref": "#/components/schemas/BanUpdatedRecord" } } }
+      ]
+    }
+  },
+  "responses": {
+    "BansPageOk": { "description": "Paginated ban records", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BansPageResponse" } } } },
+    "BanRecordOk": { "description": "Populated ban record", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BanRecordResponse" } } } },
+    "BanUpdatedOk": { "description": "Updated ban record", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BanUpdatedResponse" } } } }
+  },
+  "parameters": {
+    "BanIdPath": { "name": "banId", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/UserId" }, "description": "MongoDB ObjectId of the ban record." }
+  }
+}

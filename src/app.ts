@@ -13,6 +13,7 @@ import passportConfig from "./configs/passport.config";
 import errorHandler from "./common/middlewares/errorHandler";
 import { AppError } from "./common/errors/AppError";
 import apiRouter from "./modules";
+import docsRouter from "./docs";
 
 const app = express();
 
@@ -78,6 +79,7 @@ app.use(passportConfig.initialize());
 app.use(passportConfig.session());
 
 //* Routes
+app.use("/api/docs", docsRouter);
 app.use(apiRouter);
 
 //* 404 Handler

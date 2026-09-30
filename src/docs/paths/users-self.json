@@ -1,0 +1,98 @@
+{
+  "/users/me": {
+    "get": {
+      "tags": ["👤 Users"], "summary": "Get my profile", "security": [{ "bearerAuth": [] }],
+      "responses": {
+        "200": { "$ref": "#/components/responses/UserProfileOk" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/ApiError" }
+      }
+    },
+    "patch": {
+      "tags": ["👤 Users"], "summary": "Update my full name", "security": [{ "bearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FullnameUpdate" } } } },
+      "responses": {
+        "200": { "$ref": "#/components/responses/UserDocumentOk" },
+        "400": { "$ref": "#/components/responses/ApiError" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/ApiError" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" },
+        "500": { "$ref": "#/components/responses/ServerError" }
+      }
+    },
+    "delete": {
+      "tags": ["👤 Users"], "summary": "Delete my account", "security": [{ "bearerAuth": [] }],
+      "description": "Permanently deletes the account and associated cart and unpaid checkout data. confirmationPhrase must exactly match DELETE MY ACCOUNT followed by the account phone number.",
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DeleteMyAccountRequest" } } } },
+      "responses": {
+        "200": { "$ref": "#/components/responses/EmptySuccess" },
+        "400": { "$ref": "#/components/responses/ApiError" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/ApiError" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" }
+      }
+    }
+  },
+  "/users/me/password": {
+    "patch": {
+      "tags": ["👤 Users"], "summary": "Change my password", "security": [{ "bearerAuth": [] }],
+      "description": "Verifies the current password and removes the stored refresh token after a successful change.",
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ChangePasswordRequest" } } } },
+      "responses": {
+        "200": { "$ref": "#/components/responses/EmptySuccess" },
+        "400": { "$ref": "#/components/responses/ApiError" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/ApiError" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" }
+      }
+    }
+  },
+  "/users/me/addresses": {
+    "post": {
+      "tags": ["👤 Users"], "summary": "Add my address", "security": [{ "bearerAuth": [] }],
+      "description": "The title and postal code must not duplicate another address on this account. Coordinates must be inside Iran.",
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AddressCreateRequest" } } } },
+      "responses": {
+        "201": { "$ref": "#/components/responses/AddressListOk" },
+        "400": { "$ref": "#/components/responses/ApiError" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/ApiError" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" }
+      }
+    }
+  },
+  "/users/me/addresses/{addressId}": {
+    "parameters": [{ "$ref": "#/components/parameters/AddressIdPath" }],
+    "patch": {
+      "tags": ["👤 Users"], "summary": "Update my address", "security": [{ "bearerAuth": [] }],
+      "description": "Requires a changed field. If updating location, supply both lat and lng. The response contains the updated user document.",
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AddressUpdateRequest" } } } },
+      "responses": {
+        "200": { "$ref": "#/components/responses/UserDocumentOk" },
+        "400": { "$ref": "#/components/responses/ApiError" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/ApiError" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" }
+      }
+    },
+    "delete": {
+      "tags": ["👤 Users"], "summary": "Delete my address", "security": [{ "bearerAuth": [] }],
+      "description": "confirmationPhrase must exactly match DELETE ADDRESS followed by the addressId path parameter.",
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DeleteAddressRequest" } } } },
+      "responses": {
+        "200": { "$ref": "#/components/responses/EmptySuccess" },
+        "400": { "$ref": "#/components/responses/ApiError" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/ApiError" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" },
+        "500": { "$ref": "#/components/responses/ServerError" }
+      }
+    }
+  }
+}

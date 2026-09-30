@@ -1,0 +1,87 @@
+{
+  "/bans": {
+    "get": {
+      "tags": ["🚫 Bans"],
+      "summary": "List ban records",
+      "description": "ADMIN or SUPER_ADMIN. Search matches phone or ban reason; sorting uses createdAt.",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [
+        { "name": "search", "in": "query", "schema": { "type": "string" }, "description": "Case-insensitive phone or ban reason search." },
+        { "name": "phone", "in": "query", "schema": { "type": "string", "pattern": "^09[0-9]*$", "maxLength": 11 }, "description": "Phone prefix or full number." },
+        { "name": "userId", "in": "query", "schema": { "$ref": "#/components/schemas/UserId" }, "description": "Banned user's ObjectId." },
+        { "name": "bannedBy", "in": "query", "schema": { "type": "string" }, "description": "Admin ObjectId. This query value is not validated as an ObjectId by the current route." },
+        { "name": "banReason", "in": "query", "schema": { "type": "string" }, "description": "Case-insensitive ban reason filter." },
+        { "name": "from", "in": "query", "schema": { "type": "string", "format": "date-time" }, "description": "createdAt at or after this date." },
+        { "name": "to", "in": "query", "schema": { "type": "string", "format": "date-time" }, "description": "createdAt at or before this date; must be >= from." },
+        { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"], "default": "desc" }, "description": "Sort by createdAt." },
+        { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 10 } },
+        { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1, "default": 1 } }
+      ],
+      "responses": {
+        "200": { "$ref": "#/components/responses/BansPageOk" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/UserForbidden" },
+        "422": { "$ref": "#/components/responses/ValidationError" }
+      }
+    },
+    "post": {
+      "tags": ["🚫 Bans"],
+      "summary": "Ban a user",
+      "description": "ADMIN or SUPER_ADMIN. The target must exist, have USER role, and not already be banned. Creates a ban record and marks the user as banned. The response has data: null.",
+      "security": [{ "bearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BanCreateRequest" } } } },
+      "responses": {
+        "200": { "$ref": "#/components/responses/EmptySuccess" },
+        "400": { "$ref": "#/components/responses/ApiError" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/UserForbidden" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" }
+      }
+    }
+  },
+  "/bans/{banId}": {
+    "parameters": [{ "$ref": "#/components/parameters/BanIdPath" }],
+    "get": {
+      "tags": ["🚫 Bans"],
+      "summary": "Get a ban record",
+      "description": "ADMIN or SUPER_ADMIN. user and bannedBy are populated with fullname, phone, and role.",
+      "security": [{ "bearerAuth": [] }],
+      "responses": {
+        "200": { "$ref": "#/components/responses/BanRecordOk" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/UserForbidden" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" }
+      }
+    },
+    "patch": {
+      "tags": ["🚫 Bans"],
+      "summary": "Edit a ban reason",
+      "description": "ADMIN or SUPER_ADMIN. The new reason must differ from the existing reason. The returned record has unpopulated user and bannedBy IDs.",
+      "security": [{ "bearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BanUpdateRequest" } } } },
+      "responses": {
+        "200": { "$ref": "#/components/responses/BanUpdatedOk" },
+        "400": { "$ref": "#/components/responses/ApiError" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/UserForbidden" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" }
+      }
+    },
+    "delete": {
+      "tags": ["🚫 Bans"],
+      "summary": "Unban a user",
+      "description": "ADMIN or SUPER_ADMIN. Deletes the ban record and marks its user as unbanned. Returns the populated ban record as it existed before deletion.",
+      "security": [{ "bearerAuth": [] }],
+      "responses": {
+        "200": { "$ref": "#/components/responses/BanRecordOk" },
+        "401": { "$ref": "#/components/responses/PassportUnauthorized" },
+        "403": { "$ref": "#/components/responses/UserForbidden" },
+        "404": { "$ref": "#/components/responses/ApiError" },
+        "422": { "$ref": "#/components/responses/ValidationError" }
+      }
+    }
+  }
+}
