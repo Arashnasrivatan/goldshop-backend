@@ -73,15 +73,19 @@
         {
           "name": "sort",
           "in": "query",
+          "description": "Sort order. Out-of-stock products remain at the end. popular ranks products by units in paid/active orders; stock sorts compare inventory quantity.",
           "schema": {
             "type": "string",
             "enum": [
               "newest",
               "oldest",
+              "popular",
               "min_weight",
               "max_weight",
               "min_wage",
-              "max_wage"
+              "max_wage",
+              "min_stock",
+              "max_stock"
             ],
             "default": "newest"
           }

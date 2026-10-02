@@ -49,8 +49,18 @@ const getAllProductsQuerySchema = yup.object({
   sort: yup
     .string()
     .oneOf(
-      ["newest", "oldest", "min_weight", "max_weight", "min_wage", "max_wage"],
-      "Invalid sort option | Must be one of: newest, oldest, min_weight, max_weight, min_wage, max_wage",
+      [
+        "newest",
+        "oldest",
+        "popular",
+        "min_weight",
+        "max_weight",
+        "min_wage",
+        "max_wage",
+        "min_stock",
+        "max_stock",
+      ],
+      "Invalid sort option | Must be one of: newest, oldest, popular, min_weight, max_weight, min_wage, max_wage, min_stock, max_stock",
     ),
 
   inStockOnly: yup.boolean().optional(),

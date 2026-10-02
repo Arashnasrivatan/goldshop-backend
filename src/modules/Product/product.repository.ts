@@ -3,6 +3,15 @@ import ProductModel, { IProductDocument } from "./product.model";
 import { CreateProductDto } from "./dto/createProduct.dto";
 import { GetAllProductsDto } from "./dto/getAllProducts.dto";
 import { ClientSession, PipelineStage, PopulateOptions, Types } from "mongoose";
+import OrderModel from "../Order/order.model";
+
+const popularOrderStatuses = [
+  "PAID",
+  "PROCESSING",
+  "SHIPPED",
+  "READY_FOR_PICKUP",
+  "DELIVERED",
+];
 
 export class ProductRepository {
   private getSortQuery(sortOption?: string): Record<string, 1 | -1> {
@@ -17,6 +26,10 @@ export class ProductRepository {
         return { wage: 1 };
       case "max_wage":
         return { wage: -1 };
+      case "min_stock":
+        return { stock: 1, createdAt: -1 };
+      case "max_stock":
+        return { stock: -1, createdAt: -1 };
       case "newest":
       default:
         return { createdAt: -1 };
@@ -134,6 +147,58 @@ export class ProductRepository {
     const parsedLimit = Number(limit) || 20;
     const skip = (parsedPage - 1) * parsedLimit;
     const sortQuery = this.getSortQuery(sort);
+    const sortStages: PipelineStage[] =
+      sort === "popular"
+        ? [
+            {
+              $lookup: {
+                from: OrderModel.collection.name,
+                let: { productId: "$_id" },
+                pipeline: [
+                  {
+                    $match: {
+                      $expr: {
+                        $and: [
+                          { $in: ["$$productId", "$items.product"] },
+                          { $in: ["$status", popularOrderStatuses] },
+                          { $ne: ["$isDeleted", true] },
+                        ],
+                      },
+                    },
+                  },
+                  { $unwind: "$items" },
+                  {
+                    $match: {
+                      $expr: { $eq: ["$items.product", "$$productId"] },
+                    },
+                  },
+                  {
+                    $group: {
+                      _id: null,
+                      unitsSold: { $sum: "$items.quantity" },
+                    },
+                  },
+                ],
+                as: "popularity",
+              },
+            },
+            {
+              $addFields: {
+                unitsSold: {
+                  $ifNull: [{ $arrayElemAt: ["$popularity.unitsSold", 0] }, 0],
+                },
+              },
+            },
+            {
+              $sort: {
+                isOutOfStock: 1,
+                unitsSold: -1,
+                createdAt: -1,
+              },
+            },
+            { $project: { popularity: 0 } },
+          ]
+        : [{ $sort: { isOutOfStock: 1, ...sortQuery } }];
 
     //* 8. Aggregation Pipeline
     const pipeline: PipelineStage[] = [
@@ -144,9 +209,7 @@ export class ProductRepository {
           isOutOfStock: { $cond: [{ $lte: ["$stock", 0] }, 1, 0] },
         },
       },
-      {
-        $sort: { isOutOfStock: 1, ...sortQuery },
-      },
+      ...sortStages,
       {
         $facet: {
           metadata: [{ $count: "total" }],

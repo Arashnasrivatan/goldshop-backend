@@ -37,7 +37,10 @@ export type ProductSortOption =
   | "min_weight"
   | "max_weight"
   | "min_wage"
-  | "max_wage";
+  | "max_wage"
+  | "popular"
+  | "min_stock"
+  | "max_stock";
 
 export interface IProductFilter {
   search?: string;

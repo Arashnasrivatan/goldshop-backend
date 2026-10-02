@@ -36,6 +36,7 @@
         "customFilters": { "type": "object", "additionalProperties": {}, "description": "Arbitrary custom key/value pairs." },
         "inStock": { "type": "boolean", "description": "Computed on list and document JSON; may be absent on lean update responses." },
         "isOutOfStock": { "type": "integer", "enum": [0, 1], "description": "Computed on list results only." },
+        "unitsSold": { "type": "integer", "minimum": 0, "description": "Computed on list results when sort=popular; total units in non-deleted paid, processing, shipped, pickup-ready, or delivered orders." },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" },
         "__v": { "type": "integer", "description": "Mongoose version key; may be present." }
