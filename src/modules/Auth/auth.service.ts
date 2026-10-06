@@ -105,7 +105,7 @@ export class AuthService {
     //* SMS Service
     const smsResult = await smsService.send(
       phone,
-      [{ name: "Code", value: otpCode }],
+      [{ name: "CODE", value: otpCode }],
       configs.app.env === "production" ? configs.sms.pattern : "123456",
     );
 
@@ -230,12 +230,10 @@ export class AuthService {
       throw new AppError("Failed To Generate reset link", 500);
     }
 
-    const resetLink: string = `${configs.auth.resetPassword.link}${resetToken}`;
-
     if (configs.app.env === "production") {
       const smsResult = await smsService.send(
         phone,
-        [{ name: "TOKEN", value: resetLink }],
+        [{ name: "TOKEN", value: resetToken }],
         configs.sms.patternForgot,
       );
 
@@ -250,7 +248,7 @@ export class AuthService {
 
     return {
       message: "Reset link sent via SMS (Valid for 5 minutes)",
-      ...(configs.app.env === "development" && { data: { resetLink } }),
+      ...(configs.app.env === "development" && { data: { resetToken } }),
     };
   }
 
