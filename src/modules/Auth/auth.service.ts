@@ -6,7 +6,6 @@ import { RedisService } from "../../common/services/redis.service";
 import { smsService } from "../../common/services/sms.service";
 import configs from "../../configs/env.config";
 import jwt from "jsonwebtoken";
-import { v4 as uuidv4 } from "uuid";
 import crypto from "crypto";
 import { SendOtpDto } from "./dto/sendOTP.dto";
 import { IOtpDetails } from "./auth.types";
@@ -215,7 +214,7 @@ export class AuthService {
       throw new AppError("Please wait before requesting again", 429);
     }
 
-    const resetToken: string = uuidv4();
+    const resetToken: string = crypto.randomBytes(12).toString('hex');
     const hashedResetToken = this.hashResetToken(resetToken);
     const resetTokenKey = this.getResetTokenKey(hashedResetToken);
 
