@@ -1,5 +1,4 @@
 import * as yup from "yup";
-import { validate as uuidValidate } from "uuid";
 
 const sentSchema = yup.object().shape({
   phone: yup
@@ -92,8 +91,8 @@ const resetPasswordParamsSchema = yup.object().shape({
   token: yup
     .string()
     .required("reset Token is Required")
-    .test("is-valid-uuid", "reset Token is invalid", (value) => {
-      return value === undefined || uuidValidate(value);
+    .test("is-valid-hex-token", "reset Token is invalid", (value) => {
+      return value === undefined || /^[a-f0-9]{24}$/i.test(value);
     }),
 });
 

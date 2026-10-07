@@ -254,11 +254,11 @@ export class AuthService {
   async resetPassword(input: ResetPasswordDto) {
     const { token, newPassword, confirmPassword } = input;
 
-    if (!/^[0-9a-fA-F-]{36}$/.test(token)) {
+    if (!/^[a-f0-9]{24}$/i.test(token)) {
       throw new AppError("Invalid reset token", 400);
     }
 
-    const hashedToken = this.hashResetToken(token);
+    const hashedToken = this.hashResetToken(token.toLowerCase());
     const resetTokenKey = this.getResetTokenKey(hashedToken);
 
     const userId = await this.redisService.get<string>(resetTokenKey);

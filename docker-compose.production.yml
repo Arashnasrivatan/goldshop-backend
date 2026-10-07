@@ -1,19 +1,40 @@
 ﻿name: goldshop
+
 services:
   mongo:
     image: mongo:8.0
     restart: unless-stopped
+
+    command:
+      - mongod
+      - --replSet
+      - rs0
+      - --bind_ip_all
+      - --keyFile
+      - /etc/mongo-keyfile
+
     ports:
       - "127.0.0.1:27018:27017"
+
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
       MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-goldshop}
+
     volumes:
       - mongo_data:/data/db
-    networks: [data, mongo_access]
+      - ./mongo-keyfile:/etc/mongo-keyfile:ro
+
+    networks:
+      - data
+      - mongo_access
+
     healthcheck:
-      test: ["CMD-SHELL", "mongosh --quiet -u \"$${MONGO_INITDB_ROOT_USERNAME}\" -p \"$${MONGO_INITDB_ROOT_PASSWORD}\" --authenticationDatabase admin --eval 'db.adminCommand({ping:1}).ok' | grep 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "mongosh --quiet -u 'goldshop_mongo_admin' -p \"$${MONGO_INITDB_ROOT_PASSWORD}\" --authenticationDatabase admin --eval 'db.adminCommand({ping:1}).ok' | grep 1"
+        ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -22,14 +43,27 @@ services:
   redis:
     image: redis:7.4-alpine
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
-    environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+    command:
+      - sh
+      - -c
+      - 'exec redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"'
+
+    env_file:
+      - production.env
+
     volumes:
       - redis_data:/data
-    networks: [data]
+
+    networks:
+      - data
+
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" --no-auth-warning ping | grep PONG"]
+      test:
+        [
+          "CMD-SHELL",
+          "redis-cli -a \"$${REDIS_PASSWORD}\" --no-auth-warning ping | grep PONG"
+        ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -38,55 +72,91 @@ services:
     build:
       context: .
       dockerfile: docker/backend.Dockerfile
+
     restart: unless-stopped
+
     env_file:
       - production.env
+
     environment:
       NODE_ENV: production
       PORT: 4000
       DOMAIN: ${APP_ORIGIN}
       CORS: ${APP_ORIGIN}
-      MONGO_URI: mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongo:27017/${MONGO_DATABASE:-goldshop}?authSource=admin
+
+      MONGO_URI: mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongo:27017/${MONGO_DATABASE:-goldshop}?authSource=admin&replicaSet=rs0
+
       REDIS_URI: redis://:${REDIS_PASSWORD}@redis:6379
+
       RESET_PASSWORD_LINK: ${APP_ORIGIN}/forgot-reset.html?token=
       ZIBAL_CALLBACK_URL: ${APP_ORIGIN}/api/checkouts/verify
+
     depends_on:
-      mongo: { condition: service_healthy }
-      redis: { condition: service_healthy }
-    networks: [data, web]
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    networks:
+      - data
+      - web
+
     volumes:
       - app_logs:/app/logs
+
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/api/status').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('net').createConnection({host:'127.0.0.1',port:4000}).on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))"
+        ]
       interval: 15s
       timeout: 5s
       retries: 10
       start_period: 30s
+
     stop_grace_period: 30s
 
   web:
     build:
       context: .
       dockerfile: docker/frontend.Dockerfile
+
     restart: unless-stopped
+
     depends_on:
-      app: { condition: service_healthy }
+      app:
+        condition: service_healthy
+
     ports:
-      - "${HTTP_BIND:-127.0.0.1}:${HTTP_PORT:-8080}:80"
-    networks: [web]
+      - "127.0.0.1:8080:80"
+
+    networks:
+      - web
+
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/healthz | grep ok"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://127.0.0.1/healthz | grep ok"
+        ]
       interval: 15s
       timeout: 5s
       retries: 5
 
 networks:
   web:
+
   mongo_access:
+
   data:
     internal: true
+
 volumes:
   mongo_data:
-  redis_data:
-  app_logs:
 
+  redis_data:
+
+  app_logs:

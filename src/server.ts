@@ -28,7 +28,7 @@ async function startServer() {
     startCronJobs();
 
     //* Start Express App
-    server.listen(configs.app.port, () => {
+    server.listen(configs.app.port, "0.0.0.0", () => {
       console.log(`Server started on port ${configs.app.port} 🚀`);
     });
   } catch (err) {
